@@ -1,0 +1,21 @@
+Package: AutoNLS
+Type: Package
+Title: Automated Non Linear Regression
+Version: 0.1.0
+Authors@R: 
+    person("Adrian", "Antico", , "adrianantico@gmail.com", role = c("aut", "cre", "cph"))
+Author: Adrian Antico [aut, cre, cph]
+Maintainer: Adrian Antico <adrianantico@gmail.com>
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+Imports
+  data.table,
+  echarts4r
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+Depends: 
+    R (>= 4.1.0)
+Contact: Adrian Antico
+Language: en-US
+NeedsCompilation: no
