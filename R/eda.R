@@ -11,7 +11,6 @@
 #' - `visualize_scatterplots()`: Creates pairwise scatterplots for numeric columns.
 #' - `render_all()`: Runs all methods and returns their results.
 #'
-#' @import data.table echarts4r R6
 EDA <- R6::R6Class(
   "EDA",
   public = list(
@@ -44,7 +43,13 @@ EDA <- R6::R6Class(
     #'
     #' @return A `data.table` containing the summary statistics.
     #' @examples
-    #' eda$summarize()
+    #' data <- data.table::data.table(
+    #'   x = seq(1, 100, by = 1),
+    #'   y = 10 * seq(1, 100, by = 1)^1.2 / (50 + seq(1, 100, by = 1)^1.2) + rnorm(100, mean = 0, sd = 0.5)
+    #' )
+    #' eda <- EDA$new(data)
+    #' summary <- eda$summarize()
+    #' print(summary)
     summarize = function() {
       # Process numeric columns
       numeric_cols <- names(self$data)[sapply(self$data, is.numeric)]
@@ -215,13 +220,28 @@ EDA <- R6::R6Class(
       return(self$plots)
     },
 
-    #' Run all EDA methods
+    #' Render All Visualizations
     #'
-    #' Runs summary statistics, correlation, and visualizations for the dataset.
+    #' This method generates all visualizations, including distributions and scatterplots.
     #'
-    #' @return A list containing summary statistics, correlation matrix, and plots.
+    #' @param dist_title_prefix Prefix for titles of distribution plots.
+    #' @param dist_bins Number of bins for histograms in distribution plots.
+    #' @param dist_add_density Logical. Whether to overlay a density line on histograms.
+    #' @param dist_density_color Color for the density line.
+    #' @param dist_theme Visualization theme for the distribution plots.
+    #' @param scatter_title_prefix Prefix for titles of scatterplot visualizations.
+    #' @return A list of generated plots.
     #' @examples
-    #' eda$render_all()
+    #' eda <- EDA$new(sample_data)
+    #' plots <- eda$render_all(
+    #'   dist_title_prefix = "Distribution:",
+    #'   dist_bins = 30,
+    #'   dist_add_density = TRUE,
+    #'   dist_density_color = "blue",
+    #'   dist_theme = "dark",
+    #'   scatter_title_prefix = "Scatterplot:"
+    #' )
+    #' @export
     render_all = function(
     dist_title_prefix = "Distribution of",
     dist_bins = 10,
