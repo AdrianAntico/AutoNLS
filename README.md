@@ -1,9 +1,10 @@
-![Version:1.0.0](https://img.shields.io/static/v1?label=Version&message=1.0.0&color=blue&?style=plastic)
+![Version:0.1.0](https://img.shields.io/static/v1?label=Version&message=1.0.0&color=blue&?style=plastic)
 [![R-CMD-check](https://github.com/AdrianAntico/AutoNLS/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/AdrianAntico/AutoNLS/actions/workflows/R-CMD-check.yaml)
 [![metacran downloads](https://cranlogs.r-pkg.org/badges/last-week/AutoNLS)](https://cran.r-project.org/package=AutoNLS)
 
 
 <img src="https://raw.githubusercontent.com/AdrianAntico/AutoNLS/master/inst/Logo.PNG" align="center" width="800" />
+
 
 # **AutoNLS**
 Automated Non-Linear Systems/Structures and Exploratory Data Analysis in R
