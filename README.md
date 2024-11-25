@@ -140,7 +140,7 @@ Compare non-linear model shapes across a range of input values.
 visualizer <- ModelVisualizer$new(fitter$list_models())
 
 # Generate comparison plot
-shape_plot <- visualizer$generate_comparison_plot(x_range = seq(1, 100, by = 1), k_values = c(3, 5, 7))
+shape_plot <- visualizer$generate_comparison_plot(x_range = seq(1, 100, by = 1), params = list(), normalize = TRUE)
 print(shape_plot)
 ```
 
