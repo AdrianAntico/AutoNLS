@@ -1,4 +1,3 @@
-library(data.table)
 library(testthat)
 
 test_that("generate_comparison_plot generates valid plot", {

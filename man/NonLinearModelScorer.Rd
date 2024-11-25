@@ -7,31 +7,6 @@
 An R6 class to score non-linear regression models on new data
 and visualize the results.
 }
-\examples{
-
-## ------------------------------------------------
-## Method `NonLinearModelScorer$new`
-## ------------------------------------------------
-
-# Assuming `fit_results` is a list of fitted models
-scorer <- NonLinearModelScorer$new(fit_results)
-Score new data using fitted models
-
-
-## ------------------------------------------------
-## Method `NonLinearModelScorer$score_new_data`
-## ------------------------------------------------
-
-scored <- scorer$score_new_data(new_data, x_col = "x")
-Generate a plot for scored data
-
-
-## ------------------------------------------------
-## Method `NonLinearModelScorer$generate_score_plot`
-## ------------------------------------------------
-
-plot <- scorer$generate_score_plot("Hill", new_data, x_col = "x")
-}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
@@ -39,8 +14,7 @@ plot <- scorer$generate_score_plot("Hill", new_data, x_col = "x")
 
 \item{\code{scored_data}}{A list of data.tables containing scored data.}
 
-\item{\code{score_plots}}{A list of plots visualizing scored data.
-Initialize the NonLinearModelScorer class}
+\item{\code{score_plots}}{A list of plots visualizing scored data.}
 }
 \if{html}{\out{</div>}}
 }
@@ -71,17 +45,6 @@ Initialize the NonLinearModelScorer class}
 \subsection{Returns}{
 A new instance of the NonLinearModelScorer class.
 }
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{# Assuming `fit_results` is a list of fitted models
-scorer <- NonLinearModelScorer$new(fit_results)
-Score new data using fitted models
-
-}
-\if{html}{\out{</div>}}
-
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-NonLinearModelScorer-score_new_data"></a>}}
@@ -103,16 +66,6 @@ Score new data using fitted models
 \subsection{Returns}{
 A list of data.tables with predicted values for each model.
 }
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{scored <- scorer$score_new_data(new_data, x_col = "x")
-Generate a plot for scored data
-
-}
-\if{html}{\out{</div>}}
-
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-NonLinearModelScorer-generate_score_plot"></a>}}
@@ -136,14 +89,6 @@ Generate a plot for scored data
 \subsection{Returns}{
 A plot visualizing the scored data.
 }
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{plot <- scorer$generate_score_plot("Hill", new_data, x_col = "x")
-}
-\if{html}{\out{</div>}}
-
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-NonLinearModelScorer-clone"></a>}}

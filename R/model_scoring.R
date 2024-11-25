@@ -15,25 +15,16 @@ NonLinearModelScorer <- R6::R6Class(
     #' @field score_plots A list of plots visualizing scored data.
     score_plots = list(),
 
-    #' Initialize the NonLinearModelScorer class
-    #'
     #' @param fit_results A list of fitted model objects (e.g., output from NonLinearFitter).
     #' @return A new instance of the NonLinearModelScorer class.
-    #' @examples
-    #' # Assuming `fit_results` is a list of fitted models
-    #' scorer <- NonLinearModelScorer$new(fit_results)
     initialize = function(fit_results) {
       if (!is.list(fit_results)) stop("fit_results must be a list of model objects.")
       self$fit_results <- fit_results
     },
 
-    #' Score new data using fitted models
-    #'
     #' @param new_data A data.table containing the new data to score.
     #' @param x_col The predictor column in `new_data`.
     #' @return A list of data.tables with predicted values for each model.
-    #' @examples
-    #' scored <- scorer$score_new_data(new_data, x_col = "x")
     score_new_data = function(new_data, x_col) {
       if (!data.table::is.data.table(new_data)) stop("new_data must be a data.table.")
       if (!x_col %in% names(new_data)) stop("x_col must exist in the dataset.")
@@ -58,14 +49,10 @@ NonLinearModelScorer <- R6::R6Class(
       return(self$scored_data)
     },
 
-    #' Generate a plot for scored data
-    #'
     #' @param model_name The name of the model to plot.
     #' @param new_data The original new data used for scoring.
     #' @param x_col The predictor column in `new_data`.
     #' @return A plot visualizing the scored data.
-    #' @examples
-    #' plot <- scorer$generate_score_plot("Hill", new_data, x_col = "x")
     generate_score_plot = function(model_name, new_data, x_col) {
       # Validate x_col exists in new_data
       if (!x_col %in% names(new_data)) stop("x_col must exist in the dataset.")

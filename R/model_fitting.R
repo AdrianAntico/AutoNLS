@@ -110,12 +110,7 @@ NonLinearFitter <- R6::R6Class(
       self$models <- list()
     },
 
-    #' List available models
-    #'
-    #' Displays the names and descriptions of pre-defined models in the model library.
     #' @return A data.table summarizing available models.
-    #' @examples
-    #' fitter$list_models()
     list_models = function() {
       data.table::data.table(
         Model = names(self$model_library),
@@ -150,8 +145,6 @@ NonLinearFitter <- R6::R6Class(
       )
     },
 
-    #' Fit models to the dataset
-    #'
     #' @param x_col The name of the predictor variable.
     #' @param y_col The name of the response variable.
     #' @param control A list of control parameters for the optimizer, such as `maxiter`.

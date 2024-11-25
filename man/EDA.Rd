@@ -19,80 +19,6 @@ statistics, correlation matrices, and customizable visualizations using \code{ec
 }
 }
 
-\examples{
-
-## ------------------------------------------------
-## Method `EDA$new`
-## ------------------------------------------------
-
-library(data.table)
-data <- data.table(A = rnorm(100), B = rnorm(100, 10, 5))
-eda <- EDA$new(data)
-Compute summary statistics
-
-Calculates mean, median, variance, and the count of missing values for each column.
-
-
-## ------------------------------------------------
-## Method `EDA$summarize`
-## ------------------------------------------------
-
-data <- data.table::data.table(
-  x = seq(1, 100, by = 1),
-  y = 10 * seq(1, 100, by = 1)^1.2 / (50 + seq(1, 100, by = 1)^1.2) + rnorm(100, mean = 0, sd = 0.5)
-)
-eda <- EDA$new(data)
-summary <- eda$summarize()
-print(summary)
-Compute correlation matrix
-
-Calculates the correlation matrix for all numeric columns in the dataset.
-
-
-## ------------------------------------------------
-## Method `EDA$correlate`
-## ------------------------------------------------
-
-eda$correlate()
-Visualize distributions with histograms and optional density lines
-
-Generates histograms for numeric columns and optionally overlays density lines.
-
-
-## ------------------------------------------------
-## Method `EDA$visualize_distributions`
-## ------------------------------------------------
-
-eda$visualize_distributions(bins = 20, add_density = TRUE, theme = "dark")
-Visualize pairwise scatterplots
-
-Generates scatterplots for all pairs of numeric columns.
-
-
-## ------------------------------------------------
-## Method `EDA$visualize_scatterplots`
-## ------------------------------------------------
-
-eda$visualize_scatterplots(theme = "macarons")
-Render All Visualizations
-
-This method generates all visualizations, including distributions and scatterplots.
-
-
-## ------------------------------------------------
-## Method `EDA$render_all`
-## ------------------------------------------------
-
-eda <- EDA$new(sample_data)
-plots <- eda$render_all(
-  dist_title_prefix = "Distribution:",
-  dist_bins = 30,
-  dist_add_density = TRUE,
-  dist_density_color = "blue",
-  dist_theme = "dark",
-  scatter_title_prefix = "Scatterplot:"
-)
-}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
@@ -130,24 +56,13 @@ Initialize the EDA class}
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{data}}{A \code{data.table} containing the dataset for analysis.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{library(data.table)
-data <- data.table(A = rnorm(100), B = rnorm(100, 10, 5))
-eda <- EDA$new(data)
+\item{\code{data}}{A \code{data.table} containing the dataset for analysis.
 Compute summary statistics
 
-Calculates mean, median, variance, and the count of missing values for each column.
-
+Calculates mean, median, variance, and the count of missing values for each column.}
 }
 \if{html}{\out{</div>}}
-
 }
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-EDA-summarize"></a>}}
@@ -159,49 +74,32 @@ Calculates mean, median, variance, and the count of missing values for each colu
 
 \subsection{Returns}{
 A \code{data.table} containing the summary statistics.
+Compute correlation with the target variable
+
+Calculates both Pearson and Spearman correlations between all numeric columns (excluding the target variable) and the target variable.
 }
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{data <- data.table::data.table(
-  x = seq(1, 100, by = 1),
-  y = 10 * seq(1, 100, by = 1)^1.2 / (50 + seq(1, 100, by = 1)^1.2) + rnorm(100, mean = 0, sd = 0.5)
-)
-eda <- EDA$new(data)
-summary <- eda$summarize()
-print(summary)
-Compute correlation matrix
-
-Calculates the correlation matrix for all numeric columns in the dataset.
-
-}
-\if{html}{\out{</div>}}
-
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-EDA-correlate"></a>}}
 \if{latex}{\out{\hypertarget{method-EDA-correlate}{}}}
 \subsection{Method \code{correlate()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{EDA$correlate()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{EDA$correlate(target_col = "y")}\if{html}{\out{</div>}}
 }
 
-\subsection{Returns}{
-A correlation matrix or a message if not enough numeric columns are present.
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{target_col}}{the target variable in the data set}
 }
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{eda$correlate()
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A data.table with the Pearson and Spearman correlation values for each numeric predictor.
 Visualize distributions with histograms and optional density lines
 
 Generates histograms for numeric columns and optionally overlays density lines.
-
 }
-\if{html}{\out{</div>}}
-
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-EDA-visualize_distributions"></a>}}
@@ -240,26 +138,22 @@ Generates histograms for numeric columns and optionally overlays density lines.
 }
 \subsection{Returns}{
 A list of \code{echarts4r} histogram plots.
+Visualize pairwise scatterplots with GAM fits
+
+Generates scatterplots for all pairs of numeric columns and overlays
+fitted lines from Generalized Additive Models (GAM) for different \code{k} values.
 }
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{eda$visualize_distributions(bins = 20, add_density = TRUE, theme = "dark")
-Visualize pairwise scatterplots
-
-Generates scatterplots for all pairs of numeric columns.
-
-}
-\if{html}{\out{</div>}}
-
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-EDA-visualize_scatterplots"></a>}}
 \if{latex}{\out{\hypertarget{method-EDA-visualize_scatterplots}{}}}
 \subsection{Method \code{visualize_scatterplots()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{EDA$visualize_scatterplots(title_prefix = "Scatterplot of", theme = "dark")}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{EDA$visualize_scatterplots(
+  title_prefix = "Scatterplot of",
+  theme = "dark",
+  k_values = c(3, 5, 7)
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -268,24 +162,17 @@ Generates scatterplots for all pairs of numeric columns.
 \item{\code{title_prefix}}{Character. Prefix for the plot title.}
 
 \item{\code{theme}}{Character. Theme for the plot (e.g., "light", "dark"). Defaults to \code{"light"}.}
+
+\item{\code{k_values}}{Numeric vector. Values of \code{k} (basis dimension) for GAM fits. Defaults to \code{c(3, 5, 7)}.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A list of \code{echarts4r} scatter plots.
-}
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{eda$visualize_scatterplots(theme = "macarons")
+A list of \code{echarts4r} scatter plots with GAM fitted lines.
 Render All Visualizations
 
 This method generates all visualizations, including distributions and scatterplots.
-
 }
-\if{html}{\out{</div>}}
-
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-EDA-render_all"></a>}}
@@ -293,6 +180,7 @@ This method generates all visualizations, including distributions and scatterplo
 \subsection{Method \code{render_all()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{EDA$render_all(
+  y_col = NULL,
   dist_title_prefix = "Distribution of",
   dist_bins = 10,
   dist_add_density = TRUE,
@@ -322,22 +210,6 @@ This method generates all visualizations, including distributions and scatterplo
 \subsection{Returns}{
 A list of generated plots.
 }
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{eda <- EDA$new(sample_data)
-plots <- eda$render_all(
-  dist_title_prefix = "Distribution:",
-  dist_bins = 30,
-  dist_add_density = TRUE,
-  dist_density_color = "blue",
-  dist_theme = "dark",
-  scatter_title_prefix = "Scatterplot:"
-)
-}
-\if{html}{\out{</div>}}
-
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-EDA-clone"></a>}}

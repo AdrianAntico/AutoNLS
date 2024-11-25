@@ -25,9 +25,6 @@ NonLinearModelEvaluator <- R6::R6Class(
     #' @param fit_results A list of fitted model objects (e.g., output from NonLinearFitter).
     #' @param data The original dataset used for fitting models.
     #' @return A new instance of the NonLinearModelEvaluator class.
-    #' @examples
-    #' # Assuming `fit_results` is a list of fitted models
-    #' evaluator <- NonLinearModelEvaluator$new(fit_results, data)
     initialize = function(fit_results, data) {
       if (!is.list(fit_results)) stop("fit_results must be a list of model objects.")
       if (!data.table::is.data.table(data)) stop("data must be a data.table.")
@@ -35,12 +32,7 @@ NonLinearModelEvaluator <- R6::R6Class(
       self$data <- data
     },
 
-    #' Generate evaluation metrics for models
-    #'
-    #' Computes AIC, BIC, residual standard error, and R-squared for each model.
     #' @return A data.table of evaluation metrics.
-    #' @examples
-    #' evaluator$generate_metrics()
     generate_metrics = function() {
       if (is.null(self$fit_results)) stop("No fitted models to evaluate.")
 
@@ -91,19 +83,10 @@ NonLinearModelEvaluator <- R6::R6Class(
       return(self$evaluation_metrics)
     },
 
-    #' Generate a Comparison Plot for Model Evaluation
-    #'
-    #' Creates a plot to evaluate the observed vs. predicted values from fitted models.
-    #'
     #' @param data A `data.table` or `data.frame` containing the dataset used for evaluation.
     #' @param x_col A string specifying the name of the x variable in the dataset.
     #' @param y_col A string specifying the name of the y variable in the dataset.
     #' @return An `echarts4r` plot showing observed vs. predicted data.
-    #' @examples
-    #' evaluator <- NonLinearModelEvaluator$new(fit_results, data = sample_data)
-    #' plot <- evaluator$generate_comparison_plot(data = sample_data, x_col = "x", y_col = "y")
-    #' print(plot)
-    #' @export
     generate_comparison_plot = function(data, x_col, y_col) {
       if (is.null(self$fit_results) || length(self$fit_results) == 0) {
         stop("No fitted models to evaluate.")

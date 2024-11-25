@@ -11,6 +11,7 @@
 #' - `visualize_scatterplots()`: Creates pairwise scatterplots for numeric columns.
 #' - `render_all()`: Runs all methods and returns their results.
 #'
+#'@export
 EDA <- R6::R6Class(
   "EDA",
   public = list(
@@ -26,10 +27,6 @@ EDA <- R6::R6Class(
     #' Initialize the EDA class
     #'
     #' @param data A `data.table` containing the dataset for analysis.
-    #' @examples
-    #' library(data.table)
-    #' data <- data.table(A = rnorm(100), B = rnorm(100, 10, 5))
-    #' eda <- EDA$new(data)
     initialize = function(data) {
       if (!"data.table" %in% class(data)) {
         stop("Input data must be a data.table object.")
@@ -42,14 +39,6 @@ EDA <- R6::R6Class(
     #' Calculates mean, median, variance, and the count of missing values for each column.
     #'
     #' @return A `data.table` containing the summary statistics.
-    #' @examples
-    #' data <- data.table::data.table(
-    #'   x = seq(1, 100, by = 1),
-    #'   y = 10 * seq(1, 100, by = 1)^1.2 / (50 + seq(1, 100, by = 1)^1.2) + rnorm(100, mean = 0, sd = 0.5)
-    #' )
-    #' eda <- EDA$new(data)
-    #' summary <- eda$summarize()
-    #' print(summary)
     summarize = function() {
       # Process numeric columns
       numeric_cols <- names(self$data)[sapply(self$data, is.numeric)]
@@ -89,20 +78,35 @@ EDA <- R6::R6Class(
       return(self$summary_stats)
     },
 
-    #' Compute correlation matrix
+    #' Compute correlation with the target variable
     #'
-    #' Calculates the correlation matrix for all numeric columns in the dataset.
+    #' Calculates both Pearson and Spearman correlations between all numeric columns (excluding the target variable) and the target variable.
     #'
-    #' @return A correlation matrix or a message if not enough numeric columns are present.
-    #' @examples
-    #' eda$correlate()
-    correlate = function() {
-      numeric_cols <- names(self$data)[sapply(self$data, is.numeric)]
-      if (length(numeric_cols) > 1) {
-        self$correlation_matrix <- stats::cor(self$data[, ..numeric_cols], use = "complete.obs")
+    #' @param target_col the target variable in the data set
+    #' @return A data.table with the Pearson and Spearman correlation values for each numeric predictor.
+    correlate = function(target_col = "y") {
+      # Identify numeric columns excluding the target column
+      numeric_cols <- setdiff(names(self$data)[sapply(self$data, is.numeric)], target_col)
+
+      if (length(numeric_cols) > 0) {
+        # Compute correlations
+        correlation_results <- lapply(numeric_cols, function(col) {
+          pearson_corr <- stats::cor(self$data[[col]], self$data[[target_col]], use = "complete.obs", method = "pearson")
+          spearman_corr <- stats::cor(self$data[[col]], self$data[[target_col]], use = "complete.obs", method = "spearman")
+          list(
+            Predictor = col,
+            Pearson = pearson_corr,
+            Spearman = spearman_corr,
+            Difference = abs(pearson_corr - spearman_corr) # Difference to indicate nonlinearity
+          )
+        })
+
+        # Convert results to a data.table
+        self$correlation_matrix <- data.table::rbindlist(correlation_results)
       } else {
-        self$correlation_matrix <- "Not enough numeric columns for correlation."
+        self$correlation_matrix <- "No numeric predictors available for correlation with the target."
       }
+
       return(self$correlation_matrix)
     },
 
@@ -118,8 +122,6 @@ EDA <- R6::R6Class(
     #' @param theme Character. Theme for the plot (e.g., "light", "dark"). Defaults to `"light"`.
     #' @param density_opacity numeric. default 0.4
     #' @return A list of `echarts4r` histogram plots.
-    #' @examples
-    #' eda$visualize_distributions(bins = 20, add_density = TRUE, theme = "dark")
     visualize_distributions = function(
     title_prefix = "Distribution of",
     bins = NULL,
@@ -166,18 +168,25 @@ EDA <- R6::R6Class(
       return(self$plots)
     },
 
-    #' Visualize pairwise scatterplots
+    #' Visualize pairwise scatterplots with GAM fits
     #'
-    #' Generates scatterplots for all pairs of numeric columns.
+    #' Generates scatterplots for all pairs of numeric columns and overlays
+    #' fitted lines from Generalized Additive Models (GAM) for different `k` values.
     #'
     #' @param title_prefix Character. Prefix for the plot title.
     #' @param theme Character. Theme for the plot (e.g., "light", "dark"). Defaults to `"light"`.
-    #' @return A list of `echarts4r` scatter plots.
-    #' @examples
-    #' eda$visualize_scatterplots(theme = "macarons")
+    #' @param k_values Numeric vector. Values of `k` (basis dimension) for GAM fits. Defaults to `c(3, 5, 7)`.
+    #' @return A list of `echarts4r` scatter plots with GAM fitted lines.
     visualize_scatterplots = function(
     title_prefix = "Scatterplot of",
-    theme = "dark") {
+    theme = "dark",
+    k_values = c(3, 5, 7)
+    ) {
+      # Check if mgcv is available
+      if (!requireNamespace("mgcv", quietly = TRUE)) {
+        stop("The 'mgcv' package is required for GAM fitting. Please install it.")
+      }
+
       # Get numeric columns
       numeric_cols <- names(self$data)[sapply(self$data, is.numeric)]
 
@@ -193,22 +202,39 @@ EDA <- R6::R6Class(
       col_pairs <- combn(numeric_cols, 2, simplify = FALSE)
 
       # Loop through column pairs
-      for (pair in col_pairs) {
+      for (pair in col_pairs) { # pair = col_pairs[[1]]
         x_col <- pair[1]
         y_col <- pair[2]
 
         # Prepare data for plotting
         plot_data <- self$data[, .(X = get(x_col), Y = get(y_col))]
 
-        # Create scatterplot
-        plot <- plot_data |>
-          echarts4r::e_charts(X) |>
-          echarts4r::e_scatter(Y, name = paste(x_col, "vs", y_col)) |>
+        # Add GAM fitted lines for each `k` value
+        if(length(k_values) > 0 && is.numeric(k_values)) {
+          for (k in k_values) { # k = k_values[1]
+            # Fit GAM model
+            gam_model <- mgcv::gam(Y ~ s(X, k = k), data = plot_data)
+
+            # Generate predictions
+            plot_data[, paste0("gam_k = ", k) := predict(gam_model, newdata = plot_data)]
+          }
+        }
+
+        # Generate scatterplot
+        plot <- echarts4r::e_charts(data = plot_data, x = X) |>
+          echarts4r::e_scatter(Y, name = "Observed Data") |>
           echarts4r::e_title(text = paste(title_prefix, x_col, "and", y_col)) |>
           echarts4r::e_x_axis(name = x_col) |>
           echarts4r::e_y_axis(name = y_col) |>
           echarts4r::e_tooltip(trigger = "axis") |>
           echarts4r::e_theme(name = theme)
+
+        if(length(k_values) > 0 && is.numeric(k_values)) {
+          for (k in k_values) {
+            YVar <- paste0("gam_k = ", k)
+            plot <- echarts4r::e_line_(e = plot, serie = YVar, smooth = TRUE)
+          }
+        }
 
         # Save the plot with a unique key
         plot_key <- paste(x_col, y_col, sep = "_vs_")
@@ -231,18 +257,8 @@ EDA <- R6::R6Class(
     #' @param dist_theme Visualization theme for the distribution plots.
     #' @param scatter_title_prefix Prefix for titles of scatterplot visualizations.
     #' @return A list of generated plots.
-    #' @examples
-    #' eda <- EDA$new(sample_data)
-    #' plots <- eda$render_all(
-    #'   dist_title_prefix = "Distribution:",
-    #'   dist_bins = 30,
-    #'   dist_add_density = TRUE,
-    #'   dist_density_color = "blue",
-    #'   dist_theme = "dark",
-    #'   scatter_title_prefix = "Scatterplot:"
-    #' )
-    #' @export
     render_all = function(
+    y_col = NULL,
     dist_title_prefix = "Distribution of",
     dist_bins = 10,
     dist_add_density = TRUE,
@@ -251,7 +267,7 @@ EDA <- R6::R6Class(
     scatter_title_prefix = "Scatterplot of") {
       # Run all methods and store the results
       self$summary_stats <- self$summarize()
-      self$correlation_matrix <- self$correlate()
+      self$correlation_matrix <- self$correlate(target_col = y_col)
 
       # Generate plots
       distribution_plots <- self$visualize_distributions(

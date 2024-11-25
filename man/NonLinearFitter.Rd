@@ -15,17 +15,6 @@ Includes a library of pre-defined models to simplify selection.
 
 data <- data.table::data.table(x = 1:100, y = 5 / (1 + exp(-0.1 * (1:100 - 50))))
 fitter <- NonLinearFitter$new(data)
-List available models
-
-Displays the names and descriptions of pre-defined models in the model library.
-
-## ------------------------------------------------
-## Method `NonLinearFitter$list_models`
-## ------------------------------------------------
-
-fitter$list_models()
-Add a non-linear model for testing
-
 
 ## ------------------------------------------------
 ## Method `NonLinearFitter$add_model`
@@ -36,8 +25,6 @@ fitter$add_model("Hill")
 
 # Add a custom model
 fitter$add_model("Custom", y ~ a * exp(-b * x), list(a = 1, b = 0.1))
-Fit models to the dataset
-
 
 ## ------------------------------------------------
 ## Method `NonLinearFitter$fit_models`
@@ -96,9 +83,6 @@ A new instance of the NonLinearFitter class.
 \if{html}{\out{<div class="r example copy">}}
 \preformatted{data <- data.table::data.table(x = 1:100, y = 5 / (1 + exp(-0.1 * (1:100 - 50))))
 fitter <- NonLinearFitter$new(data)
-List available models
-
-Displays the names and descriptions of pre-defined models in the model library.
 }
 \if{html}{\out{</div>}}
 
@@ -115,17 +99,8 @@ Displays the names and descriptions of pre-defined models in the model library.
 
 \subsection{Returns}{
 A data.table summarizing available models.
-}
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{fitter$list_models()
 Add a non-linear model for testing
-
 }
-\if{html}{\out{</div>}}
-
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-NonLinearFitter-add_model"></a>}}
@@ -156,8 +131,6 @@ fitter$add_model("Hill")
 
 # Add a custom model
 fitter$add_model("Custom", y ~ a * exp(-b * x), list(a = 1, b = 0.1))
-Fit models to the dataset
-
 }
 \if{html}{\out{</div>}}
 

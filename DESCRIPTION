@@ -17,7 +17,8 @@ Imports:
     data.table,
     dplyr,
     echarts4r,
-    minpack.lm
+    minpack.lm,
+    mgcv
 Suggests:
     testthat
 License: AGPL (>= 3)

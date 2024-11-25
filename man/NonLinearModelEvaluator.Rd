@@ -8,36 +8,6 @@ An R6 class to evaluate non-linear regression models.
 Includes tools to generate tables of statistics and visualizations
 to compare models against data.
 }
-\examples{
-
-## ------------------------------------------------
-## Method `NonLinearModelEvaluator$new`
-## ------------------------------------------------
-
-# Assuming `fit_results` is a list of fitted models
-evaluator <- NonLinearModelEvaluator$new(fit_results, data)
-Generate evaluation metrics for models
-
-Computes AIC, BIC, residual standard error, and R-squared for each model.
-
-## ------------------------------------------------
-## Method `NonLinearModelEvaluator$generate_metrics`
-## ------------------------------------------------
-
-evaluator$generate_metrics()
-Generate a Comparison Plot for Model Evaluation
-
-Creates a plot to evaluate the observed vs. predicted values from fitted models.
-
-
-## ------------------------------------------------
-## Method `NonLinearModelEvaluator$generate_comparison_plot`
-## ------------------------------------------------
-
-evaluator <- NonLinearModelEvaluator$new(fit_results, data = sample_data)
-plot <- evaluator$generate_comparison_plot(data = sample_data, x_col = "x", y_col = "y")
-print(plot)
-}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
@@ -81,18 +51,6 @@ Initialize the NonLinearModelEvaluator class}
 \subsection{Returns}{
 A new instance of the NonLinearModelEvaluator class.
 }
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{# Assuming `fit_results` is a list of fitted models
-evaluator <- NonLinearModelEvaluator$new(fit_results, data)
-Generate evaluation metrics for models
-
-Computes AIC, BIC, residual standard error, and R-squared for each model.
-}
-\if{html}{\out{</div>}}
-
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-NonLinearModelEvaluator-generate_metrics"></a>}}
@@ -105,18 +63,6 @@ Computes AIC, BIC, residual standard error, and R-squared for each model.
 \subsection{Returns}{
 A data.table of evaluation metrics.
 }
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{evaluator$generate_metrics()
-Generate a Comparison Plot for Model Evaluation
-
-Creates a plot to evaluate the observed vs. predicted values from fitted models.
-
-}
-\if{html}{\out{</div>}}
-
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-NonLinearModelEvaluator-generate_comparison_plot"></a>}}
@@ -140,16 +86,6 @@ Creates a plot to evaluate the observed vs. predicted values from fitted models.
 \subsection{Returns}{
 An \code{echarts4r} plot showing observed vs. predicted data.
 }
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{evaluator <- NonLinearModelEvaluator$new(fit_results, data = sample_data)
-plot <- evaluator$generate_comparison_plot(data = sample_data, x_col = "x", y_col = "y")
-print(plot)
-}
-\if{html}{\out{</div>}}
-
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-NonLinearModelEvaluator-clone"></a>}}

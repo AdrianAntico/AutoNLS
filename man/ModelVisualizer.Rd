@@ -6,36 +6,6 @@
 \description{
 An R6 class to visualize the shapes of various non-linear models for comparison.
 }
-\examples{
-
-## ------------------------------------------------
-## Method `ModelVisualizer$new`
-## ------------------------------------------------
-
-visualizer <- ModelVisualizer$new(models)
-Generate a Comparison Plot
-
-This method visualizes the shapes of multiple non-linear models across a
-specified range of x values. The models can be compared side by side in the plot.
-
-
-## ------------------------------------------------
-## Method `ModelVisualizer$generate_comparison_plot`
-## ------------------------------------------------
-
-# Define some models
-models <- list(
-  "Hill" = function(x, vmax = 10, k = 50, n = 2) vmax * x^n / (k^n + x^n),
-  "Exponential" = function(x, a = 1, b = 0.05) a * exp(b * x)
-)
-
-# Initialize ModelVisualizer
-visualizer <- ModelVisualizer$new(models)
-
-# Generate comparison plot
-plot <- visualizer$generate_comparison_plot(x_range = seq(1, 100, by = 1), normalize = TRUE)
-print(plot)
-}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
@@ -70,19 +40,6 @@ Initialize the ModelVisualizer class}
 \subsection{Returns}{
 A new instance of the ModelVisualizer class.
 }
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{visualizer <- ModelVisualizer$new(models)
-Generate a Comparison Plot
-
-This method visualizes the shapes of multiple non-linear models across a
-specified range of x values. The models can be compared side by side in the plot.
-
-}
-\if{html}{\out{</div>}}
-
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ModelVisualizer-generate_comparison_plot"></a>}}
@@ -110,25 +67,6 @@ specified range of x values. The models can be compared side by side in the plot
 \subsection{Returns}{
 An \code{echarts4r} object representing the comparison plot.
 }
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{# Define some models
-models <- list(
-  "Hill" = function(x, vmax = 10, k = 50, n = 2) vmax * x^n / (k^n + x^n),
-  "Exponential" = function(x, a = 1, b = 0.05) a * exp(b * x)
-)
-
-# Initialize ModelVisualizer
-visualizer <- ModelVisualizer$new(models)
-
-# Generate comparison plot
-plot <- visualizer$generate_comparison_plot(x_range = seq(1, 100, by = 1), normalize = TRUE)
-print(plot)
-}
-\if{html}{\out{</div>}}
-
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ModelVisualizer-clone"></a>}}
