@@ -65,7 +65,7 @@ install.packages(c("shiny", "bs4Dash", "bslib", "DT"))
 
 ## Usage
 
-### To just run the Shiny App
+### Run the Shiny App
 ```r
 library(AutoNLS)
 run_shiny_app()
