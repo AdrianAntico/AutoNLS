@@ -20,7 +20,11 @@ Imports:
     minpack.lm,
     mgcv
 Suggests:
-    testthat
+    testthat,
+    shiny,
+    DT,
+    bs4Dash,
+    bslib
 License: AGPL (>= 3)
 Encoding: UTF-8
 LazyData: true

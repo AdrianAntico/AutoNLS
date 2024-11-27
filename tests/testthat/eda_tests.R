@@ -73,8 +73,7 @@ test_that("visualize_distributions generates valid plots", {
   eda$visualize_distributions(
     title_prefix = "Test Distribution of",
     bins = 10,
-    add_density = TRUE,
-    density_color = "#654321"
+    add_density = TRUE
   )
   expect_true(is.list(eda$plots))
   expect_true(all(sapply(eda$plots, function(p) inherits(p, "echarts4r"))))
@@ -96,5 +95,14 @@ test_that("render_all executes all methods and returns expected outputs", {
   expect_true(is.data.table(results$Summary))
   expect_true(is.list(results$Plots))
   expect_true(all(sapply(results$Plots, function(p) inherits(p, "echarts4r"))))
+})
+
+test_that("EDA visualize_distributions resets plots", {
+  eda <- EDA$new(sample_data)
+  eda$visualize_scatterplots()
+  expect_true("A_vs_B" %in% names(eda$plots))
+  eda$visualize_distributions()
+  expect_false("x_vs_y" %in% names(eda$plots))
+  expect_true(all(c("A", "B") %in% names(eda$plots)))
 })
 

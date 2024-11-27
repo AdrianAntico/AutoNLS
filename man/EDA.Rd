@@ -108,9 +108,8 @@ Generates histograms for numeric columns and optionally overlays density lines.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{EDA$visualize_distributions(
   title_prefix = "Distribution of",
-  bins = NULL,
+  bins = 20,
   add_density = TRUE,
-  density_color = "#EE6666",
   tooltip_trigger = "axis",
   theme = "dark",
   density_opacity = 0.4
@@ -125,8 +124,6 @@ Generates histograms for numeric columns and optionally overlays density lines.
 \item{\code{bins}}{Integer. Number of bins for the histogram. Defaults to Sturges' formula.}
 
 \item{\code{add_density}}{Logical. Whether to add a density line. Defaults to \code{TRUE}.}
-
-\item{\code{density_color}}{Character. Color for the density line. Defaults to \code{"#EE6666"}.}
 
 \item{\code{tooltip_trigger}}{"axis"}
 
@@ -184,7 +181,6 @@ This method generates all visualizations, including distributions and scatterplo
   dist_title_prefix = "Distribution of",
   dist_bins = 10,
   dist_add_density = TRUE,
-  dist_density_color = "#EE6666",
   dist_theme = "light",
   scatter_title_prefix = "Scatterplot of"
 )}\if{html}{\out{</div>}}
@@ -193,17 +189,19 @@ This method generates all visualizations, including distributions and scatterplo
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
+\item{\code{y_col}}{Target variable of interest in data set}
+
 \item{\code{dist_title_prefix}}{Prefix for titles of distribution plots.}
 
 \item{\code{dist_bins}}{Number of bins for histograms in distribution plots.}
 
 \item{\code{dist_add_density}}{Logical. Whether to overlay a density line on histograms.}
 
-\item{\code{dist_density_color}}{Color for the density line.}
-
 \item{\code{dist_theme}}{Visualization theme for the distribution plots.}
 
 \item{\code{scatter_title_prefix}}{Prefix for titles of scatterplot visualizations.}
+
+\item{\code{dist_density_color}}{Color for the density line.}
 }
 \if{html}{\out{</div>}}
 }

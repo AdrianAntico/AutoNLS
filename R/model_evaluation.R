@@ -117,7 +117,9 @@ NonLinearModelEvaluator <- R6::R6Class(
             echarts4r::e_line(y_pred, name = "Predicted") |>
             echarts4r::e_title(
               text = paste("Model Fit:", deparse(fit$call$formula))
-            )
+            ) |>
+            echarts4r::e_datazoom(x_index = c(0,1)) |>
+            echarts4r::e_toolbox_feature(feature = c("saveAsImage","dataZoom"))
         }, error = function(e) {
           message("Error processing model plot: ", e$message)
           NULL

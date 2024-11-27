@@ -78,7 +78,9 @@ ModelVisualizer <- R6::R6Class(
           top = "top"
         ) |>
         echarts4r::e_x_axis(name = "x") |>
-        echarts4r::e_y_axis(name = if (normalize) "Normalized y" else "y")
+        echarts4r::e_y_axis(name = if (normalize) "Normalized y" else "y") |>
+        echarts4r::e_datazoom(x_index = c(0,1)) |>
+        echarts4r::e_toolbox_feature(feature = c("saveAsImage","dataZoom"))
 
       return(plot)
     }

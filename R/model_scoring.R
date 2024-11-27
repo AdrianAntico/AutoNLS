@@ -84,7 +84,9 @@ NonLinearModelScorer <- R6::R6Class(
         echarts4r::e_tooltip(trigger = "axis") |>
         echarts4r::e_x_axis(name = x_col) |>
         echarts4r::e_y_axis(name = "Predicted Values") |>
-        echarts4r::e_legend(right = 0)
+        echarts4r::e_legend(right = 0) |>
+        echarts4r::e_datazoom(x_index = c(0,1)) |>
+        echarts4r::e_toolbox_feature(feature = c("saveAsImage","dataZoom"))
 
       self$score_plots[[model_name]] <- plot
       return(plot)

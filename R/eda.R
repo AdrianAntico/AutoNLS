@@ -117,20 +117,27 @@ EDA <- R6::R6Class(
     #' @param title_prefix Character. Prefix for the plot title.
     #' @param bins Integer. Number of bins for the histogram. Defaults to Sturges' formula.
     #' @param add_density Logical. Whether to add a density line. Defaults to `TRUE`.
-    #' @param density_color Character. Color for the density line. Defaults to `"#EE6666"`.
     #' @param tooltip_trigger "axis"
     #' @param theme Character. Theme for the plot (e.g., "light", "dark"). Defaults to `"light"`.
     #' @param density_opacity numeric. default 0.4
     #' @return A list of `echarts4r` histogram plots.
     visualize_distributions = function(
     title_prefix = "Distribution of",
-    bins = NULL,
+    bins = 20,
     add_density = TRUE,
-    density_color = "#EE6666",
     tooltip_trigger = "axis",
     theme = "dark",
     density_opacity = 0.4) {
+
+      # Clear self$plots to avoid mixing states
+      self$plots <- list()
+
       numeric_cols <- names(self$data)[sapply(self$data, is.numeric)]
+
+      # Validate numeric columns
+      if (length(numeric_cols) == 0) {
+        return(list())
+      }
 
       for (col in numeric_cols) {
         # Prepare the dataset for plotting
@@ -149,7 +156,10 @@ EDA <- R6::R6Class(
           echarts4r::e_tooltip(trigger = tooltip_trigger) |>
           echarts4r::e_theme(theme) |>
           echarts4r::e_x_axis(name = col) |>
-          echarts4r::e_y_axis(name = "Density")
+          echarts4r::e_y_axis(name = "Hist") |>
+          echarts4r::e_legend(show = TRUE, type = "scroll", orient = "horizontal", right = 50, top = 30) |>
+          echarts4r::e_datazoom(x_index = c(0,1)) |>
+          echarts4r::e_toolbox_feature(feature = c("saveAsImage","dataZoom"))
 
         if (add_density) {
           plot <- plot |>
@@ -186,6 +196,9 @@ EDA <- R6::R6Class(
       if (!requireNamespace("mgcv", quietly = TRUE)) {
         stop("The 'mgcv' package is required for GAM fitting. Please install it.")
       }
+
+      # Reset Plots
+      self$plots <- list()
 
       # Get numeric columns
       numeric_cols <- names(self$data)[sapply(self$data, is.numeric)]
@@ -225,9 +238,12 @@ EDA <- R6::R6Class(
           echarts4r::e_scatter(Y, name = "Observed Data") |>
           echarts4r::e_title(text = paste(title_prefix, x_col, "and", y_col)) |>
           echarts4r::e_x_axis(name = x_col) |>
-          echarts4r::e_y_axis(name = y_col) |>
+          echarts4r::e_y_axis(name = y_col, nameLocation = "middle", nameGap = 45) |>
           echarts4r::e_tooltip(trigger = "axis") |>
-          echarts4r::e_theme(name = theme)
+          echarts4r::e_theme(name = theme) |>
+          echarts4r::e_legend(show = TRUE, type = "scroll", orient = "horizontal", right = 50, top = 30) |>
+          echarts4r::e_datazoom(x_index = c(0,1)) |>
+          echarts4r::e_toolbox_feature(feature = c("saveAsImage","dataZoom"))
 
         if(length(k_values) > 0 && is.numeric(k_values)) {
           for (k in k_values) {
@@ -250,6 +266,7 @@ EDA <- R6::R6Class(
     #'
     #' This method generates all visualizations, including distributions and scatterplots.
     #'
+    #' @param y_col Target variable of interest in data set
     #' @param dist_title_prefix Prefix for titles of distribution plots.
     #' @param dist_bins Number of bins for histograms in distribution plots.
     #' @param dist_add_density Logical. Whether to overlay a density line on histograms.
@@ -262,7 +279,6 @@ EDA <- R6::R6Class(
     dist_title_prefix = "Distribution of",
     dist_bins = 10,
     dist_add_density = TRUE,
-    dist_density_color = "#EE6666",
     dist_theme = "light",
     scatter_title_prefix = "Scatterplot of") {
       # Run all methods and store the results
@@ -274,7 +290,6 @@ EDA <- R6::R6Class(
         title_prefix = dist_title_prefix,
         bins = dist_bins,
         add_density = dist_add_density,
-        density_color = dist_density_color,
         theme = dist_theme
       )
 
