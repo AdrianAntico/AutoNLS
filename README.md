@@ -58,12 +58,18 @@ devtools::install_github("AdrianAntico/AutoNLS")
 To run the Shiny app, ensure you have the following packages installed:
 `shiny`, `bs4Dash`, `bslib`, and `DT`.
 
-# You can install them using:
+You can install them using:
 ```R
 install.packages(c("shiny", "bs4Dash", "bslib", "DT"))
 ```
 
 ## Usage
+
+### To just run the Shiny App
+```r
+library(AutoNLS)
+run_shiny_app()
+```
 
 ### 1. Initialize AutoNLS
 
