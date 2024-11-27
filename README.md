@@ -91,19 +91,26 @@ data[, y := pmax(y, 1e-3)]
 ```
 
 ### 2. Perform Exploratory Data Analysis
-Use the EDA class to compute correlations and create visualizations.
+
+The `EDA` class provides powerful tools for exploring your data. You can compute correlations, visualize distributions, and explore relationships between variables.
+
+### Example: Exploratory Data Analysis
 
 ```r
 # Initialize EDA
 eda <- EDA$new(data)
 
-# Correlation analysis
+# 1. Correlation analysis
 correlations <- eda$correlate(target_col = "y")
 print(correlations)
 
-# Visualize scatterplots with GAM fits
-plots <- eda$visualize_scatterplots(k_values = c(3, 5, 7))
-print(plots[["x1_vs_y"]])
+# 2. Visualize distributions
+dist_plots <- eda$visualize_distributions(bins = 10, theme = "macarons")
+print(dist_plots[["x1"]])  # Display the distribution plot for variable 'x1'
+
+# 3. Visualize scatterplots with GAM fits
+scatter_plots <- eda$visualize_scatterplots(k_values = c(3, 5, 7))
+print(scatter_plots[["x1_vs_y"]])  # Display the scatterplot for 'x1' vs 'y' with GAM fits
 ```
 
 ### 3. Fit Non-Linear Models
