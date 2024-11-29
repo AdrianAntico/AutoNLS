@@ -4,6 +4,7 @@ library(bslib)
 library(echarts4r)
 library(data.table)
 library(AutoNLS)
+library(DT)
 
 ui <- bs4DashPage(
   freshTheme = bslib::bs_theme(version = 5, bootswatch = "flatly"),  # Initialize Bootstrap 5 theme
@@ -29,7 +30,6 @@ ui <- bs4DashPage(
   # Body
   body = bs4DashBody(
     bs4TabItems(
-      # EDA Tab
       # EDA Tab (Updated)
       bs4TabItem(
         tabName = "eda",
@@ -38,6 +38,8 @@ ui <- bs4DashPage(
             title = "EDA Controls",
             width = 12,  # Full-width for smaller screens
             collapsible = TRUE,
+            solidHeader = TRUE,
+            status = "primary",
             fluidRow(
               column(
                 width = 6,
@@ -111,9 +113,9 @@ ui <- bs4DashPage(
           column(
             width = 12,  # Plots for EDA
             tabsetPanel(
-              tabPanel("Distributions", uiOutput("eda_plots_ui")),
-              tabPanel("Correlation", uiOutput("eda_corr_ui")),
-              tabPanel("Scatterplots", uiOutput("eda_scatterplots_ui"))
+              tabPanel("Distributions", br(), uiOutput("eda_plots_ui")),
+              tabPanel("Correlation", br(), uiOutput("eda_corr_ui")),
+              tabPanel("Scatterplots", br(), uiOutput("eda_scatterplots_ui"))
             )
           )
         )
@@ -123,13 +125,65 @@ ui <- bs4DashPage(
       bs4TabItem(
         tabName = "model_fitting",
         fluidRow(
+          # Top row for model fitting UI settings
           column(
-            width = 3,
-            actionButton("run_fitting", "Fit Models", class = "btn-success")
-          ),
+            width = 12,
+            bs4Dash::box(
+              title = "Model Fitting Settings",
+              width = 12,
+              collapsible = TRUE,
+              solidHeader = TRUE,
+              status = "primary",
+              div(
+                style = "margin-bottom: 10px;",
+                uiOutput("model_selector_ui")  # UI for selecting models
+              ),
+              div(
+                style = "margin-bottom: 10px;",
+                uiOutput("variable_selector_ui")  # UI for x and y variable selection
+              ),
+              div(
+                style = "margin-bottom: 10px;",
+                uiOutput("model_params_ui")  # UI for model parameters
+              ),
+              div(
+                style = "margin-bottom: 10px;",
+                selectInput(
+                  inputId = "model_theme",
+                  label = "Select Plot Theme:",
+                  choices = c(
+                    "auritus", "azul", "bee-inspired", "blue", "caravan", "carp", "chalk",
+                    "cool", "dark-bold", "dark", "eduardo", "essos", "forest", "fresh-cut",
+                    "fruit", "gray", "green", "halloween", "helianthus", "infographic",
+                    "inspired", "jazz", "london", "macarons", "macarons2", "mint",
+                    "purple-passion", "red-velvet", "red", "roma", "royal", "sakura",
+                    "shine", "tech-blue", "vintage", "walden", "wef", "weforum",
+                    "westeros", "wonderland"
+                  ),
+                  selected = "macarons"  # Default selection
+                )
+              ),
+              div(
+                style = "margin-bottom: 10px; text-align: center;",
+                actionButton("fit_models", "Fit Models", class = "btn-success")
+              )
+            )
+          )
+        ),
+        fluidRow(
+          # Bottom row for model fitting results
           column(
-            width = 9,
-            uiOutput("model_fitting_ui")
+            width = 12,
+            bs4Dash::box(
+              title = "Model Fitting Results",
+              collapsible = TRUE,
+              width = 12,
+              status = "success",
+              solidHeader = TRUE,
+              DT::DTOutput("model_summary_table"), # UI for model summary table
+              br(),
+              uiOutput("fitted_plots_ui")   # UI for fitted plots
+            )
           )
         )
       ),
@@ -162,6 +216,10 @@ server <- function(input, output, session) {
   # Reactive value for the dataset
   dataset <- reactiveVal(NULL)
 
+  # --------------------------------------
+  # EDA
+  # --------------------------------------
+
   # Load and validate uploaded data
   observeEvent(input$file, {
     req(input$file)
@@ -179,7 +237,6 @@ server <- function(input, output, session) {
     req(dataset())
     EDA$new(dataset())
   })
-
 
   # Handle Run Analysis button
   observeEvent(c(input$run_analysis, input$theme), {
@@ -228,7 +285,7 @@ server <- function(input, output, session) {
       if (is.character(corr_matrix)) {
         h3(corr_matrix)  # Display error message if correlation matrix is unavailable
       } else {
-        DT::dataTableOutput("corr_table")
+        DT::DTOutput("corr_table")
       }
     })
 
@@ -282,10 +339,176 @@ server <- function(input, output, session) {
     })
   })
 
-  # Placeholder UI for other tabs
-  output$model_fitting_ui <- renderUI({
-    h3("Model fitting results will appear here.")
+  # --------------------------------------
+  # Model Fitting
+  # --------------------------------------
+
+  # Populate model selector UI
+  output$model_selector_ui <- renderUI({
+    req(dataset())
+
+    fitter <- NonLinearFitter$new(dataset())
+    models_info <- fitter$list_models()
+
+    selectInput(
+      "selected_models",
+      "Select Models (Multiple Allowed)",
+      choices = setNames(models_info$Model, paste(models_info$Model, "-", models_info$Description)),
+      multiple = TRUE  # Allow multiple model selection
+    )
   })
+
+  # Populate variable selector UI
+  output$variable_selector_ui <- renderUI({
+    req(dataset())
+
+    fluidRow(
+      column(
+        width = 6,
+        selectInput("x_variable", "Select X Variable", choices = names(dataset()))
+      ),
+      column(
+        width = 6,
+        selectInput("y_variable", "Select Y Variable", choices = names(dataset()))
+      )
+    )
+  })
+
+  # Fit Selected Models
+  observeEvent(input$fit_models, {
+    req(dataset(), input$x_variable, input$y_variable, input$selected_models)
+
+    # Initialize the fitter and add selected models
+    fitter <- NonLinearFitter$new(dataset())
+    lapply(input$selected_models, function(model_name) fitter$add_model(model_name))
+
+    # Fit models
+    fit_results <- fitter$fit_models(x_col = input$x_variable, y_col = input$y_variable)
+
+    # Initialize evaluator
+    evaluator <- NonLinearModelEvaluator$new(fit_results, data = dataset())
+
+    # Generate metrics using the evaluator
+    metrics <- evaluator$generate_metrics()
+
+    # Update the summary table
+    output$model_summary_table <- DT::renderDataTable({
+      # metrics_with_model <- cbind(`Model Name` = names(fit_results), metrics)
+      DT::datatable(
+        # metrics_with_model,
+        metrics,
+        options = list(
+          scrollX = TRUE,  # Enable horizontal scrolling for wide tables
+          pageLength = 5,  # Set the default number of rows displayed
+          lengthMenu = c(5, 10, 20)  # Options for rows per page
+        ),
+        rownames = FALSE
+      ) |>
+        DT::formatRound(columns = setdiff(colnames(metrics), c("Model Name", "Model")), digits = 3)
+    })
+
+    # Generate and render all model plots
+    output$fitted_plots_ui <- renderUI({
+      req(evaluator, dataset(), input$x_variable, input$y_variable)
+
+      # Generate comparison plots for all models
+      plots_list <- evaluator$generate_comparison_plot(
+        data = dataset(),
+        x_col = input$x_variable,
+        y_col = input$y_variable,
+        theme = input$model_theme
+      )
+
+      # Dynamically generate UI elements for plots
+      if (is.null(plots_list) || length(plots_list) == 0) {
+        return(h3("No fitted models to display."))
+      }
+
+      # Generate a list of boxes for each plot
+      ui_elements <- lapply(names(plots_list), function(model_name) {
+        plotname <- paste0("fitted_plot_", model_name)
+
+        # Create a container for each plot
+        bs4Dash::box(
+          title = paste("Model Fit:", model_name),
+          width = 12,
+          collapsible = TRUE,
+          solidHeader = TRUE,
+          status = "primary",
+          echarts4r::echarts4rOutput(plotname, height = "400px")
+        )
+      })
+
+      # Ensure the generated UI is returned properly
+      do.call(tagList, ui_elements)
+    })
+
+    # Render the plots themselves
+    observe({
+      req(evaluator, dataset(), input$x_variable, input$y_variable)
+
+      plots_list <- evaluator$generate_comparison_plot(
+        data = dataset(),
+        x_col = input$x_variable,
+        y_col = input$y_variable,
+        theme = input$model_theme
+      )
+
+      # Render each plot individually
+      lapply(names(plots_list), function(model_name) {
+        plotname <- paste0("fitted_plot_", model_name)
+        output[[plotname]] <- echarts4r::renderEcharts4r({
+          plots_list[[model_name]]
+        })
+      })
+    })
+
+
+    # Generate and render all model plots
+    # output$fitted_plots_ui <- renderUI({
+    #   # req(evaluator, dataset(), input$x_variable, input$y_variable)
+    #
+    #   # Generate comparison plots for all models
+    #   plots_list <- evaluator$generate_comparison_plot(
+    #     data = dataset(),
+    #     x_col = input$x_variable,
+    #     y_col = input$y_variable,
+    #     theme = input$model_theme
+    #   )
+    #
+    #   # Dynamically generate UI elements for plots
+    #   if (is.null(plots_list) || length(plots_list) == 0) {
+    #     return(h3("No fitted models to display."))
+    #   }
+    #
+    #   lapply(seq_along(plots_list), function(i) {
+    #     model_name <- names(plots_list)[i]
+    #     plotname <- paste0("fitted_plot_", model_name)
+    #
+    #     # Create a container for each plot
+    #     bs4Dash::box(
+    #       title = paste("Model Fit:", model_name),
+    #       width = 12,
+    #       collapsible = TRUE,
+    #       solidHeader = TRUE,
+    #       status = "primary",
+    #       echarts4r::echarts4rOutput(plotname, height = "400px")
+    #     )
+    #   }) |> tagList()
+    #
+    #   lapply(names(plots_list), function(model_name) {
+    #     plotname <- paste0("fitted_plot_", model_name)
+    #     output[[plotname]] <- echarts4r::renderEcharts4r({
+    #       plots_list[[model_name]]
+    #     })
+    #   })
+    # })
+  })
+
+
+  # --------------------------------------
+  # Model Scoring
+  # --------------------------------------
 
   output$scoring_ui <- renderUI({
     h3("Scoring results will appear here.")

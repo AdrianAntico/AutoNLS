@@ -36,7 +36,8 @@ NonLinearModelEvaluator <- R6::R6Class(
     generate_metrics = function() {
       if (is.null(self$fit_results)) stop("No fitted models to evaluate.")
 
-      metrics <- lapply(self$fit_results, function(fit) {
+      metrics <- lapply(names(self$fit_results), function(model_name) {
+        fit <- self$fit_results[[model_name]]
         if (is.null(fit)) return(NULL)
 
         tryCatch({
@@ -67,6 +68,7 @@ NonLinearModelEvaluator <- R6::R6Class(
           r_squared <- 1 - ss_res / ss_tot
 
           list(
+            `Model Name` = model_name,
             Model = deparse(formula),
             AIC = aic,
             BIC = bic,
@@ -86,17 +88,22 @@ NonLinearModelEvaluator <- R6::R6Class(
     #' @param data A `data.table` or `data.frame` containing the dataset used for evaluation.
     #' @param x_col A string specifying the name of the x variable in the dataset.
     #' @param y_col A string specifying the name of the y variable in the dataset.
+    #' @param theme Echarts theme
     #' @return An `echarts4r` plot showing observed vs. predicted data.
-    generate_comparison_plot = function(data, x_col, y_col) {
+    generate_comparison_plot = function(data, x_col, y_col, theme = "macarons") {
       if (is.null(self$fit_results) || length(self$fit_results) == 0) {
         stop("No fitted models to evaluate.")
       }
       if (!all(c(x_col, y_col) %in% names(data))) stop("x_col and y_col must exist in the dataset.")
 
-      self$plots <- lapply(self$fit_results, function(fit) {
-        if (is.null(fit)) return(NULL)
+      # Retrieve metrics (including R-squared)
+      metrics <- self$generate_metrics()
 
+      # Generate plots
+      self$plots <- setNames(lapply(names(self$fit_results), function(model_name) {
+        fit <- self$fit_results[[model_name]]
         tryCatch({
+
           # Generate predictions
           predictions <- data.table::data.table(
             x = data[[x_col]],
@@ -110,13 +117,20 @@ NonLinearModelEvaluator <- R6::R6Class(
           )
           combined_data <- merge(combined_data, predictions, by = "x", all = TRUE)
 
+          # Get R-squared from metrics
+          print(metrics)
+          r_squared <- metrics[`Model Name` == eval(model_name)][["R_Squared"]]
+          print(r_squared)
+
           # Create plot
           combined_data |>
             echarts4r::e_charts(x) |>
             echarts4r::e_scatter(y, name = "Observed") |>
             echarts4r::e_line(y_pred, name = "Predicted") |>
+            echarts4r::e_theme(name = theme) |>
             echarts4r::e_title(
-              text = paste("Model Fit:", deparse(fit$call$formula))
+              text = paste("Model Fit:", model_name),
+              subtext = paste("R-Squared: ", round(r_squared, 4))
             ) |>
             echarts4r::e_datazoom(x_index = c(0,1)) |>
             echarts4r::e_toolbox_feature(feature = c("saveAsImage","dataZoom"))
@@ -124,7 +138,7 @@ NonLinearModelEvaluator <- R6::R6Class(
           message("Error processing model plot: ", e$message)
           NULL
         })
-      })
+      }), names(self$fit_results))
 
       return(self$plots)
     }

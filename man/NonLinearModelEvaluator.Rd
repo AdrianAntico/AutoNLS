@@ -69,7 +69,12 @@ A data.table of evaluation metrics.
 \if{latex}{\out{\hypertarget{method-NonLinearModelEvaluator-generate_comparison_plot}{}}}
 \subsection{Method \code{generate_comparison_plot()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{NonLinearModelEvaluator$generate_comparison_plot(data, x_col, y_col)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{NonLinearModelEvaluator$generate_comparison_plot(
+  data,
+  x_col,
+  y_col,
+  theme = "macarons"
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -80,6 +85,8 @@ A data.table of evaluation metrics.
 \item{\code{x_col}}{A string specifying the name of the x variable in the dataset.}
 
 \item{\code{y_col}}{A string specifying the name of the y variable in the dataset.}
+
+\item{\code{theme}}{Echarts theme}
 }
 \if{html}{\out{</div>}}
 }
