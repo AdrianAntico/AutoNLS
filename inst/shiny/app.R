@@ -13,7 +13,14 @@ ui <- bs4DashPage(
 
   # Header with theme switcher
   header = bs4DashNavbar(
-    skin = "dark"
+    title = tagList(
+      tags$img(
+        src = "https://raw.githubusercontent.com/AdrianAntico/AutoNLS/main/inst/Logo.PNG",
+        height = "120px",
+        style = "display: block; margin: 10px auto;"
+      )
+    ),
+    skin = "light"
   ),
 
   # Sidebar
@@ -30,6 +37,7 @@ ui <- bs4DashPage(
   # Body
   body = bs4DashBody(
     bs4TabItems(
+
       # EDA Tab (Updated)
       bs4TabItem(
         tabName = "eda",
