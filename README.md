@@ -38,6 +38,11 @@ AutoNLS is an R package designed to streamline non-linear regression modeling, e
   - Score new datasets using fitted non-linear models.
   - Visualize predictions interactively.
 
+- **Shiny App:**
+  - Intuitive graphical interface for non-linear regression and data analysis.
+  - Fully integrated with all AutoNLS features, including EDA, model fitting, and scoring.
+  - Ideal for users who prefer interactive analysis without writing code.
+
 ---
 
 ## **Installation**
