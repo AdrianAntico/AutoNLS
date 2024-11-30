@@ -52,8 +52,9 @@ NonLinearModelScorer <- R6::R6Class(
     #' @param model_name The name of the model to plot.
     #' @param new_data The original new data used for scoring.
     #' @param x_col The predictor column in `new_data`.
+    #' @param theme Echarts theme
     #' @return A plot visualizing the scored data.
-    generate_score_plot = function(model_name, new_data, x_col) {
+    generate_score_plot = function(model_name, new_data, x_col, theme = "macarons") {
       # Validate x_col exists in new_data
       if (!x_col %in% names(new_data)) stop("x_col must exist in the dataset.")
 
@@ -84,9 +85,10 @@ NonLinearModelScorer <- R6::R6Class(
         echarts4r::e_tooltip(trigger = "axis") |>
         echarts4r::e_x_axis(name = x_col) |>
         echarts4r::e_y_axis(name = "Predicted Values") |>
-        echarts4r::e_legend(right = 0) |>
+        echarts4r::e_legend(right = 50) |>
         echarts4r::e_datazoom(x_index = c(0,1)) |>
-        echarts4r::e_toolbox_feature(feature = c("saveAsImage","dataZoom"))
+        echarts4r::e_toolbox_feature(feature = c("saveAsImage","dataZoom")) |>
+        echarts4r::e_theme(name = theme)
 
       self$score_plots[[model_name]] <- plot
       return(plot)

@@ -7,8 +7,6 @@ library(AutoNLS)
 library(DT)
 
 ui <- bs4DashPage(
-  freshTheme = bslib::bs_theme(version = 5, bootswatch = "flatly"),  # Initialize Bootstrap 5 theme
-
   title = "AutoNLS",
 
   # Header with theme switcher
@@ -201,23 +199,59 @@ ui <- bs4DashPage(
         tabName = "scoring",
         fluidRow(
           column(
-            width = 3,
-            fileInput("score_file", "Upload Scoring Data (.csv)", accept = ".csv"),
-            actionButton("run_scoring", "Score Data", class = "btn-warning")
-          ),
+            width = 12,  # Full width for Scoring Settings
+            bs4Dash::box(
+              title = "Scoring Settings",
+              collapsible = TRUE,
+              status = "info",
+              solidHeader = TRUE,
+              width = 12,
+              div(
+                style = "margin-bottom: 10px;",
+                fileInput("score_file", "Upload Scoring Data (.csv)", accept = ".csv")
+              ),
+              div(
+                style = "margin-bottom: 10px;",
+                uiOutput("score_variable_selector_ui")
+              ),
+              div(
+                style = "margin-bottom: 10px;",
+                uiOutput("scoring_model_selector_ui")
+              ),
+              div(
+                style = "margin-bottom: 10px;",
+                selectInput(
+                  inputId = "scoring_theme",
+                  label = "Select Plot Theme:",
+                  choices = c(
+                    "auritus", "azul", "bee-inspired", "blue", "caravan", "carp", "chalk",
+                    "cool", "dark-bold", "dark", "eduardo", "essos", "forest", "fresh-cut",
+                    "fruit", "gray", "green", "halloween", "helianthus", "infographic",
+                    "inspired", "jazz", "london", "macarons", "macarons2", "mint",
+                    "purple-passion", "red-velvet", "red", "roma", "royal", "sakura",
+                    "shine", "tech-blue", "vintage", "walden", "wef", "weforum",
+                    "westeros", "wonderland"
+                  ),
+                  selected = "macarons"  # Default selection
+                )
+              ),
+              div(
+                style = "margin-bottom: 10px;",
+                actionButton("run_scoring", "Score Data", class = "btn-warning")
+              )
+            )
+          )
+        ),
+        fluidRow(
           column(
-            width = 9,
-            uiOutput("scoring_ui")
+            width = 12,  # Full width for scoring results
+            uiOutput("scored_plots_ui")
           )
         )
       )
     )
   )
 )
-
-
-
-
 
 
 server <- function(input, output, session) {
@@ -351,6 +385,9 @@ server <- function(input, output, session) {
   # Model Fitting
   # --------------------------------------
 
+  # Initialize reactive value for fitted results
+  fit_results <- reactiveVal(NULL)
+
   # Populate model selector UI
   output$model_selector_ui <- renderUI({
     req(dataset())
@@ -391,10 +428,10 @@ server <- function(input, output, session) {
     lapply(input$selected_models, function(model_name) fitter$add_model(model_name))
 
     # Fit models
-    fit_results <- fitter$fit_models(x_col = input$x_variable, y_col = input$y_variable)
+    fit_results(fitter$fit_models(x_col = input$x_variable, y_col = input$y_variable))
 
     # Initialize evaluator
-    evaluator <- NonLinearModelEvaluator$new(fit_results, data = dataset())
+    evaluator <- NonLinearModelEvaluator$new(fit_results(), data = dataset())
 
     # Generate metrics using the evaluator
     metrics <- evaluator$generate_metrics()
@@ -470,47 +507,6 @@ server <- function(input, output, session) {
         })
       })
     })
-
-
-    # Generate and render all model plots
-    # output$fitted_plots_ui <- renderUI({
-    #   # req(evaluator, dataset(), input$x_variable, input$y_variable)
-    #
-    #   # Generate comparison plots for all models
-    #   plots_list <- evaluator$generate_comparison_plot(
-    #     data = dataset(),
-    #     x_col = input$x_variable,
-    #     y_col = input$y_variable,
-    #     theme = input$model_theme
-    #   )
-    #
-    #   # Dynamically generate UI elements for plots
-    #   if (is.null(plots_list) || length(plots_list) == 0) {
-    #     return(h3("No fitted models to display."))
-    #   }
-    #
-    #   lapply(seq_along(plots_list), function(i) {
-    #     model_name <- names(plots_list)[i]
-    #     plotname <- paste0("fitted_plot_", model_name)
-    #
-    #     # Create a container for each plot
-    #     bs4Dash::box(
-    #       title = paste("Model Fit:", model_name),
-    #       width = 12,
-    #       collapsible = TRUE,
-    #       solidHeader = TRUE,
-    #       status = "primary",
-    #       echarts4r::echarts4rOutput(plotname, height = "400px")
-    #     )
-    #   }) |> tagList()
-    #
-    #   lapply(names(plots_list), function(model_name) {
-    #     plotname <- paste0("fitted_plot_", model_name)
-    #     output[[plotname]] <- echarts4r::renderEcharts4r({
-    #       plots_list[[model_name]]
-    #     })
-    #   })
-    # })
   })
 
 
@@ -518,8 +514,111 @@ server <- function(input, output, session) {
   # Model Scoring
   # --------------------------------------
 
-  output$scoring_ui <- renderUI({
-    h3("Scoring results will appear here.")
+  # Reactive value for scoring dataset
+  scoring_data <- reactiveVal(NULL)
+
+  # Load and validate scoring data
+  observeEvent(input$score_file, {
+    req(input$score_file)
+    tryCatch({
+      data <- data.table::fread(input$score_file$datapath)
+      scoring_data(data)
+      showNotification("Scoring data uploaded successfully!", type = "message")
+    }, error = function(e) {
+      showNotification("Error: Please upload a valid CSV file for scoring.", type = "error")
+    })
+  })
+
+  # Generate UI for variable selection in scoring
+  output$score_variable_selector_ui <- renderUI({
+    req(scoring_data())
+
+    variables <- names(scoring_data())
+    fluidRow(
+      column(
+        width = 6,
+        selectInput("x_variable_scoring", "Select X Variable", choices = variables, selected = variables[1])
+      )
+    )
+  })
+
+  # Generate UI for selecting models in scoring
+  output$scoring_model_selector_ui <- renderUI({
+    req(fit_results())  # Requires previously fitted models
+
+    model_choices <- names(fit_results())
+
+    selectInput(
+      "scoring_models",
+      "Select Models for Scoring",
+      choices = model_choices,
+      selected = model_choices,  # Default to all models
+      multiple = TRUE
+    )
+  })
+
+  # Perform scoring
+  observeEvent(input$run_scoring, {
+    print("here 1")
+    req(scoring_data(), input$x_variable_scoring, input$scoring_models)
+    print("here 2")
+    tryCatch({
+      # Initialize the scorer
+      scorer <- NonLinearModelScorer$new(fit_results = fit_results())
+
+      # Perform scoring for the selected models
+      score_results <- lapply(input$scoring_models, function(model_name) {
+        scorer$score_new_data(scoring_data(), input$x_variable_scoring)
+      })
+
+      # Generate plots for scored data
+      scored_plots <- lapply(input$scoring_models, function(model_name) {
+        scorer$generate_score_plot(
+          model_name = model_name,
+          new_data = scoring_data(),
+          x_col = input$x_variable_scoring,
+          theme = input$scoring_theme  # Use selected theme
+        )
+      })
+
+      # Dynamically render scoring plots in UI
+      output$scored_plots_ui <- renderUI({
+        if (length(scored_plots) == 0) {
+          return(h3("No scoring plots available."))
+        }
+
+        lapply(seq_along(scored_plots), function(i) {
+          model_name <- input$scoring_models[i]
+          plotname <- paste0("scored_plot_", model_name)
+
+          bs4Dash::box(
+            title = paste("Scoring Plot:", model_name),
+            width = 12,
+            collapsible = TRUE,
+            solidHeader = TRUE,
+            status = "primary",
+            echarts4r::echarts4rOutput(plotname, height = "400px")
+          )
+        }) |> tagList()
+      })
+
+      # Render each plot dynamically
+      lapply(seq_along(scored_plots), function(i) {
+        model_name <- input$scoring_models[i]
+        plotname <- paste0("scored_plot_", model_name)
+
+        output[[plotname]] <- echarts4r::renderEcharts4r({
+          scored_plots[[i]]
+        })
+      })
+
+      showNotification(
+        paste("Scoring completed successfully for", length(input$scoring_models), "models."),
+        type = "message"
+      )
+    }, error = function(e) {
+      showNotification(paste("Error during scoring:", e$message), type = "error")
+    })
   })
 }
 

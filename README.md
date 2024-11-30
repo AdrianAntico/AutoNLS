@@ -182,8 +182,6 @@ AutoNLS relies on the following R packages:
 - mgcv
 - minpack.lm
 - R6
-- stats
-- testthat
 
 ## Contributing
 We welcome contributions! If you'd like to contribute, please:

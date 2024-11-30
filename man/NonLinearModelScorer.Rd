@@ -72,7 +72,12 @@ A list of data.tables with predicted values for each model.
 \if{latex}{\out{\hypertarget{method-NonLinearModelScorer-generate_score_plot}{}}}
 \subsection{Method \code{generate_score_plot()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{NonLinearModelScorer$generate_score_plot(model_name, new_data, x_col)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{NonLinearModelScorer$generate_score_plot(
+  model_name,
+  new_data,
+  x_col,
+  theme = "macarons"
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -83,6 +88,8 @@ A list of data.tables with predicted values for each model.
 \item{\code{new_data}}{The original new data used for scoring.}
 
 \item{\code{x_col}}{The predictor column in \code{new_data}.}
+
+\item{\code{theme}}{Echarts theme}
 }
 \if{html}{\out{</div>}}
 }
