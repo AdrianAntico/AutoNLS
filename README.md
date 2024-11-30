@@ -191,3 +191,13 @@ We welcome contributions! If you'd like to contribute, please:
 3. Submit a pull request.
 
 For bugs or feature requests, please open an issue on https://github.com/AdrianAntico/AutoNLS/issues.
+
+
+## License
+This project is licensed under the AGPL-3.0 License with additional conditions.
+
+**Key Additional Terms:**
+
+Monetization of this software, including reselling, sublicensing, integrating it into proprietary paid services, offering it as part of a commercial product, or using it as part of a commercial training service, is strictly prohibited without prior written consent from the copyright holder.
+Use in corporate settings is permitted, but corporations are prohibited from monetizing the software in any form without permission.
+For the full license terms, please see the LICENSE file.

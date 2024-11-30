@@ -657,3 +657,22 @@ You should also get your employer (if you work as a programmer) or
 school, if any, to sign a "copyright disclaimer" for the program, if
 necessary. For more information on this, and how to apply and follow
 the GNU AGPL, see <https://www.gnu.org/licenses/>.
+
+Additional Conditions for AutoNLS
+The following additional conditions are imposed under Section 7 of the GNU Affero General Public License:
+
+1. Restrictions on Monetization
+a. Monetization Prohibited: Monetization of this software, including but not limited to reselling, sublicensing, integrating it into proprietary paid services, offering it as part of a commercial product, or utilizing it in paid training, consulting, or other professional services, is strictly prohibited without prior written consent from the copyright holder.
+
+b. Attribution: Any use of the Software, including modifications and derivative works, must include proper attribution to the copyright holder in all instances of use, distribution, and publication.
+
+2. Conditions for Corporate Use
+Corporations and other entities may use the Software internally for non-monetized purposes. However, any form of monetization, as outlined in Section 1.a, requires prior written consent.
+
+3. Termination of Rights
+Failure to comply with these additional conditions will result in termination of your rights under this license, as specified in Section 8 of the GNU Affero General Public License.
+
+4. Contact for Permissions
+For inquiries, permissions, or additional licenses, contact: adrianantico@gmail.com
+
+Copyright © 2024 Adrian Antico. All rights reserved.
