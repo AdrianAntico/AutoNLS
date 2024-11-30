@@ -84,20 +84,22 @@ EDA <- R6::R6Class(
     #'
     #' @param target_col the target variable in the data set
     #' @return A data.table with the Pearson and Spearman correlation values for each numeric predictor.
-    correlate = function(target_col = "y") {
+    correlate = function(target_col = NULL) {
       # Identify numeric columns excluding the target column
       numeric_cols <- setdiff(names(self$data)[sapply(self$data, is.numeric)], target_col)
 
       if (length(numeric_cols) > 0) {
+
         # Compute correlations
         correlation_results <- lapply(numeric_cols, function(col) {
           pearson_corr <- stats::cor(self$data[[col]], self$data[[target_col]], use = "complete.obs", method = "pearson")
           spearman_corr <- stats::cor(self$data[[col]], self$data[[target_col]], use = "complete.obs", method = "spearman")
           list(
+            Target = target_col,
             Predictor = col,
             Pearson = pearson_corr,
             Spearman = spearman_corr,
-            Difference = abs(pearson_corr - spearman_corr) # Difference to indicate nonlinearity
+            Difference = pearson_corr - spearman_corr # Difference to indicate nonlinearity
           )
         })
 

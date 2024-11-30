@@ -6,6 +6,16 @@ library(data.table)
 library(AutoNLS)
 library(DT)
 
+EchartsThemes <- c(
+  "auritus", "azul", "bee-inspired", "blue", "caravan", "carp", "chalk",
+  "cool", "dark-bold", "dark", "eduardo", "essos", "forest", "fresh-cut",
+  "fruit", "gray", "green", "halloween", "helianthus", "infographic",
+  "inspired", "jazz", "london", "macarons", "macarons2", "mint",
+  "purple-passion", "red-velvet", "red", "roma", "royal", "sakura",
+  "shine", "tech-blue", "vintage", "walden", "wef", "weforum",
+  "westeros", "wonderland"
+)
+
 ui <- bs4DashPage(
   title = "AutoNLS",
 
@@ -34,6 +44,31 @@ ui <- bs4DashPage(
 
   # Body
   body = bs4DashBody(
+    tags$head(
+      tags$head(
+        tags$style(HTML("
+    /* Light mode styles */
+    body.light-mode table.dataTable td,
+    body.light-mode table.dataTable th,
+    body.light-mode .dataTables_info,
+    body.light-mode .dataTables_paginate,
+    body.light-mode .dataTables_filter label,
+    body.light-mode .dataTables_length label {
+      color: #333; /* Dark text for light mode */
+    }
+
+    /* Dark mode styles */
+    body.dark-mode table.dataTable td,
+    body.dark-mode table.dataTable th,
+    body.dark-mode .dataTables_info,
+    body.dark-mode .dataTables_paginate,
+    body.dark-mode .dataTables_filter label,
+    body.dark-mode .dataTables_length label {
+      color: #ccc; /* Light text for dark mode */
+    }
+  "))
+      )),
+
     bs4TabItems(
 
       # EDA Tab (Updated)
@@ -56,15 +91,7 @@ ui <- bs4DashPage(
                 selectInput(
                   inputId = "theme",
                   label = "Plot Theme:",
-                  choices = c(
-                    "auritus", "azul", "bee-inspired", "blue", "caravan", "carp", "chalk",
-                    "cool", "dark-bold", "dark", "eduardo", "essos", "forest", "fresh-cut",
-                    "fruit", "gray", "green", "halloween", "helianthus", "infographic",
-                    "inspired", "jazz", "london", "macarons", "macarons2", "mint",
-                    "purple-passion", "red-velvet", "red", "roma", "royal", "sakura",
-                    "shine", "tech-blue", "vintage", "walden", "wef", "weforum",
-                    "westeros", "wonderland"
-                  ),
+                  choices = EchartsThemes,
                   selected = "macarons"  # Default selection
                 )
               )
@@ -164,15 +191,7 @@ ui <- bs4DashPage(
                     selectInput(
                       inputId = "model_theme",
                       label = "Select Plot Theme:",
-                      choices = c(
-                        "auritus", "azul", "bee-inspired", "blue", "caravan", "carp", "chalk",
-                        "cool", "dark-bold", "dark", "eduardo", "essos", "forest", "fresh-cut",
-                        "fruit", "gray", "green", "halloween", "helianthus", "infographic",
-                        "inspired", "jazz", "london", "macarons", "macarons2", "mint",
-                        "purple-passion", "red-velvet", "red", "roma", "royal", "sakura",
-                        "shine", "tech-blue", "vintage", "walden", "wef", "weforum",
-                        "westeros", "wonderland"
-                      ),
+                      choices = EchartsThemes,
                       selected = "macarons"  # Default selection
                     )
                   )
@@ -268,15 +287,7 @@ ui <- bs4DashPage(
                 selectInput(
                   inputId = "scoring_theme",
                   label = "Select Plot Theme:",
-                  choices = c(
-                    "auritus", "azul", "bee-inspired", "blue", "caravan", "carp", "chalk",
-                    "cool", "dark-bold", "dark", "eduardo", "essos", "forest", "fresh-cut",
-                    "fruit", "gray", "green", "halloween", "helianthus", "infographic",
-                    "inspired", "jazz", "london", "macarons", "macarons2", "mint",
-                    "purple-passion", "red-velvet", "red", "roma", "royal", "sakura",
-                    "shine", "tech-blue", "vintage", "walden", "wef", "weforum",
-                    "westeros", "wonderland"
-                  ),
+                  choices = EchartsThemes,
                   selected = "macarons"  # Default selection
                 )
               ),
@@ -342,14 +353,22 @@ server <- function(input, output, session) {
         return(h3("No distributions to display. Please ensure the dataset contains numeric columns."))
       }
 
-      # Create UI for each plot
-      lapply(seq_along(plots_list_dist), function(i) {
+      # Create a list of boxes for each plot
+      ui_elements <- lapply(seq_along(plots_list_dist), function(i) {
         plotname <- paste0("eda_plot_", i)
-        column(
-          width = 6,  # Two plots per row
+
+        bs4Dash::box(
+          title = paste("Distribution Plot:", names(plots_list_dist)[i]),
+          width = 12,
+          collapsible = TRUE,
+          solidHeader = TRUE,
+          status = "primary",
           echarts4r::echarts4rOutput(plotname, height = "400px")
         )
-      }) |> fluidRow()
+      })
+
+      # Ensure the generated UI is returned properly
+      do.call(tagList, ui_elements)
     })
 
     # Render plots
@@ -373,33 +392,50 @@ server <- function(input, output, session) {
   })
 
   # Handle Generate Correlation Matrix button
-  observeEvent(c(input$run_corr, input$target_col), {
-    req(eda(), input$target_col)
+  observeEvent(input$run_corr, {
+    req(eda())
 
+    # Compute the correlation matrix
     corr_matrix <- eda()$correlate(target_col = input$target_col)
 
-    # Render correlation matrix in UI
+    # Dynamically render correlation table in a box
     output$eda_corr_ui <- renderUI({
       if (is.character(corr_matrix)) {
-        h3(corr_matrix)  # Display error message if correlation matrix is unavailable
+        # Display error message if the correlation matrix is unavailable
+        bs4Dash::box(
+          title = "Correlation Matrix Error",
+          width = 12,
+          collapsible = TRUE,
+          solidHeader = TRUE,
+          status = "danger",
+          h3(corr_matrix)
+        )
       } else {
-        DT::DTOutput("corr_table")
+
+        # Display the correlation table
+        bs4Dash::box(
+          title = "Correlation Table",
+          width = 12,
+          collapsible = TRUE,
+          solidHeader = TRUE,
+          status = "primary",
+          DT::DTOutput("corr_table")
+        )
       }
     })
 
+    # Render the correlation matrix as a datatable
     output$corr_table <- DT::renderDataTable({
-
-      # Render as a DataTable
       DT::datatable(
         corr_matrix,
         options = list(
           scrollX = TRUE,  # Enable horizontal scrolling for wide tables
-          pageLength = 5,  # Set the default number of rows displayed
+          pageLength = 5,  # Default number of rows displayed
           lengthMenu = c(5, 10, 20)  # Options for rows per page
         ),
         rownames = FALSE
       ) |>
-        DT::formatRound(columns = setdiff(colnames(corr_matrix), "Predictor"), digits = 2)
+        DT::formatRound(columns = setdiff(colnames(corr_matrix), c("Target", "Predictor")), digits = 2)
     })
   })
 
@@ -408,27 +444,40 @@ server <- function(input, output, session) {
     req(eda())
 
     # Generate scatterplots
-    scatterplots <- eda()$visualize_scatterplots(
-      theme = input$theme
-    )
+    scatterplots <- eda()$visualize_scatterplots(theme = input$theme)
 
-    # Dynamically render scatterplots in UI
+    # Dynamically render scatterplots in individual boxes
     output$eda_scatterplots_ui <- renderUI({
       if (is.null(scatterplots) || length(scatterplots) == 0) {
-        return(h3("No scatterplots to display. Please ensure the dataset contains at least two numeric columns."))
-      }
-
-      # Create UI for each scatterplot
-      lapply(seq_along(scatterplots), function(i) {
-        plotname <- paste0("scatter_plot_", i)
-        column(
-          width = 6,  # Two plots per row
-          echarts4r::echarts4rOutput(plotname, height = "400px")
+        # Display error message if no scatterplots are available
+        bs4Dash::box(
+          title = "Scatterplots Error",
+          width = 12,
+          collapsible = TRUE,
+          solidHeader = TRUE,
+          status = "danger",
+          h3("No scatterplots to display. Please ensure the dataset contains at least two numeric columns.")
         )
-      }) |> fluidRow()
+      } else {
+        # Create a box for each scatterplot
+        ui_elements <- lapply(seq_along(scatterplots), function(i) {
+          plotname <- paste0("scatter_plot_", i)
+          bs4Dash::box(
+            title = paste("Scatterplot", i),
+            width = 12,  # Full-width for each box
+            collapsible = TRUE,
+            solidHeader = TRUE,
+            status = "primary",
+            echarts4r::echarts4rOutput(plotname, height = "400px")
+          )
+        })
+
+        # Ensure the generated UI is returned properly
+        do.call(tagList, ui_elements)
+      }
     })
 
-    # Render plots
+    # Render scatterplots dynamically
     lapply(seq_along(scatterplots), function(i) {
       plotname <- paste0("scatter_plot_", i)
       output[[plotname]] <- echarts4r::renderEcharts4r({
@@ -522,20 +571,15 @@ server <- function(input, output, session) {
     if (last_trigger() == "fit_models") {
 
       # Fit models
-      print("fit models 1")
       fit_results(fitter$fit_models(x_col = input$x_variable, y_col = input$y_variable))
 
       # Initialize evaluator
-      print("fit models 2")
       evaluator <- NonLinearModelEvaluator$new(fit_results(), data = dataset())
 
       # Generate metrics using the evaluator
-      print("fit models 3")
       metrics <- evaluator$generate_metrics(y_col = input$y_variable)
-      print(metrics)
 
       # Update the summary table with a box wrapper
-      print("fit models 4")
       output$model_summary_ui <- renderUI({
         req(fit_results())
 
@@ -551,7 +595,6 @@ server <- function(input, output, session) {
       })
 
       # Update the summary table
-      print("fit models 5")
       output$model_summary_table <- DT::renderDataTable({
         # metrics_with_model <- cbind(`Model Name` = names(fit_results), metrics)
         DT::datatable(
@@ -568,14 +611,10 @@ server <- function(input, output, session) {
       })
 
       # Generate and render all model plots
-      print("fit models 6")
       output$fitted_plots_ui <- renderUI({
         req(evaluator, dataset(), input$x_variable, input$y_variable)
 
         # Generate comparison plots for all models
-        print("fit models 6.1")
-        print(input$x_variable)
-        print(input$y_variable)
         plots_list <- evaluator$generate_comparison_plot(
           data = dataset(),
           x_col = input$x_variable,
@@ -608,7 +647,6 @@ server <- function(input, output, session) {
       })
 
       # Render the plots themselves
-      print("fit models 7")
       observe({
         req(evaluator, dataset(), input$x_variable, input$y_variable)
 
@@ -620,7 +658,7 @@ server <- function(input, output, session) {
         )
 
         # Render each plot individually
-        lapply(names(plots_list), function(model_name) {
+        plots <- lapply(names(plots_list), function(model_name) {
           plotname <- paste0("fitted_plot_", model_name)
           output[[plotname]] <- echarts4r::renderEcharts4r({
             plots_list[[model_name]]

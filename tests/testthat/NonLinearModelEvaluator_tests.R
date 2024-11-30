@@ -80,3 +80,4 @@ test_that("generate_comparison_plot handles empty or NULL fit_results", {
     "No fitted models to evaluate."
   )
 })
+
