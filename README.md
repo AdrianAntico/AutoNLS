@@ -114,7 +114,6 @@ Upload new data for scoring.
 Generate scoring plots to evaluate predictions.
 Visual Preview of the App
 
-
 ## Code Usage
 
 ### Step 1: Load the Data
@@ -180,7 +179,7 @@ Use the NonLinearModelEvaluator class to evaluate fitted models and generate plo
 evaluator <- NonLinearModelEvaluator$new(fit_results, data = dummy_data)
 
 # Generate metrics
-metrics <- evaluator$generate_metrics()
+metrics <- evaluator$generate_metrics(y_col = "Target")
 print(metrics)
 
 # Generate comparison plots
@@ -214,7 +213,7 @@ scoring_plots <- scorer$generate_score_plot("Hill", new_data, x_col = "X-Value")
 scoring_plots  # View the scoring plot for the "Hill" model
 ```
 
-### Appendix: Pre-Investigation of Model Shapes
+### Pre-Investigation of Model Shapes
 If you want to perform a pre-investigation into what the models' shapes look like for a given range of x values, you can use the model_visualizer functionality from the NonLinearFitter class. This is especially helpful for understanding the behavior of different non-linear models before fitting them to your data.
 
 ```r
@@ -228,6 +227,44 @@ plot <- fitter$model_visualizer$generate_comparison_plot(x_range = x_range)
 # Display the plot
 plot
 ```
+
+### Adding Custom Models
+In addition to the pre-defined models included in AutoNLS, you can add your own custom models for non-linear regression. This allows you to extend the package's functionality to meet specific needs.
+
+Here’s how to add a custom model:
+
+```r
+# Load necessary libraries
+library(AutoNLS)
+
+# Load the dummy data included in the package
+data_path <- system.file("data", "dummy_data.csv", package = "AutoNLS")
+dummy_data <- data.table::fread(data_path)
+
+# Initialize the NonLinearFitter
+fitter <- NonLinearFitter$new(dummy_data)
+
+# Add a custom model
+custom_formula <- y ~ a * exp(-b * x)
+custom_start_params <- list(a = 1, b = 0.1)
+
+# Fit the custom model
+fit_results <- fitter$fit_models(x_col = "X-Value", y_col = "Target")
+
+# Evaluate the fitted model
+evaluator <- NonLinearModelEvaluator$new(fit_results, data = dummy_data)
+metrics <- evaluator$generate_metrics(y_col = "Target")
+print(metrics)
+
+# Visualize the fit for the custom model
+plots <- evaluator$generate_comparison_plot(
+  data = dummy_data, 
+  x_col = "X-Value", 
+  y_col = "Target"
+)
+print(plots[["CustomExponentialDecay"]])
+```
+
 
 ## Dependencies
 AutoNLS relies on the following R packages:
