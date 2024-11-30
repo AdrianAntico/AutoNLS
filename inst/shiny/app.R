@@ -34,11 +34,44 @@ ui <- bs4DashPage(
   # Sidebar
   sidebar = bs4DashSidebar(
     skin = "light",
-    title = "AutoNLS",
-    bs4SidebarMenu(
-      bs4SidebarMenuItem("EDA", tabName = "eda", icon = icon("chart-bar")),
-      bs4SidebarMenuItem("Model Fitting", tabName = "model_fitting", icon = icon("cogs")),
-      bs4SidebarMenuItem("Scoring", tabName = "scoring", icon = icon("table"))
+    title = NULL,  # Remove the title to prevent the tooltip
+    div(
+      style = "display: flex; flex-direction: column; height: 100%;",
+      # Navigation title
+      div(
+        style = "padding: 10px 15px; font-weight: bold; font-size: 14px; color: #555; text-transform: uppercase; border-bottom: 1px solid #ddd;",
+        "Navigation"
+      ),
+      # Menu items
+      div(
+        style = "flex-grow: 1;",  # Ensures menu items take up available space
+        bs4SidebarMenu(
+          bs4SidebarMenuItem("Home", tabName = "home", icon = icon("home")), # Add this line
+          bs4SidebarMenuItem("EDA", tabName = "eda", icon = icon("chart-bar")),
+          bs4SidebarMenuItem("Model Fitting", tabName = "model_fitting", icon = icon("cogs")),
+          bs4SidebarMenuItem("Scoring", tabName = "scoring", icon = icon("table"))
+        )
+      ),
+      # Metadata section
+      div(
+        style = "margin-top: auto; padding-top: 10px; padding-left: 15px; text-align: left; font-size: 12px; color: gray; border-top: 1px solid #ddd;",
+        tags$p("© 2024 AutoNLS"),
+        tags$div(
+          style = "display: flex; align-items: center; gap: 5px;",
+          tags$img(
+            src = "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
+            height = "16px",
+            width = "16px",
+            style = "vertical-align: middle;"
+          ),
+          tags$a(
+            href = "https://github.com/AdrianAntico/AutoNLS",
+            target = "_blank",
+            "GitHub Repository"
+          )
+        ),
+        tags$p("Author: Adrian Antico")
+      )
     )
   ),
 
@@ -70,6 +103,40 @@ ui <- bs4DashPage(
       )),
 
     bs4TabItems(
+
+      # Home Tab
+      bs4TabItem(
+        tabName = "home",
+        fluidRow(
+          bs4Dash::box(
+            title = "Welcome to AutoNLS",
+            width = 12,
+            collapsible = TRUE,
+            solidHeader = TRUE,
+            status = "primary",
+            tags$h4("Overview"),
+            tags$p("AutoNLS is a powerful tool for non-linear regression modeling."),
+            tags$ul(
+              tags$li("Analyze your data with the EDA tab."),
+              tags$li("Fit up to 18 different non-linear models in the Model Fitting tab."),
+              tags$li("Score predictions in the Scoring tab.")
+            ),
+            br(),
+            tags$h4("Get Started"),
+            tags$p("Navigate through the tabs on the left to start your analysis."),
+            br(),
+            tags$h4("Additional Resources"),
+            tags$ul(
+              tags$li(tags$a(href = "https://github.com/AdrianAntico/AutoNLS", "GitHub Repository")),
+              tags$li("Author: Adrian Antico"),
+              tags$li("Support: https://github.com/AdrianAntico/AutoNLS/issues")
+            ),
+            br(),
+            tags$p("Enjoy a sneak peek of non-linear patterns in action below!"),
+            echarts4r::echarts4rOutput("home_plot", height = "400px")  # Add the plot here
+          )
+        )
+      ),
 
       # EDA Tab (Updated)
       bs4TabItem(
@@ -313,6 +380,36 @@ ui <- bs4DashPage(
 server <- function(input, output, session) {
   # Reactive value for the dataset
   dataset <- reactiveVal(NULL)
+
+  # --------------------------------------
+  # Home
+  # --------------------------------------
+
+  # Data generator
+  generate_non_linear_data <- function() {
+    x <- seq(1, 100, by = 1)
+    data <- data.table(
+      x = x,
+      Logistic = 100 / (1 + exp(-0.1 * (x - 50))),      # Logistic curve
+      Hill = 50 * x^2 / (100^2 + x^2),                  # Hill equation
+      Exponential = 30 * exp(-0.05 * x)                 # Exponential decay
+    )
+    # Melt the data into a long format
+    data_long <- data.table::melt(data, id.vars = "x", variable.name = "Model", value.name = "y")
+    return(data_long)
+  }
+
+  # Fake data plot of NL Models
+  output$home_plot <- echarts4r::renderEcharts4r({
+    data <- generate_non_linear_data()
+    echarts4r::e_charts(data |> dplyr::group_by(Model), x) |>
+    echarts4r::e_line(serie = y, smooth = TRUE) |>
+    echarts4r::e_title("Non-Linear Regressions") |>
+    echarts4r::e_x_axis(name = "X-Value", splitLine = list(show = FALSE)) |>
+    echarts4r::e_y_axis(name = "Y-Value", splitLine = list(show = FALSE)) |>
+    echarts4r::e_legend(left = "right") |>
+    echarts4r::e_theme("macarons")
+  })
 
   # --------------------------------------
   # EDA
