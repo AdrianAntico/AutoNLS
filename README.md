@@ -70,107 +70,116 @@ library(AutoNLS)
 run_shiny_app()
 ```
 
-### 1. Initialize AutoNLS
+### Step 1: Load the Data
 
-Start by loading the package and preparing your data.
+First, we load the example dataset dummy_data.csv included with the package.
 
 ```r
-library(AutoNLS)
 library(data.table)
 
-# Example dataset
-data <- data.table(
-  x1 = rnorm(100),
-  x2 = rnorm(100, mean = 5),
-  y = 10 * seq(1, 100, by = 1)^1.2 / (50 + seq(1, 100, by = 1)^1.2) + rnorm(100)
-)
+# Load the dummy dataset
+file_path <- system.file("extdata", "dummy_data.csv", package = "AutoNLS")
+dummy_data <- fread(file_path)
 
-# Ensure response variable remains positive
-data[, y := pmax(y, 1e-3)]
+# Display the first few rows
+print(dummy_data)
 ```
 
-### 2. Perform Exploratory Data Analysis
+### Step 2: Perform Exploratory Data Analysis (EDA)
 
-The `EDA` class provides powerful tools for exploring your data. You can compute correlations, visualize distributions, and explore relationships between variables.
-
-### Example: Exploratory Data Analysis
+We use the EDA class to compute correlations and create visualizations.
 
 ```r
 # Initialize EDA
-eda <- EDA$new(data)
+eda <- EDA$new(dummy_data)
 
-# 1. Correlation analysis
-correlations <- eda$correlate(target_col = "y")
+# Correlation analysis
+correlations <- eda$correlate(target_col = "Target")
 print(correlations)
 
-# 2. Visualize distributions
-dist_plots <- eda$visualize_distributions(bins = 10, theme = "macarons")
-print(dist_plots[["x1"]])  # Display the distribution plot for variable 'x1'
+# Visualize distributions
+distribution_plots <- eda$visualize_distributions(bins = 10)
+distribution_plots[[1]]  # View the first distribution plot
 
-# 3. Visualize scatterplots with GAM fits
+# Visualize scatterplots with GAM fits
 scatter_plots <- eda$visualize_scatterplots(k_values = c(3, 5, 7))
-print(scatter_plots[["x1_vs_y"]])  # Display the scatterplot for 'x1' vs 'y' with GAM fits
+scatter_plots[[1]]  # View the first scatterplot
 ```
 
-### 3. Fit Non-Linear Models
-Fit multiple non-linear models to your data and evaluate their performance.
+### Step 3: Fit Non-Linear Models
+Next, we use the NonLinearFitter class to fit selected non-linear models to the data.
 
 ```r
-# Initialize NonLinearFitter
-fitter <- NonLinearFitter$new(data)
+# Initialize the fitter
+fitter <- NonLinearFitter$new(dummy_data)
 
-# Add a model
+# Add models to test
 fitter$add_model("Hill")
+fitter$add_model("Logistic")
+fitter$add_model("ExponentialDecay")
 
 # Fit models
-fit_results <- fitter$fit_models(x_col = "x1", y_col = "y")
+fit_results <- fitter$fit_models(x_col = "X-Value", y_col = "Target")
+
+# Print summary of fit results
+print(fit_results)
 ```
 
-### 4. Evaluate Models
-Compare fitted models using evaluation metrics and visualizations.
+### Step 4: Evaluate Fitted Models
+Use the NonLinearModelEvaluator class to evaluate fitted models and generate plots.
 
 ```r
-# Initialize Evaluator
-evaluator <- NonLinearModelEvaluator$new(fit_results, data)
+# Initialize evaluator
+evaluator <- NonLinearModelEvaluator$new(fit_results, data = dummy_data)
 
 # Generate metrics
 metrics <- evaluator$generate_metrics()
 print(metrics)
 
 # Generate comparison plots
-comparison_plots <- evaluator$generate_comparison_plot(data, x_col = "x1", y_col = "y")
-print(comparison_plots)
+comparison_plots <- evaluator$generate_comparison_plot(
+  data = dummy_data,
+  x_col = "X-Value",
+  y_col = "Target"
+)
+comparison_plots[[1]]  # View the first comparison plot
 ```
 
-### 5. Score New Data
-Score new datasets using the fitted models.
+### Step 5: Score New Data
+We use the NonLinearModelScorer class to score new data based on the fitted models. For this example, we'll assume new_data.csv is another dataset in the same format as dummy_data.csv.
 
 ```r
-# Example new dataset
-new_data <- data.table(x = seq(1, 100, by = 1))
+# Load new data for scoring
+file_path_new <- system.file("extdata", "new_data.csv", package = "AutoNLS")
+new_data <- fread(file_path_new)
 
-# Initialize Scorer
-scorer <- NonLinearModelScorer$new(fit_results)
+# Initialize the scorer
+scorer <- NonLinearModelScorer$new(fit_results, new_data)
 
-# Score new data
-scored_data <- scorer$score_new_data(new_data, x_col = "x")
-print(scored_data)
+# Score new data for all models
+score_results <- scorer$score_all_models()
 
-# Visualize scored data
-score_plot <- scorer$generate_score_plot("Hill", new_data, x_col = "x")
-print(score_plot)
+# Print scored results
+print(score_results)
+
+# Generate scoring plots
+scoring_plots <- scorer$generate_score_plot("Hill", new_data, x_col = "X-Value")
+scoring_plots  # View the scoring plot for the "Hill" model
 ```
 
-### 6. Visualize Model Shapes
-Compare non-linear model shapes across a range of input values.
+### Appendix: Pre-Investigation of Model Shapes
+If you want to perform a pre-investigation into what the models' shapes look like for a given range of x values, you can use the model_visualizer functionality from the NonLinearFitter class. This is especially helpful for understanding the behavior of different non-linear models before fitting them to your data.
 
 ```r
-# Initialize Visualizer
-visualizer <- ModelVisualizer$new(fitter$list_models())
+# Initialize the fitter
+fitter <- NonLinearFitter$new(dummy_data)
 
-# Generate comparison plot
-shape_plot <- visualizer$generate_comparison_plot(x_range = seq(1, 100, by = 1), params = list(), normalize = TRUE)
-print(shape_plot)
+# Use model visualizer to explore model shapes
+x_range <- seq(1, 100, by = 1)
+plot <- fitter$model_visualizer$generate_comparison_plot(x_range = x_range)
+
+# Display the plot
+plot
 ```
 
 ## Dependencies
