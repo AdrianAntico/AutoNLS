@@ -62,13 +62,60 @@ You can install them using:
 install.packages(c("shiny", "bs4Dash", "bslib", "DT"))
 ```
 
-## Usage
+## Shiny App Usage (code usage below)
 
-### Run the Shiny App
+### AutoNLS Shiny App
+The AutoNLS Shiny App is an interactive, user-friendly interface built on top of the AutoNLS package. The app simplifies the process of exploring datasets, fitting non-linear regression models, and visualizing results without needing to write any code. It’s ideal for analysts, researchers, and data enthusiasts who prefer a GUI-based approach.
+
+Features of the Shiny App:
+Exploratory Data Analysis (EDA):
+
+Visualize variable distributions with customizable bin sizes and themes.
+Compute and display correlation matrices.
+Explore pairwise relationships with scatterplots and generalized additive model (GAM) fits.
+Model Fitting:
+
+Select and fit multiple non-linear regression models to your data.
+Evaluate model metrics (e.g., R-squared, RMSE).
+Visualize model fits and compare them side-by-side.
+Scoring:
+
+Use fitted models to generate predictions for new datasets.
+Compare scoring plots for multiple models on unseen data.
+Customization:
+
+Choose from a wide variety of themes for plots.
+Interactively select variables and adjust model parameters.
+How to Run the Shiny App
+Install the package (if not already installed):
+
 ```r
-library(AutoNLS)
 run_shiny_app()
 ```
+
+Interact with the app:
+
+Use the sidebar to navigate between EDA, Model Fitting, and Scoring pages.
+Upload your dataset in CSV format and follow the prompts to generate insights and models.
+
+Example Walkthrough:
+EDA Page:
+
+Upload a dataset (e.g., dummy_data.csv).
+Explore variable distributions, compute correlations, and generate scatterplots.
+Model Fitting Page:
+
+Select predictor (X-Value) and target (Target) variables.
+Choose models to fit (e.g., Hill, Logistic).
+View model metrics and plots.
+Scoring Page:
+
+Upload new data for scoring.
+Generate scoring plots to evaluate predictions.
+Visual Preview of the App
+
+
+## Code Usage
 
 ### Step 1: Load the Data
 
