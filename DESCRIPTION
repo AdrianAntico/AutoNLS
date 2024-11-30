@@ -25,7 +25,7 @@ Suggests:
     DT,
     bs4Dash,
     bslib
-License: AGPL (>= 3)
+License: file LICENSE
 Encoding: UTF-8
 LazyData: true
 Depends: 

@@ -7,49 +7,6 @@
 An R6 class for automatically fitting non-linear regression models.
 Includes a library of pre-defined models to simplify selection.
 }
-\examples{
-
-## ------------------------------------------------
-## Method `NonLinearFitter$new`
-## ------------------------------------------------
-
-data <- data.table::data.table(x = 1:100, y = 5 / (1 + exp(-0.1 * (1:100 - 50))))
-fitter <- NonLinearFitter$new(data)
-List available models
-
-
-## ------------------------------------------------
-## Method `NonLinearFitter$list_models`
-## ------------------------------------------------
-
-fitter$list_models()
-Add a non-linear model for testing
-
-
-## ------------------------------------------------
-## Method `NonLinearFitter$add_model`
-## ------------------------------------------------
-
-# Add a pre-defined model
-fitter$add_model("Hill")
-
-# Add a custom model
-fitter$add_model("Custom", y ~ a * exp(-b * x), list(a = 1, b = 0.1))
-
-## ------------------------------------------------
-## Method `NonLinearFitter$fit_models`
-## ------------------------------------------------
-
-fitter$fit_models(x_col = "x", y_col = "y", control = list(maxiter = 200))
-Generate a comparison plot for model shapes
-
-
-## ------------------------------------------------
-## Method `NonLinearFitter$model_comparison_plot`
-## ------------------------------------------------
-
-plot <- fitter$generate_comparison_plot(x_range = seq(1, 100, by = 1))
-}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
@@ -98,17 +55,6 @@ Must include the predictor and response variable columns.}
 \subsection{Returns}{
 A new instance of the NonLinearFitter class.
 }
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{data <- data.table::data.table(x = 1:100, y = 5 / (1 + exp(-0.1 * (1:100 - 50))))
-fitter <- NonLinearFitter$new(data)
-List available models
-
-}
-\if{html}{\out{</div>}}
-
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-NonLinearFitter-list_models"></a>}}
@@ -120,17 +66,8 @@ List available models
 
 \subsection{Returns}{
 A data.table summarizing available models.
-}
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{fitter$list_models()
 Add a non-linear model for testing
-
 }
-\if{html}{\out{</div>}}
-
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-NonLinearFitter-add_model"></a>}}
@@ -154,18 +91,6 @@ Add a non-linear model for testing
 \subsection{Returns}{
 NULL
 }
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{# Add a pre-defined model
-fitter$add_model("Hill")
-
-# Add a custom model
-fitter$add_model("Custom", y ~ a * exp(-b * x), list(a = 1, b = 0.1))
-}
-\if{html}{\out{</div>}}
-
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-NonLinearFitter-fit_models"></a>}}
@@ -189,17 +114,8 @@ Default is \code{list(maxiter = 200)}.}
 }
 \subsection{Returns}{
 A list of fitted model objects.
-}
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{fitter$fit_models(x_col = "x", y_col = "y", control = list(maxiter = 200))
 Generate a comparison plot for model shapes
-
 }
-\if{html}{\out{</div>}}
-
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-NonLinearFitter-model_comparison_plot"></a>}}
@@ -228,14 +144,6 @@ Defaults to TRUE.}
 \subsection{Returns}{
 An \code{echarts4r} object representing the comparison plot.
 }
-\subsection{Examples}{
-\if{html}{\out{<div class="r example copy">}}
-\preformatted{plot <- fitter$generate_comparison_plot(x_range = seq(1, 100, by = 1))
-}
-\if{html}{\out{</div>}}
-
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-NonLinearFitter-clone"></a>}}

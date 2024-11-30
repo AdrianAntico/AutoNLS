@@ -84,7 +84,7 @@ Calculates both Pearson and Spearman correlations between all numeric columns (e
 \if{latex}{\out{\hypertarget{method-EDA-correlate}{}}}
 \subsection{Method \code{correlate()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{EDA$correlate(target_col = "y")}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{EDA$correlate(target_col = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

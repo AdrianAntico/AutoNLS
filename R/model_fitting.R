@@ -101,20 +101,13 @@ NonLinearFitter <- R6::R6Class(
     #' @param data A data.table containing the dataset for modeling.
     #' Must include the predictor and response variable columns.
     #' @return A new instance of the NonLinearFitter class.
-    #' @examples
-    #' data <- data.table::data.table(x = 1:100, y = 5 / (1 + exp(-0.1 * (1:100 - 50))))
-    #' fitter <- NonLinearFitter$new(data)
     initialize = function(data) {
       if (!data.table::is.data.table(data)) stop("Input data must be a data.table")
       self$data <- data
       self$models <- list()
     },
 
-    #' List available models
-    #'
     #' @return A data.table summarizing available models.
-    #' @examples
-    #' fitter$list_models()
     list_models = function() {
       data.table::data.table(
         Model = names(self$model_library),
@@ -129,12 +122,6 @@ NonLinearFitter <- R6::R6Class(
     #' @param formula The non-linear formula for the model (optional if using pre-defined model).
     #' @param start_params A list of starting parameters for the model (optional if using pre-defined model).
     #' @return NULL
-    #' @examples
-    #' # Add a pre-defined model
-    #' fitter$add_model("Hill")
-    #'
-    #' # Add a custom model
-    #' fitter$add_model("Custom", y ~ a * exp(-b * x), list(a = 1, b = 0.1))
     add_model = function(name, formula = NULL, start_params = NULL) {
       if (is.null(formula) || is.null(start_params)) {
         if (!name %in% names(self$model_library)) {
@@ -155,8 +142,6 @@ NonLinearFitter <- R6::R6Class(
     #' @param control A list of control parameters for the optimizer, such as `maxiter`.
     #' Default is `list(maxiter = 200)`.
     #' @return A list of fitted model objects.
-    #' @examples
-    #' fitter$fit_models(x_col = "x", y_col = "y", control = list(maxiter = 200))
     fit_models = function(x_col, y_col, control = list(maxiter = 200)) {
 
       if (is.null(self$models) || length(self$models) == 0) {
@@ -208,8 +193,6 @@ NonLinearFitter <- R6::R6Class(
     #' Defaults to TRUE.
     #' @param theme A string specifying the plot theme (e.g., "macarons").
     #' @return An `echarts4r` object representing the comparison plot.
-    #' @examples
-    #' plot <- fitter$generate_comparison_plot(x_range = seq(1, 100, by = 1))
     model_comparison_plot = function(x_range = seq(1, 100, by = 1), normalize = TRUE, theme = "macarons") {
       if (is.null(self$models) || length(self$models) == 0) {
         stop("No models available for visualization. Use add_model() to add models.")
