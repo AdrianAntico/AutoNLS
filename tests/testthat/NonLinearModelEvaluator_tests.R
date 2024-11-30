@@ -4,7 +4,7 @@ library(testthat)
 test_that("generate_comparison_plot generates valid plots", {
   # Sample dataset
   sample_data <- data.table::data.table(
-    x = seq(1, 100, by = 1),
+    `x-value` = seq(1, 100, by = 1),
     y = 10 * seq(1, 100, by = 1)^1.2 / (50 + seq(1, 100, by = 1)^1.2) + rnorm(100, mean = 0, sd = 0.5)
   )
 
@@ -16,13 +16,13 @@ test_that("generate_comparison_plot generates valid plots", {
   fitter$add_model("Hill")
 
   # Fit models
-  fit_results <- fitter$fit_models(x_col = "x", y_col = "y")
+  fit_results <- fitter$fit_models(x_col = "x-value", y_col = "y")
 
   # Initialize NonLinearModelEvaluator
   evaluator <- NonLinearModelEvaluator$new(fit_results, data = sample_data)
 
   # Test 1: Function generates a list of plots
-  plots <- evaluator$generate_comparison_plot(sample_data, x_col = "x", y_col = "y")
+  plots <- evaluator$generate_comparison_plot(sample_data, x_col = "x-value", y_col = "y")
   expect_true(is.list(plots))
   expect_equal(length(plots), length(fit_results))
   expect_true(all(sapply(plots, function(p) inherits(p, "echarts4r"))))

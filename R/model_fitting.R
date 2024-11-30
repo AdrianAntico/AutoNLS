@@ -110,11 +110,16 @@ NonLinearFitter <- R6::R6Class(
       self$models <- list()
     },
 
+    #' List available models
+    #'
     #' @return A data.table summarizing available models.
+    #' @examples
+    #' fitter$list_models()
     list_models = function() {
       data.table::data.table(
         Model = names(self$model_library),
-        Description = sapply(self$model_library, function(x) x$description)
+        Description = sapply(self$model_library, function(x) x$description),
+        Formula = sapply(self$model_library, function(x) deparse(x$formula))
       )
     },
 
@@ -153,6 +158,7 @@ NonLinearFitter <- R6::R6Class(
     #' @examples
     #' fitter$fit_models(x_col = "x", y_col = "y", control = list(maxiter = 200))
     fit_models = function(x_col, y_col, control = list(maxiter = 200)) {
+
       if (is.null(self$models) || length(self$models) == 0) {
         stop("No models to fit. Use add_model() to add models.")
       }
@@ -160,18 +166,18 @@ NonLinearFitter <- R6::R6Class(
         stop("x_col and y_col must exist in the dataset.")
       }
 
+      # Create a copy of the data with renamed columns for fitting
+      temp_data <- copy(self$data)
+      data.table::setnames(temp_data, old = c(x_col, y_col), new = c("x", "y"))
       self$fit_results <- lapply(names(self$models), function(model_name) {
         model <- self$models[[model_name]]
 
-        # Dynamically adjust the formula to use x_col and y_col
-        formula <- as.formula(
-          gsub("x", x_col, gsub("y", y_col, deparse(model$formula)))
-        )
-
+        # Use the unaltered formula from the model library
+        formula <- model$formula
         fit <- tryCatch({
           model_fit <- minpack.lm::nlsLM(
             formula = formula,
-            data = self$data,
+            data = temp_data,
             start = model$start_params,
             control = control
           )
@@ -193,6 +199,73 @@ NonLinearFitter <- R6::R6Class(
       # Name the list using the model names
       names(self$fit_results) <- names(self$models)
       return(self$fit_results)
+    },
+
+    #' Generate a comparison plot for model shapes
+    #'
+    #' @param x_range A numeric vector specifying the range of x values to evaluate.
+    #' @param normalize Logical. If TRUE, normalizes the y values for each model to fall between 0 and 1.
+    #' Defaults to TRUE.
+    #' @param theme A string specifying the plot theme (e.g., "macarons").
+    #' @return An `echarts4r` object representing the comparison plot.
+    #' @examples
+    #' plot <- fitter$generate_comparison_plot(x_range = seq(1, 100, by = 1))
+    model_comparison_plot = function(x_range = seq(1, 100, by = 1), normalize = TRUE, theme = "macarons") {
+      if (is.null(self$models) || length(self$models) == 0) {
+        stop("No models available for visualization. Use add_model() to add models.")
+      }
+
+      plot_data <- data.table::data.table(x = x_range)
+
+      for (model_name in names(self$models)) {
+        model_fn <- self$model_library[[model_name]]$formula[[3]]
+        start_params <- self$model_library[[model_name]]$start_params
+
+        # Evaluate the model function
+        plot_data[[model_name]] <- vapply(
+          x_range,
+          function(x) eval(model_fn, envir = c(list(x = x), start_params)),
+          numeric(1)
+        )
+      }
+
+      # Normalize y values if requested
+      if (normalize) {
+        for (model_name in names(self$models)) {
+          y_values <- plot_data[[model_name]]
+          y_min <- min(y_values, na.rm = TRUE)
+          y_max <- max(y_values, na.rm = TRUE)
+          plot_data[[model_name]] <- (y_values - y_min) / (y_max - y_min)
+        }
+      }
+
+      # Reshape data for plotting
+      plot_data_long <- data.table::melt(plot_data, id.vars = "x", variable.name = "Model", value.name = "y")
+
+      # Create the plot using grouping
+      plot <- echarts4r::e_charts(
+        data = plot_data_long |> dplyr::group_by(Model),
+        x = x
+      ) |>
+        echarts4r::e_line(serie = y) |>
+        echarts4r::e_title(
+          text = if (normalize) "Normalized Comparison of Non-Linear Model Shapes" else "Comparison of Non-Linear Model Shapes"
+        ) |>
+        echarts4r::e_tooltip(trigger = "axis") |>
+        echarts4r::e_theme(name = theme) |>
+        echarts4r::e_legend(
+          type = "scroll",
+          orient = "vertical",
+          right = 50,
+          top = 60,
+          height = "240px",
+          textStyle = list(fontWeight = "bold")) |>
+        echarts4r::e_x_axis(name = "x") |>
+        echarts4r::e_y_axis(name = if (normalize) "Normalized y" else "y") |>
+        echarts4r::e_datazoom(x_index = c(0,1)) |>
+        echarts4r::e_toolbox_feature(feature = c("saveAsImage","dataZoom"))
+
+      return(plot)
     }
   )
 )

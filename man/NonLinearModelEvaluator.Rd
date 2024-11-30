@@ -57,9 +57,16 @@ A new instance of the NonLinearModelEvaluator class.
 \if{latex}{\out{\hypertarget{method-NonLinearModelEvaluator-generate_metrics}{}}}
 \subsection{Method \code{generate_metrics()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{NonLinearModelEvaluator$generate_metrics()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{NonLinearModelEvaluator$generate_metrics(y_col = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{y_col}}{target variable}
+}
+\if{html}{\out{</div>}}
+}
 \subsection{Returns}{
 A data.table of evaluation metrics.
 }

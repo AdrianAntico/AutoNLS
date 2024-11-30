@@ -32,8 +32,9 @@ NonLinearModelEvaluator <- R6::R6Class(
       self$data <- data
     },
 
+    #' @param y_col target variable
     #' @return A data.table of evaluation metrics.
-    generate_metrics = function() {
+    generate_metrics = function(y_col = NULL) {
       if (is.null(self$fit_results)) stop("No fitted models to evaluate.")
 
       metrics <- lapply(names(self$fit_results), function(model_name) {
@@ -48,11 +49,9 @@ NonLinearModelEvaluator <- R6::R6Class(
 
           # Access the formula stored in the fitted model
           formula <- fit$formula
-          response_var <- all.vars(formula)[1] # Extract the response variable name
-          predictor_var <- all.vars(formula)[2] # Extract the predictor variable name
 
           # Directly access observed values from the original dataset
-          observed <- self$data[[response_var]]
+          observed <- self$data[[y_col]]
 
           # Ensure observed values are numeric
           if (!is.numeric(observed)) {
@@ -97,7 +96,7 @@ NonLinearModelEvaluator <- R6::R6Class(
       if (!all(c(x_col, y_col) %in% names(data))) stop("x_col and y_col must exist in the dataset.")
 
       # Retrieve metrics (including R-squared)
-      metrics <- self$generate_metrics()
+      metrics <- self$generate_metrics(y_col = y_col)
 
       # Generate plots
       self$plots <- setNames(lapply(names(self$fit_results), function(model_name) {
@@ -118,9 +117,7 @@ NonLinearModelEvaluator <- R6::R6Class(
           combined_data <- merge(combined_data, predictions, by = "x", all = TRUE)
 
           # Get R-squared from metrics
-          print(metrics)
           r_squared <- metrics[`Model Name` == eval(model_name)][["R_Squared"]]
-          print(r_squared)
 
           # Create plot
           combined_data |>

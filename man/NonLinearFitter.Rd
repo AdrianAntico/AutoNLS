@@ -15,6 +15,16 @@ Includes a library of pre-defined models to simplify selection.
 
 data <- data.table::data.table(x = 1:100, y = 5 / (1 + exp(-0.1 * (1:100 - 50))))
 fitter <- NonLinearFitter$new(data)
+List available models
+
+
+## ------------------------------------------------
+## Method `NonLinearFitter$list_models`
+## ------------------------------------------------
+
+fitter$list_models()
+Add a non-linear model for testing
+
 
 ## ------------------------------------------------
 ## Method `NonLinearFitter$add_model`
@@ -31,6 +41,14 @@ fitter$add_model("Custom", y ~ a * exp(-b * x), list(a = 1, b = 0.1))
 ## ------------------------------------------------
 
 fitter$fit_models(x_col = "x", y_col = "y", control = list(maxiter = 200))
+Generate a comparison plot for model shapes
+
+
+## ------------------------------------------------
+## Method `NonLinearFitter$model_comparison_plot`
+## ------------------------------------------------
+
+plot <- fitter$generate_comparison_plot(x_range = seq(1, 100, by = 1))
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
@@ -57,6 +75,7 @@ Initialize the NonLinearFitter class}
 \item \href{#method-NonLinearFitter-list_models}{\code{NonLinearFitter$list_models()}}
 \item \href{#method-NonLinearFitter-add_model}{\code{NonLinearFitter$add_model()}}
 \item \href{#method-NonLinearFitter-fit_models}{\code{NonLinearFitter$fit_models()}}
+\item \href{#method-NonLinearFitter-model_comparison_plot}{\code{NonLinearFitter$model_comparison_plot()}}
 \item \href{#method-NonLinearFitter-clone}{\code{NonLinearFitter$clone()}}
 }
 }
@@ -83,6 +102,8 @@ A new instance of the NonLinearFitter class.
 \if{html}{\out{<div class="r example copy">}}
 \preformatted{data <- data.table::data.table(x = 1:100, y = 5 / (1 + exp(-0.1 * (1:100 - 50))))
 fitter <- NonLinearFitter$new(data)
+List available models
+
 }
 \if{html}{\out{</div>}}
 
@@ -99,8 +120,17 @@ fitter <- NonLinearFitter$new(data)
 
 \subsection{Returns}{
 A data.table summarizing available models.
-Add a non-linear model for testing
 }
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{fitter$list_models()
+Add a non-linear model for testing
+
+}
+\if{html}{\out{</div>}}
+
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-NonLinearFitter-add_model"></a>}}
@@ -163,6 +193,44 @@ A list of fitted model objects.
 \subsection{Examples}{
 \if{html}{\out{<div class="r example copy">}}
 \preformatted{fitter$fit_models(x_col = "x", y_col = "y", control = list(maxiter = 200))
+Generate a comparison plot for model shapes
+
+}
+\if{html}{\out{</div>}}
+
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-NonLinearFitter-model_comparison_plot"></a>}}
+\if{latex}{\out{\hypertarget{method-NonLinearFitter-model_comparison_plot}{}}}
+\subsection{Method \code{model_comparison_plot()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{NonLinearFitter$model_comparison_plot(
+  x_range = seq(1, 100, by = 1),
+  normalize = TRUE,
+  theme = "macarons"
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{x_range}}{A numeric vector specifying the range of x values to evaluate.}
+
+\item{\code{normalize}}{Logical. If TRUE, normalizes the y values for each model to fall between 0 and 1.
+Defaults to TRUE.}
+
+\item{\code{theme}}{A string specifying the plot theme (e.g., "macarons").}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+An \code{echarts4r} object representing the comparison plot.
+}
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{plot <- fitter$generate_comparison_plot(x_range = seq(1, 100, by = 1))
 }
 \if{html}{\out{</div>}}
 
