@@ -33,9 +33,16 @@ NonLinearModelEvaluator <- R6::R6Class(
     },
 
     #' @param y_col target variable
-    #' @return A data.table of evaluation metrics.
+    #' @return A data.table of evaluation metrics with fitted equations.
     generate_metrics = function(y_col = NULL) {
       if (is.null(self$fit_results)) stop("No fitted models to evaluate.")
+
+      # For numeric equation output
+      format_equation <- function(equation) {
+        # Replace double negatives with a single positive sign
+        formatted_equation <- gsub("-\\s*-", "+ ", equation)
+        return(formatted_equation)
+      }
 
       metrics <- lapply(names(self$fit_results), function(model_name) {
         fit <- self$fit_results[[model_name]]
@@ -50,13 +57,9 @@ NonLinearModelEvaluator <- R6::R6Class(
           # Access the formula stored in the fitted model
           formula <- fit$formula
 
-          # Directly access observed values from the original dataset
+          # Extract observed values
           observed <- self$data[[y_col]]
-
-          # Ensure observed values are numeric
-          if (!is.numeric(observed)) {
-            stop("Observed values are not numeric.")
-          }
+          if (!is.numeric(observed)) stop("Observed values are not numeric.")
 
           # Compute predicted values using the fitted model
           predicted <- predict(fit, newdata = self$data)
@@ -66,13 +69,24 @@ NonLinearModelEvaluator <- R6::R6Class(
           ss_tot <- sum((observed - mean(observed))^2)
           r_squared <- 1 - ss_res / ss_tot
 
+          # Extract fitted parameter values
+          params <- coef(fit)
+
+          # Replace parameter names in the formula with their fitted values
+          fitted_equation <- deparse(formula)
+          for (param_name in names(params)) {
+            fitted_equation <- gsub(param_name, format(params[[param_name]], digits = 3), fitted_equation)
+          }
+
+          # Compile metrics
           list(
             `Model Name` = model_name,
-            Model = deparse(formula),
+            Formula = deparse(formula),              # Original model formula
+            Model = format_equation(fitted_equation),     # Fitted model with parameter values
             AIC = aic,
             BIC = bic,
-            Residual_Std_Error = residual_std_error,
-            R_Squared = r_squared
+            Resid_Std_Err = residual_std_error,
+            R_Sq = r_squared
           )
         }, error = function(e) {
           message("Error processing model: ", e$message)
@@ -117,7 +131,7 @@ NonLinearModelEvaluator <- R6::R6Class(
           combined_data <- merge(combined_data, predictions, by = "x", all = TRUE)
 
           # Get R-squared from metrics
-          r_squared <- metrics[`Model Name` == eval(model_name)][["R_Squared"]]
+          r_squared <- metrics[`Model Name` == eval(model_name)][["R_Sq"]]
 
           # Create plot
           combined_data |>
@@ -127,7 +141,7 @@ NonLinearModelEvaluator <- R6::R6Class(
             echarts4r::e_theme(name = theme) |>
             echarts4r::e_title(
               text = paste("Model Fit:", model_name),
-              subtext = paste("R-Squared: ", round(r_squared, 4))
+              subtext = paste("R-Sq: ", round(r_squared, 4))
             ) |>
             echarts4r::e_datazoom(x_index = c(0,1)) |>
             echarts4r::e_toolbox_feature(feature = c("saveAsImage","dataZoom"))

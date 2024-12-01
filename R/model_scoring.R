@@ -82,10 +82,10 @@ NonLinearModelScorer <- R6::R6Class(
         echarts4r::e_title(
           text = paste("Scored Data: Model -", model_name)
         ) |>
-        echarts4r::e_tooltip(trigger = "axis") |>
+        echarts4r::e_tooltip(trigger = "axis", backgroundColor = "aliceblue") |>
         echarts4r::e_x_axis(name = x_col) |>
         echarts4r::e_y_axis(name = "Predicted Values") |>
-        echarts4r::e_legend(right = 50) |>
+        echarts4r::e_legend(right = 120) |>
         echarts4r::e_datazoom(x_index = c(0,1)) |>
         echarts4r::e_toolbox_feature(feature = c("saveAsImage","dataZoom")) |>
         echarts4r::e_theme(name = theme)

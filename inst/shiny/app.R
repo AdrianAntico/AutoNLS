@@ -345,30 +345,52 @@ ui <- bs4DashPage(
               status = "info",
               solidHeader = TRUE,
               width = 12,
-              div(
-                style = "margin-bottom: 10px;",
-                fileInput("score_file", "Upload Scoring Data (.csv)", accept = ".csv")
-              ),
-              div(
-                style = "margin-bottom: 10px;",
-                uiOutput("score_variable_selector_ui")
-              ),
-              div(
-                style = "margin-bottom: 10px;",
-                uiOutput("scoring_model_selector_ui")
-              ),
-              div(
-                style = "margin-bottom: 10px;",
-                selectInput(
-                  inputId = "scoring_theme",
-                  label = "Select Plot Theme:",
-                  choices = EchartsThemes,
-                  selected = "macarons"  # Default selection
+              # Inputs arranged in pairs (two per row)
+              fluidRow(
+                column(
+                  width = 6,
+                  div(
+                    style = "margin-bottom: 10px;",
+                    fileInput("score_file", "Upload Scoring Data (.csv)", accept = ".csv")
+                  )
+                ),
+                column(
+                  width = 6,
+                  div(
+                    style = "margin-bottom: 10px;",
+                    uiOutput("score_variable_selector_ui")
+                  )
                 )
               ),
-              div(
-                style = "margin-bottom: 10px;",
-                actionButton("run_scoring", "Score Data", class = "btn-warning")
+              fluidRow(
+                column(
+                  width = 6,
+                  div(
+                    style = "margin-bottom: 10px;",
+                    uiOutput("scoring_model_selector_ui")
+                  )
+                ),
+                column(
+                  width = 6,
+                  div(
+                    style = "margin-bottom: 10px;",
+                    selectInput(
+                      inputId = "scoring_theme",
+                      label = "Select Plot Theme:",
+                      choices = EchartsThemes,
+                      selected = "macarons"  # Default selection
+                    )
+                  )
+                )
+              ),
+              fluidRow(
+                column(
+                  width = 6,
+                  div(
+                    style = "margin-bottom: 10px; text-align: center;",
+                    actionButton("run_scoring", "Score Data", class = "btn-warning")
+                  )
+                )
               )
             )
           )
@@ -398,10 +420,10 @@ server <- function(input, output, session) {
     x <- seq(1, 100, by = 1)
     data <- data.table(
       x = x,
-      Logistic = 100 / (1 + exp(-0.1 * (x - 50))),      # Logistic curve
-      Hill = 50 * x^2 / (100^2 + x^2),                  # Hill equation
-      Exponential = 30 * exp(-0.05 * x)                 # Exponential decay
-    )
+      Logistic = 100 / (1 + exp(-0.1 * (x - 50))),
+      Hill = 70 * x^2 / (25^2 + x^2),
+      Exponential = 70 * exp(-0.05 * x))
+
     # Melt the data into a long format
     data_long <- data.table::melt(data, id.vars = "x", variable.name = "Model", value.name = "y")
     return(data_long)
@@ -416,7 +438,7 @@ server <- function(input, output, session) {
     echarts4r::e_x_axis(name = "X-Value", splitLine = list(show = FALSE)) |>
     echarts4r::e_y_axis(name = "Y-Value", splitLine = list(show = FALSE)) |>
     echarts4r::e_legend(left = "right") |>
-    echarts4r::e_theme("macarons")
+    echarts4r::e_theme("purple-passion")
   })
 
   # --------------------------------------
@@ -752,7 +774,7 @@ server <- function(input, output, session) {
           ),
           rownames = FALSE
         ) |>
-          DT::formatRound(columns = setdiff(colnames(metrics), c("Model Name", "Model")), digits = 3)
+          DT::formatRound(columns = setdiff(colnames(metrics), c("Model Name", "Formula", "Model")), digits = 3)
       })
 
       # Generate and render all model plots
@@ -861,10 +883,8 @@ server <- function(input, output, session) {
   })
 
   # Perform scoring
-  observeEvent(input$run_scoring, {
-    print("here 1")
+  observeEvent(c(input$run_scoring, input$scoring_theme), {
     req(scoring_data(), input$x_variable_scoring, input$scoring_models)
-    print("here 2")
     tryCatch({
       # Initialize the scorer
       scorer <- NonLinearModelScorer$new(fit_results = fit_results())
@@ -914,11 +934,6 @@ server <- function(input, output, session) {
           scored_plots[[i]]
         })
       })
-
-      showNotification(
-        paste("Scoring completed successfully for", length(input$scoring_models), "models."),
-        type = "message"
-      )
     }, error = function(e) {
       showNotification(paste("Error during scoring:", e$message), type = "error")
     })
