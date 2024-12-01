@@ -204,6 +204,10 @@ NonLinearFitter <- R6::R6Class(
         model_fn <- self$model_library[[model_name]]$formula[[3]]
         start_params <- self$model_library[[model_name]]$start_params
 
+        print("here 1")
+        print(model_fn)
+        print(start_params)
+
         # Evaluate the model function
         plot_data[[model_name]] <- vapply(
           x_range,
@@ -213,6 +217,7 @@ NonLinearFitter <- R6::R6Class(
       }
 
       # Normalize y values if requested
+      print("here 2")
       if (normalize) {
         for (model_name in names(self$models)) {
           y_values <- plot_data[[model_name]]
@@ -222,8 +227,12 @@ NonLinearFitter <- R6::R6Class(
         }
       }
 
+      print("here 3")
+
       # Reshape data for plotting
       plot_data_long <- data.table::melt(plot_data, id.vars = "x", variable.name = "Model", value.name = "y")
+
+      print("here 4")
 
       # Create the plot using grouping
       plot <- echarts4r::e_charts(
@@ -234,7 +243,7 @@ NonLinearFitter <- R6::R6Class(
         echarts4r::e_title(
           text = if (normalize) "Normalized Comparison of Non-Linear Model Shapes" else "Comparison of Non-Linear Model Shapes"
         ) |>
-        echarts4r::e_tooltip(trigger = "axis") |>
+        # echarts4r::e_tooltip(trigger = "axis") |>
         echarts4r::e_theme(name = theme) |>
         echarts4r::e_legend(
           type = "scroll",
@@ -247,6 +256,8 @@ NonLinearFitter <- R6::R6Class(
         echarts4r::e_y_axis(name = if (normalize) "Normalized y" else "y") |>
         echarts4r::e_datazoom(x_index = c(0,1)) |>
         echarts4r::e_toolbox_feature(feature = c("saveAsImage","dataZoom"))
+
+      print("here 5")
 
       return(plot)
     }

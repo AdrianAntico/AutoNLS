@@ -46,10 +46,11 @@ EDA <- R6::R6Class(
         lapply(numeric_cols, function(col_name) {
           col <- self$data[[col_name]]
           data.table::data.table(
-            Mean = list(mean(col, na.rm = TRUE)),
-            Median = list(median(col, na.rm = TRUE)),
-            Variance = list(var(col, na.rm = TRUE)),
-            NA_Count = list(sum(is.na(col)))
+            Variable = col_name,
+            Mean = mean(col, na.rm = TRUE),
+            Median = median(col, na.rm = TRUE),
+            Variance = var(col, na.rm = TRUE),
+            NA_Count = sum(is.na(col))
           )
         })
       } else {
@@ -62,10 +63,11 @@ EDA <- R6::R6Class(
         lapply(categorical_cols, function(col_name) {
           col <- self$data[[col_name]]
           data.table::data.table(
-            Mean = list(NA_real_),
-            Median = list(NA_real_),
-            Variance = list(NA_real_),
-            NA_Count = list(sum(is.na(col)))
+            Variable = col_name,
+            Mean = NA_real_,
+            Median = NA_real_,
+            Variance = NA_real_,
+            NA_Count = sum(is.na(col))
           )
         })
       } else {

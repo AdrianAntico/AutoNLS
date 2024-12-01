@@ -195,21 +195,28 @@ ui <- bs4DashPage(
                 # Buttons distributed horizontally
                 fluidRow(
                   column(
-                    width = 4,
+                    width = 3,
+                    div(
+                      style = "margin-top: 10px;",  # Add margin for vertical alignment
+                      actionButton("run_summary", "Summary", class = "btn-secondary")
+                    )
+                  ),
+                  column(
+                    width = 3,
                     div(
                       style = "margin-top: 10px;",  # Add margin for vertical alignment
                       actionButton("run_analysis", "Distributions", class = "btn-primary")
                     )
                   ),
                   column(
-                    width = 4,
+                    width = 3,
                     div(
                       style = "margin-top: 10px;",  # Add margin for vertical alignment
                       actionButton("run_corr", "Correlation", class = "btn-info")
                     )
                   ),
                   column(
-                    width = 4,
+                    width = 3,
                     div(
                       style = "margin-top: 10px;",  # Add margin for vertical alignment
                       actionButton("run_scatterplots", "Relationships", class = "btn-secondary")
@@ -223,9 +230,10 @@ ui <- bs4DashPage(
           column(
             width = 12,  # Plots for EDA
             tabsetPanel(
+              tabPanel("Summary", br(), uiOutput("eda_summary_ui")),
               tabPanel("Distributions", br(), uiOutput("eda_plots_ui")),
               tabPanel("Correlation", br(), uiOutput("eda_corr_ui")),
-              tabPanel("Scatterplots", br(), uiOutput("eda_scatterplots_ui"))
+              tabPanel("Relationships", br(), uiOutput("eda_scatterplots_ui"))
             )
           )
         )
@@ -431,6 +439,46 @@ server <- function(input, output, session) {
   eda <- reactive({
     req(dataset())
     EDA$new(dataset())
+  })
+
+  # Handle Generate Summary button
+  observeEvent(input$run_summary, {
+    req(eda())
+
+    # Generate summary data
+    summary_data <- eda()$summarize()
+
+    # Render summary table in UI
+    output$eda_summary_ui <- renderUI({
+      if (is.null(summary_data) || nrow(summary_data) == 0) {
+        return(h3("No summary available. Please upload a valid dataset."))
+      }
+
+      bs4Dash::box(
+        title = "Dataset Summary",
+        collapsible = TRUE,
+        solidHeader = TRUE,
+        status = "info",
+        width = 12,
+        DT::DTOutput("summary_table")
+      )
+    })
+
+    # Render the datatable
+    output$summary_table <- DT::renderDataTable({
+      rounded_columns <- intersect(c("Mean", "Median", "StdDev", "Variance"), names(summary_data))
+
+      DT::datatable(
+        summary_data,
+        options = list(
+          scrollX = TRUE,
+          pageLength = 10,
+          lengthMenu = c(5, 10, 20)
+        ),
+        rownames = FALSE
+      ) |>
+        DT::formatRound(columns = rounded_columns, digits = 2)
+    })
   })
 
   # Handle Run Analysis button
