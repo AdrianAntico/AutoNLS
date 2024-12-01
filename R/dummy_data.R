@@ -9,4 +9,5 @@
 #'   \item{Target}{Numeric response variable.}
 #' }
 #' @source Generated synthetically for the AutoNLS package.
+#' @name dummy_data
 "dummy_data"

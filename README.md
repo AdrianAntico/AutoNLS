@@ -67,57 +67,49 @@ You can install them using:
 install.packages(c("shiny", "bs4Dash", "bslib", "DT"))
 ```
 
-## Shiny App Usage (code usage below)
+## Shiny App Usage
 
 ### AutoNLS Shiny App
-The AutoNLS Shiny App is an interactive, user-friendly interface built on top of the AutoNLS package. The app simplifies the process of exploring datasets, fitting non-linear regression models, and visualizing results without needing to write any code. It’s ideal for analysts, researchers, and data enthusiasts who prefer a GUI-based approach.
+The AutoNLS Shiny App provides an interactive and user-friendly interface for performing non-linear regression analysis without writing code.
 
-Features of the Shiny App:
-Exploratory Data Analysis (EDA):
+Key Features
+* Exploratory Data Analysis (EDA):
+  * Visualize variable distributions with customizable bin sizes and themes.
+  * Compute and display correlation matrices.
+  * Explore pairwise relationships using scatterplots and GAM (Generalized Additive Model) fits.
+* Model Fitting:
+  * Select and fit multiple non-linear regression models to your data.
+  * Evaluate models with metrics like R-squared and RMSE.
+  * Visualize and compare model fits side-by-side.
+* Scoring:
+  * Use fitted models to make predictions on new datasets.
+  * Compare scoring plots across multiple models.
+* Customization:
+  * Choose from a variety of plot themes.
+  * Interactively select variables and adjust model parameters.
 
-Visualize variable distributions with customizable bin sizes and themes.
-Compute and display correlation matrices.
-Explore pairwise relationships with scatterplots and generalized additive model (GAM) fits.
-Model Fitting:
-
-Select and fit multiple non-linear regression models to your data.
-Evaluate model metrics (e.g., R-squared, RMSE).
-Visualize model fits and compare them side-by-side.
-Scoring:
-
-Use fitted models to generate predictions for new datasets.
-Compare scoring plots for multiple models on unseen data.
-Customization:
-
-Choose from a wide variety of themes for plots.
-Interactively select variables and adjust model parameters.
-How to Run the Shiny App
-Install the package (if not already installed):
-
+How to run the Shiny App:
+1. Install and load AutoNLS
+2. Launch the app with:
 ```r
 run_shiny_app()
 ```
-
-Interact with the app:
-
-Use the sidebar to navigate between EDA, Model Fitting, and Scoring pages.
-Upload your dataset in CSV format and follow the prompts to generate insights and models.
+3. Interact with the app:
+  * Use the sidebar to navigate between EDA, Model Fitting, and Scoring pages.
+  * Upload your dataset in CSV format and follow the prompts to generate insights and models.
 
 Example Walkthrough:
-EDA Page:
-
-Upload a dataset (e.g., dummy_data.csv).
-Explore variable distributions, compute correlations, and generate scatterplots.
-Model Fitting Page:
-
-Select predictor (X-Value) and target (Target) variables.
-Choose models to fit (e.g., Hill, Logistic).
-View model metrics and plots.
-Scoring Page:
-
-Upload new data for scoring.
-Generate scoring plots to evaluate predictions.
-Visual Preview of the App
+* EDA Page:
+  * Upload a dataset (e.g., dummy_data.csv).
+  * Explore variable distributions, compute correlations, and generate scatterplots.
+* Model Fitting Page:
+  * Select predictor (X-Value) and target (Target) variables.
+  * Choose models to fit (e.g., Hill, Logistic).
+  * View model metrics and plots.
+* Scoring Page:
+  * Upload new data for scoring.
+  * Generate scoring plots to evaluate predictions.
+  * Visual Preview of the App
 
 ## Code Usage
 
@@ -126,11 +118,10 @@ Visual Preview of the App
 First, we load the example dataset dummy_data.csv included with the package.
 
 ```r
-library(data.table)
+library(AutoNLS)
 
-# Load the dummy dataset
-file_path <- system.file("extdata", "dummy_data.csv", package = "AutoNLS")
-dummy_data <- fread(file_path)
+# Load example data
+data("dummy_data")
 
 # Display the first few rows
 print(dummy_data)
@@ -241,10 +232,7 @@ Here’s how to add a custom model:
 ```r
 # Load necessary libraries
 library(AutoNLS)
-
-# Load the dummy data included in the package
-data_path <- system.file("data", "dummy_data.csv", package = "AutoNLS")
-dummy_data <- data.table::fread(data_path)
+data("dummy_data")
 
 # Initialize the NonLinearFitter
 fitter <- NonLinearFitter$new(dummy_data)
@@ -252,6 +240,11 @@ fitter <- NonLinearFitter$new(dummy_data)
 # Add a custom model
 custom_formula <- y ~ a * exp(-b * x)
 custom_start_params <- list(a = 1, b = 0.1)
+fitter$add_model(
+  name = "CustomExponentialDecay", 
+  formula = custom_formula, 
+  start_params = custom_start_params
+)
 
 # Fit the custom model
 fit_results <- fitter$fit_models(x_col = "X-Value", y_col = "Target")
