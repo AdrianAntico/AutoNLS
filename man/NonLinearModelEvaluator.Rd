@@ -80,7 +80,8 @@ A data.table of evaluation metrics with fitted equations.
   data,
   x_col,
   y_col,
-  theme = "macarons"
+  theme = "macarons",
+  weighted_results = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -94,11 +95,13 @@ A data.table of evaluation metrics with fitted equations.
 \item{\code{y_col}}{A string specifying the name of the y variable in the dataset.}
 
 \item{\code{theme}}{Echarts theme}
+
+\item{\code{weighted_results}}{Optional list of weighted model fits for comparison.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-An \code{echarts4r} plot showing observed vs. predicted data.
+An \code{echarts4r} plot showing observed vs. predicted data, with weighted comparisons if available.
 }
 }
 \if{html}{\out{<hr>}}

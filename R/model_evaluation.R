@@ -102,8 +102,9 @@ NonLinearModelEvaluator <- R6::R6Class(
     #' @param x_col A string specifying the name of the x variable in the dataset.
     #' @param y_col A string specifying the name of the y variable in the dataset.
     #' @param theme Echarts theme
-    #' @return An `echarts4r` plot showing observed vs. predicted data.
-    generate_comparison_plot = function(data, x_col, y_col, theme = "macarons") {
+    #' @param weighted_results Optional list of weighted model fits for comparison.
+    #' @return An `echarts4r` plot showing observed vs. predicted data, with weighted comparisons if available.
+    generate_comparison_plot = function(data, x_col, y_col, theme = "macarons", weighted_results = NULL) {
       if (is.null(self$fit_results) || length(self$fit_results) == 0) {
         stop("No fitted models to evaluate.")
       }
@@ -116,28 +117,39 @@ NonLinearModelEvaluator <- R6::R6Class(
       self$plots <- setNames(lapply(names(self$fit_results), function(model_name) {
         fit <- self$fit_results[[model_name]]
         tryCatch({
-
-          # Generate predictions
-          predictions <- data.table::data.table(
+          # Generate predictions for unweighted results
+          predictions_unweighted <- data.table::data.table(
             x = data[[x_col]],
-            y_pred = predict(fit, newdata = data)
+            y_pred_unweighted = predict(fit, newdata = data)
           )
+
+          # Generate predictions for weighted results (if available)
+          if (!is.null(weighted_results)) {
+            weighted_fit <- weighted_results[[model_name]]
+            predictions_weighted <- data.table::data.table(
+              x = data[[x_col]],
+              y_pred_weighted = predict(weighted_fit, newdata = data)
+            )
+          }
 
           # Merge predictions with observed data
           combined_data <- data.table::data.table(
             x = data[[x_col]],
             y = data[[y_col]]
           )
-          combined_data <- merge(combined_data, predictions, by = "x", all = TRUE)
+          combined_data <- merge(combined_data, predictions_unweighted, by = "x", all = TRUE)
+          if (!is.null(weighted_results)) {
+            combined_data <- merge(combined_data, predictions_weighted, by = "x", all = TRUE)
+          }
 
           # Get R-squared from metrics
           r_squared <- metrics[`Model Name` == eval(model_name)][["R_Sq"]]
 
           # Create plot
-          combined_data |>
+          plot <- combined_data |>
             echarts4r::e_charts(x) |>
             echarts4r::e_scatter(y, name = "Observed") |>
-            echarts4r::e_line(y_pred, name = "Predicted") |>
+            echarts4r::e_line(y_pred_unweighted, name = "Unweighted Predicted") |>
             echarts4r::e_theme(name = theme) |>
             echarts4r::e_title(
               text = paste("Model Fit:", model_name),
@@ -145,6 +157,14 @@ NonLinearModelEvaluator <- R6::R6Class(
             ) |>
             echarts4r::e_datazoom(x_index = c(0,1)) |>
             echarts4r::e_toolbox_feature(feature = c("saveAsImage","dataZoom"))
+
+          # Add weighted predictions if available
+          if (!is.null(weighted_results)) {
+            plot <- plot |>
+              echarts4r::e_line(y_pred_weighted, name = "Weighted Predicted")
+          }
+
+          plot
         }, error = function(e) {
           message("Error processing model plot: ", e$message)
           NULL

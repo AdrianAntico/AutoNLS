@@ -297,8 +297,8 @@ NonLinearFitter <- R6::R6Class(
             model_fit <- list(
               coefficients = result_params,
               formula = formula,
-              residuals = temp_data$y - model_function(temp_data$x, result_params),
-              fitted.values = model_function(temp_data$x, result_params),
+              residuals = temp_data$y - model$model_function(temp_data$x, result_params),
+              fitted.values = model$model_function(temp_data$x, result_params),
               class = "custom_nls"
             )
           }
@@ -444,6 +444,7 @@ NonLinearFitter <- R6::R6Class(
 )
 
 # # Testing
+# library(AutoNLS)
 # data <- data.table::fread("../dummy_data.csv")
 # fitter <- NonLinearFitter$new(data = data)
 # self <- fitter
@@ -460,3 +461,12 @@ NonLinearFitter <- R6::R6Class(
 # self <- fitter
 # self$data <- data
 # self$add_model(name = "Hill")
+#
+# # Generate comparison plots
+# comparison_plots <- fitter$generate_comparison_plot(
+#   data = data,
+#   x_col = "X-Value",
+#   y_col = "Target",
+#   theme = "macarons",
+#   weighted_results = fit_results_weighted
+# )
