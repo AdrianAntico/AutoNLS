@@ -97,7 +97,12 @@ NULL
 \if{latex}{\out{\hypertarget{method-NonLinearFitter-fit_models}{}}}
 \subsection{Method \code{fit_models()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{NonLinearFitter$fit_models(x_col, y_col, control = list(maxiter = 200))}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{NonLinearFitter$fit_models(
+  x_col,
+  y_col,
+  weights_col = NULL,
+  control = list(maxiter = 200)
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -109,6 +114,8 @@ NULL
 
 \item{\code{control}}{A list of control parameters for the optimizer, such as \code{maxiter}.
 Default is \code{list(maxiter = 200)}.}
+
+\item{\code{weight_col}}{The name of the weights variable.}
 }
 \if{html}{\out{</div>}}
 }

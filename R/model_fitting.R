@@ -27,72 +27,166 @@ NonLinearFitter <- R6::R6Class(
       Hill = list(
         description = "Hill equation: models dose-response relationships.",
         formula = y ~ a * x^b / (c + x^b),
-        start_params = list(a = 1, b = 1, c = 1)
+        start_params = list(a = 1, b = 1, c = 1),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          c <- params[["c"]]
+          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          a * x^b / (c + x^b)
+        }
       ),
       Logistic = list(
         description = "Logistic growth model.",
         formula = y ~ a / (1 + exp(-b * (x - c))),
-        start_params = list(a = 1, b = 1, c = 50)
+        start_params = list(a = 1, b = 1, c = 50),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          c <- params[["c"]]
+          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          a / (1 + exp(-b * (x - c)))
+        }
       ),
       ExponentialDecay = list(
         description = "Exponential decay model.",
         formula = y ~ a * exp(-b * x),
-        start_params = list(a = 1, b = 0.1)
+        start_params = list(a = 1, b = 0.1),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          a * exp(-b * x)
+        }
       ),
       Gompertz = list(
         description = "Gompertz growth model.",
         formula = y ~ a * exp(-b * exp(-c * x)),
-        start_params = list(a = 1, b = 1, c = 1)
+        start_params = list(a = 1, b = 1, c = 1),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          c <- params[["c"]]
+          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          a * exp(-b * exp(-c * x))
+        }
       ),
       MichaelisMenten = list(
         description = "Michaelis-Menten kinetics.",
         formula = y ~ (Vmax * x) / (Km + x),
-        start_params = list(Vmax = 1, Km = 1)
+        start_params = list(Vmax = 1, Km = 1),
+        model_function = function(x, params) {
+          Vmax <- params[["Vmax"]]
+          Km <- params[["Km"]]
+          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          (Vmax * x) / (Km + x)
+        }
       ),
       WeibullType1 = list(
         description = "Weibull Type 1 model, used in survival analysis.",
         formula = y ~ a * exp(-exp(b - c * x)),
-        start_params = list(a = 1, b = 1, c = 0.1)
+        start_params = list(a = 1, b = 1, c = 0.1),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          c <- params[["c"]]
+          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          a * exp(-exp(b - c * x))
+        }
       ),
       WeibullType2 = list(
         description = "Weibull Type 2 model for sigmoidal data.",
         formula = y ~ a * (1 - exp(-b * x^c)),
-        start_params = list(a = 1, b = 0.1, c = 1)
+        start_params = list(a = 1, b = 0.1, c = 1),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          c <- params[["c"]]
+          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          a * (1 - exp(-b * x^c))
+        }
       ),
       Asymptotic = list(
         description = "Asymptotic regression model for limited growth.",
         formula = y ~ a - (a - b) * exp(-c * x),
-        start_params = list(a = 1, b = 1, c = 0.1)
+        start_params = list(a = 1, b = 1, c = 0.1),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          c <- params[["c"]]
+          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          a - (a - b) * exp(-c * x)
+        }
       ),
       PowerCurve = list(
         description = "Power curve model for scaling relationships.",
         formula = y ~ a * x^b,
-        start_params = list(a = 1, b = 1)
+        start_params = list(a = 1, b = 1),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          a * x^b
+        }
       ),
       Logarithmic = list(
         description = "Logarithmic model for data leveling off.",
         formula = y ~ a + b * log(x),
-        start_params = list(a = 1, b = 1)
+        start_params = list(a = 1, b = 1),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          a + b * log(x)
+        }
       ),
       RectangularHyperbola = list(
         description = "Rectangular hyperbola for saturation processes.",
         formula = y ~ (a * x) / (b + x),
-        start_params = list(a = 1, b = 1)
+        start_params = list(a = 1, b = 1),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          (a * x) / (b + x)
+        }
       ),
       Richards = list(
         description = "Richards curve: a generalization of logistic growth.",
         formula = y ~ a / (1 + exp(-b * (x - c)))^d,
-        start_params = list(a = 1, b = 1, c = 50, d = 1)
+        start_params = list(a = 1, b = 1, c = 50, d = 1),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          c <- params[["c"]]
+          d <- params[["d"]]
+          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          a / (1 + exp(-b * (x - c)))^d
+        }
       ),
       ChapmanRichards = list(
         description = "Chapman-Richards model for growth.",
         formula = y ~ a * (1 - exp(-b * x))^c,
-        start_params = list(a = 1, b = 0.1, c = 2)
+        start_params = list(a = 1, b = 0.1, c = 2),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          c <- params[["c"]]
+          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          a * (1 - exp(-b * x))^c
+        }
       ),
       HyperbolicTangent = list(
         description = "Hyperbolic tangent model for sigmoidal data.",
         formula = y ~ a * tanh(b * x + c),
-        start_params = list(a = 1, b = 0.1, c = 0)
+        start_params = list(a = 1, b = 0.1, c = 0),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          c <- params[["c"]]
+          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          a * tanh(b * x + c)
+        }
       )
     ),
 
@@ -130,43 +224,86 @@ NonLinearFitter <- R6::R6Class(
         model_info <- self$model_library[[name]]
         formula <- model_info$formula
         start_params <- model_info$start_params
+        model_function <- model_info$model_function
       }
       self$models[[name]] <- list(
         formula = formula,
-        start_params = start_params
+        start_params = start_params,
+        model_function = model_function
       )
     },
 
     #' @param x_col The name of the predictor variable.
     #' @param y_col The name of the response variable.
+    #' @param weight_col The name of the weights variable.
     #' @param control A list of control parameters for the optimizer, such as `maxiter`.
     #' Default is `list(maxiter = 200)`.
     #' @return A list of fitted model objects.
-    fit_models = function(x_col, y_col, control = list(maxiter = 200)) {
+    fit_models = function(x_col, y_col, weights_col = NULL, control = list(maxiter = 200)) {
 
       if (is.null(self$models) || length(self$models) == 0) {
         stop("No models to fit. Use add_model() to add models.")
       }
+
       if (!all(c(x_col, y_col) %in% names(self$data))) {
         stop("x_col and y_col must exist in the dataset.")
       }
 
+      # Extract weights if weights_col is specified
+      weights_vector <- if (!is.null(weights_col)) {
+        if (!weights_col %in% names(self$data)) stop("Weights column not found in dataset.")
+        self$data[[weights_col]]
+      } else {
+        NULL  # Use NULL for unweighted fitting
+      }
+
+      # Ensure no missing values in weights (only if weights are provided)
+      if (!is.null(weights_vector) && any(is.na(weights_vector))) {
+        stop("Weights column contains missing values.")
+      }
+
       # Create a copy of the data with renamed columns for fitting
-      temp_data <- copy(self$data)
+      temp_data <- data.table::copy(self$data)
       data.table::setnames(temp_data, old = c(x_col, y_col), new = c("x", "y"))
+
       self$fit_results <- lapply(names(self$models), function(model_name) {
         model <- self$models[[model_name]]
 
         # Use the unaltered formula from the model library
         formula <- model$formula
+
+        # Fit model with or without weights
         fit <- tryCatch({
-          model_fit <- minpack.lm::nlsLM(
-            formula = formula,
-            data = temp_data,
-            start = model$start_params,
-            control = control
-          )
-          # Attach the formula explicitly to the fit object
+          if (is.null(weights_vector)) {
+            # Unweighted fitting
+            model_fit <- minpack.lm::nlsLM(
+              formula = formula,
+              data = temp_data,
+              start = model$start_params,
+              control = control
+            )
+          } else {
+
+            # Weighted fitting using custom optimization
+            result_params <- private$optimize_with_weights(
+              x = temp_data$x,
+              y = temp_data$y,
+              weights = weights_vector,
+              model = model$model_function,
+              start_params = model$start_params
+            )
+
+            # Create a fake nls-like object for consistency
+            model_fit <- list(
+              coefficients = result_params,
+              formula = formula,
+              residuals = temp_data$y - model_function(temp_data$x, result_params),
+              fitted.values = model_function(temp_data$x, result_params),
+              class = "custom_nls"
+            )
+          }
+
+          # Attach formula to fit object
           model_fit$formula <- formula
           model_fit
         }, error = function(e) {
@@ -261,5 +398,65 @@ NonLinearFitter <- R6::R6Class(
 
       return(plot)
     }
+  ),
+
+  private = list(
+    # Weighted optimization logic
+    optimize_with_weights = function(x, y, weights, model, start_params) {
+
+      # Convert start_params into a named vector
+      params <- unlist(start_params)
+
+      # Define the weighted residual sum of squares function
+      wrss <- function(params_vec) {
+        # Reconstruct parameters as a named list
+        params_list <- as.list(params_vec)
+        names(params_list) <- names(start_params)
+
+        # Compute predictions using the model
+        predicted <- model(x = x, params = params_list)
+
+        # Ensure valid predictions
+        if (length(predicted) != length(y)) {
+          stop("Predicted values do not match observed values in length.")
+        }
+
+        # Calculate weighted residuals
+        residuals <- y - predicted
+        sum(weights * residuals^2)  # Return WRSS
+      }
+
+      # Use optim() for minimization
+      result <- optim(
+        par = params,
+        fn = wrss,
+        method = "BFGS",
+        control = list(maxit = 500, reltol = 1e-6)
+      )
+
+      if (result$convergence != 0) {
+        stop("Optimization did not converge for the weighted model.")
+      }
+
+      return(result$par)  # Return optimized parameters
+    }
   )
 )
+
+# # Testing
+# data <- data.table::fread("../dummy_data.csv")
+# fitter <- NonLinearFitter$new(data = data)
+# self <- fitter
+# fitter$add_model(name = "Hill")
+# self$add_model(name = "Hill")
+#
+# self$models
+#
+# model_no_weights <- fitter$fit_models(x_col = "X-Value", y_col = "Target")
+#
+# model_weights <- fitter$fit_models(x_col = "X-Value", y_col = "Target", weights_col = "Weights")
+#
+#
+# self <- fitter
+# self$data <- data
+# self$add_model(name = "Hill")

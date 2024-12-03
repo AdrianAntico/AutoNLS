@@ -68,7 +68,7 @@ A new instance of the NonLinearModelEvaluator class.
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A data.table of evaluation metrics.
+A data.table of evaluation metrics with fitted equations.
 }
 }
 \if{html}{\out{<hr>}}
