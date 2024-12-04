@@ -15,9 +15,5 @@
 The BIC value for the model.
 }
 \description{
-Computes the Bayesian Information Criterion (BIC) for models of class \code{custom_nls}.
-}
-\examples{
-# Assuming `fit` is a fitted `custom_nls` model
-BIC(fit)
+Computes the Bayesian Information Criterion for models of class \code{custom_nls}.
 }

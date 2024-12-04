@@ -12,12 +12,8 @@
 \item{...}{Additional arguments (currently ignored).}
 }
 \value{
-The AIC value for the model.
+The AIC value for the model
 }
 \description{
-Computes the Akaike Information Criterion (AIC) for models of class \code{custom_nls}.
-}
-\examples{
-# Assuming `fit` is a fitted `custom_nls` model
-AIC(fit)
+Computes the Akaike Information Criterion for models of class \code{custom_nls}.
 }

@@ -64,7 +64,7 @@ NonLinearModelEvaluator <- R6::R6Class(
             # Compute AIC and BIC manually
             n <- length(observed)
             k <- length(params)
-            log_likelihood <- -n/2 * (log(2 * pi) + log(wrss / n) + 1)
+            log_likelihood <- n/2 * (log(2 * pi) + log(wrss / n) + 1)
             aic <- -2 * log_likelihood + 2 * k
             bic <- -2 * log_likelihood + log(n) * k
 

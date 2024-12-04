@@ -112,10 +112,10 @@ NULL
 
 \item{\code{y_col}}{The name of the response variable.}
 
+\item{\code{weights_col}}{The name of the weights variable.}
+
 \item{\code{control}}{A list of control parameters for the optimizer, such as \code{maxiter}.
 Default is \code{list(maxiter = 200)}.}
-
-\item{\code{weight_col}}{The name of the weights variable.}
 }
 \if{html}{\out{</div>}}
 }
