@@ -100,12 +100,18 @@ summary.custom_nls <- function(object, ...) {
 #' # Assuming `fit` is a fitted `custom_nls` model
 #' AIC(fit)
 AIC.custom_nls <- function(object, ...) {
-  n <- length(object$fitted.values)      # Number of observations
-  k <- length(coef(object))             # Number of parameters
-  rss <- sum(object$residuals^2)        # Residual sum of squares
-  sigma2 <- rss / n                     # Residual variance
+  n <- length(object$fitted.values)
+  k <- length(coef(object))
+  rss <- sum(object$residuals^2)
+  sigma2 <- rss / n
+
+  if (sigma2 <= 0) stop("Residual variance (sigma^2) is non-positive, AIC cannot be computed.")
+  cat("AIC Debug -> n:", n, "k:", k, "rss:", rss, "sigma2:", sigma2, "\n")
+
   log_likelihood <- -n / 2 * (log(2 * pi) + log(sigma2) + 1)
-  aic <- -2 * log_likelihood + 2 * k    # AIC formula
+  cat("AIC Debug -> log-likelihood:", log_likelihood, "\n")
+
+  aic <- -2 * log_likelihood + 2 * k
   return(aic)
 }
 
@@ -120,11 +126,17 @@ AIC.custom_nls <- function(object, ...) {
 #' # Assuming `fit` is a fitted `custom_nls` model
 #' BIC(fit)
 BIC.custom_nls <- function(object, ...) {
-  n <- length(object$fitted.values)      # Number of observations
-  k <- length(coef(object))             # Number of parameters
-  rss <- sum(object$residuals^2)        # Residual sum of squares
-  sigma2 <- rss / n                     # Residual variance
+  n <- length(object$fitted.values)
+  k <- length(coef(object))
+  rss <- sum(object$residuals^2)
+  sigma2 <- rss / n
+
+  if (sigma2 <= 0) stop("Residual variance (sigma^2) is non-positive, BIC cannot be computed.")
+  cat("BIC Debug -> n:", n, "k:", k, "rss:", rss, "sigma2:", sigma2, "\n")
+
   log_likelihood <- -n / 2 * (log(2 * pi) + log(sigma2) + 1)
-  bic <- -2 * log_likelihood + k * log(n) # BIC formula
+  cat("BIC Debug -> log-likelihood:", log_likelihood, "\n")
+
+  bic <- -2 * log_likelihood + k * log(n)
   return(bic)
 }

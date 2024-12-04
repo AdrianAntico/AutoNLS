@@ -445,87 +445,80 @@ NonLinearFitter <- R6::R6Class(
   )
 )
 
-# # Testing
-# library(AutoNLS)
-# data <- data.table::fread("../dummy_data.csv")
-# fitter <- NonLinearFitter$new(data = data)
-# self <- fitter
-# fitter$add_model(name = "Hill")
-# self$add_model(name = "Hill")
-#
-# self$models
-#
-# model_no_weights <- fitter$fit_models(x_col = "X-Value", y_col = "Target")
-# model_weights <- fitter$fit_models(x_col = "X-Value", y_col = "Target", weights_col = "Weights")
-# self <- fitter
-#
-# self <- fitter
-# self$data <- data
-# self$add_model(name = "Hill")
-#
-#
-# # Initialize evaluator with unweighted models
-# evaluator <- NonLinearModelEvaluator$new(fit_results = model_no_weights, data = data)
-#
-# # Generate metrics for unweighted models
-# metrics_unweighted <- evaluator$generate_metrics(y_col = "Target")
-# print(metrics_unweighted)
-#
-# # Generate comparison plots for unweighted models
-# comparison_plots_unweighted <- evaluator$generate_comparison_plot(
-#   data = data,
-#   x_col = "X-Value",
-#   y_col = "Target",
-#   theme = "macarons"
-# )
-#
-# # Initialize evaluator with weighted models
-# evaluator_weighted <- NonLinearModelEvaluator$new(fit_results = model_weights, data = data)
-#
-# self <- evaluator_weighted
-#
-# # Generate metrics for weighted models
-# metrics_weighted <- evaluator_weighted$generate_metrics(y_col = "Target", x_col = "X-Value")
-# print(metrics_weighted)
-#
-# # Generate comparison plots for weighted models
-# comparison_plots_weighted <- evaluator_weighted$generate_comparison_plot(
-#   data = data,
-#   x_col = "X-Value",
-#   y_col = "Target",
-#   theme = "macarons"
-# )
-#
-#
-# # Prepare new data for scoring
-# new_data <- data.table::data.table(
-#   `X-Value` = seq(1, 100, by = 1)
-# )
-#
-# # Initialize scorer
-# scorer_weighted <- NonLinearModelScorer$new(fit_results = model_weights)
-# scorer_unweighted <- NonLinearModelScorer$new(fit_results = model_no_weights)
-#
-# # Score new data with weighted models
-# scored_weighted <- scorer_weighted$score_new_data(
-#   new_data = new_data,
-#   x_col = "X-Value"
-# )
-# print(scored_weighted$Hill)
-#
-# # Score new data with unweighted models
-# scored_unweighted <- scorer_unweighted$score_new_data(
-#   new_data = new_data,
-#   x_col = "X-Value"
-# )
-# print(scored_unweighted$Hill)
-#
-#
-#
-#
-#
-# observed <- data$Target
-# predicted <- 13.63 * data$`X-Value`^0.998 / (92.99 + data$`X-Value`^0.998)
-# residuals <- observed - predicted
-# residual_variance <- mean(residuals^2)
-# print(residual_variance)
+# Testing
+library(AutoNLS)
+data <- data.table::fread("../dummy_data.csv")
+fitter <- NonLinearFitter$new(data = data)
+self <- fitter
+fitter$add_model(name = "Hill")
+self$add_model(name = "Hill")
+
+self$models
+
+model_no_weights <- fitter$fit_models(x_col = "X-Value", y_col = "Target")
+model_weights <- fitter$fit_models(x_col = "X-Value", y_col = "Target", weights_col = "Weights")
+self <- fitter
+
+self <- fitter
+self$data <- data
+self$add_model(name = "Hill")
+
+
+# Initialize evaluator with unweighted models
+evaluator <- NonLinearModelEvaluator$new(fit_results = model_no_weights, data = data)
+
+# Generate metrics for unweighted models
+metrics_unweighted <- evaluator$generate_metrics(y_col = "Target")
+print(metrics_unweighted)
+
+# Generate comparison plots for unweighted models
+comparison_plots_unweighted <- evaluator$generate_comparison_plot(
+  data = data,
+  x_col = "X-Value",
+  y_col = "Target",
+  theme = "macarons"
+)
+
+# Initialize evaluator with weighted models
+evaluator_weighted <- NonLinearModelEvaluator$new(fit_results = model_weights, data = data)
+
+self <- evaluator_weighted
+
+# Generate metrics for weighted models
+metrics_weighted <- evaluator_weighted$generate_metrics(y_col = "Target", x_col = "X-Value")
+print(metrics_weighted)
+
+# Generate comparison plots for weighted models
+comparison_plots_weighted <- evaluator_weighted$generate_comparison_plot(
+  data = data,
+  x_col = "X-Value",
+  y_col = "Target",
+  theme = "macarons"
+)
+
+
+# Prepare new data for scoring
+new_data <- data.table::data.table(
+  `X-Value` = seq(1, 100, by = 1)
+)
+
+# Initialize scorer
+scorer_weighted <- NonLinearModelScorer$new(fit_results = model_weights)
+scorer_unweighted <- NonLinearModelScorer$new(fit_results = model_no_weights)
+
+# Score new data with weighted models
+scored_weighted <- scorer_weighted$score_new_data(
+  new_data = new_data,
+  x_col = "X-Value"
+)
+print(scored_weighted$Hill)
+
+# Score new data with unweighted models
+scored_unweighted <- scorer_unweighted$score_new_data(
+  new_data = new_data,
+  x_col = "X-Value"
+)
+print(scored_unweighted$Hill)
+
+
+
