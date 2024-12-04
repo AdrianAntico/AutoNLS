@@ -33,11 +33,22 @@ NonLinearModelScorer <- R6::R6Class(
         if (is.null(fit)) return(NULL)
 
         tryCatch({
-          # Generate predictions
-          predictions <- data.table::data.table(
-            x = new_data[[x_col]],
-            y_pred = predict(fit, newdata = new_data)
-          )
+          if (inherits(fit, "custom_nls")) {
+            # Use custom model function for scoring
+            params <- coef(fit)  # Extract fitted parameters
+            model_function <- fit$model_function  # Retrieve model-specific function
+
+            predictions <- data.table::data.table(
+              x = new_data[[x_col]],
+              y_pred = model_function(x = new_data[[x_col]], params = params)
+            )
+          } else {
+            # Use standard predict() for nls models
+            predictions <- data.table::data.table(
+              x = new_data[[x_col]],
+              y_pred = predict(fit, newdata = new_data)
+            )
+          }
           predictions
         }, error = function(e) {
           message("Error scoring model: ", e$message)

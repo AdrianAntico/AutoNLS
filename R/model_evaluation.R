@@ -33,61 +33,98 @@ NonLinearModelEvaluator <- R6::R6Class(
     },
 
     #' @param y_col target variable
+    #' @param x_col x variable
     #' @return A data.table of evaluation metrics with fitted equations.
-    generate_metrics = function(y_col = NULL) {
+    generate_metrics = function(y_col = NULL, x_col = NULL) {
       if (is.null(self$fit_results)) stop("No fitted models to evaluate.")
-
-      # For numeric equation output
-      format_equation <- function(equation) {
-        # Replace double negatives with a single positive sign
-        formatted_equation <- gsub("-\\s*-", "+ ", equation)
-        return(formatted_equation)
-      }
 
       metrics <- lapply(names(self$fit_results), function(model_name) {
         fit <- self$fit_results[[model_name]]
         if (is.null(fit)) return(NULL)
 
         tryCatch({
-          summary_fit <- summary(fit)
-          aic <- AIC(fit)
-          bic <- BIC(fit)
-          residual_std_error <- summary_fit$sigma
+          if (inherits(fit, "custom_nls")) {
+            # Extract parameters
+            params <- coef(fit)
+            model_function <- fit$model_function
 
-          # Access the formula stored in the fitted model
-          formula <- fit$formula
+            # Observed and predicted values
+            observed <- self$data[[y_col]]
+            predicted <- model_function(x = self$data[[x_col]], params = params)
+            residuals <- observed - predicted
 
-          # Extract observed values
-          observed <- self$data[[y_col]]
-          if (!is.numeric(observed)) stop("Observed values are not numeric.")
+            # Weighted residual sum of squares
+            wrss <- sum(residuals^2 * fit$weights)
 
-          # Compute predicted values using the fitted model
-          predicted <- predict(fit, newdata = self$data)
+            # Compute R-squared
+            ss_res <- sum(residuals^2)
+            ss_tot <- sum((observed - mean(observed))^2)
+            r_squared <- 1 - ss_res / ss_tot
 
-          # Compute R-squared
-          ss_res <- sum((observed - predicted)^2)
-          ss_tot <- sum((observed - mean(observed))^2)
-          r_squared <- 1 - ss_res / ss_tot
+            # Compute AIC and BIC manually
+            n <- length(observed)
+            k <- length(params)
+            log_likelihood <- -n/2 * (log(2 * pi) + log(wrss / n) + 1)
+            aic <- -2 * log_likelihood + 2 * k
+            bic <- -2 * log_likelihood + log(n) * k
 
-          # Extract fitted parameter values
-          params <- coef(fit)
+            # Create fitted model string
+            fitted_equation <- deparse(fit$formula)
+            for (param_name in names(params)) {
+              fitted_equation <- gsub(
+                paste0("\\b", param_name, "\\b"),
+                format(params[[param_name]], digits = 4),
+                fitted_equation
+              )
+            }
 
-          # Replace parameter names in the formula with their fitted values
-          fitted_equation <- deparse(formula)
-          for (param_name in names(params)) {
-            fitted_equation <- gsub(param_name, format(params[[param_name]], digits = 3), fitted_equation)
+            # Compile metrics
+            list(
+              `Model Name` = model_name,
+              Formula = deparse(fit$formula),
+              Model = fitted_equation,  # Use the formula with coefficients
+              AIC = aic,
+              BIC = bic,
+              Resid_Std_Err = sqrt(mean(residuals^2)),
+              R_Sq = r_squared
+            )
+          } else {
+            # Use standard methods for unweighted models
+            summary_fit <- summary(fit)
+            aic <- AIC(fit)
+            bic <- BIC(fit)
+            residual_std_error <- summary_fit$sigma
+
+            # Observed and predicted values
+            observed <- self$data[[y_col]]
+            predicted <- predict(fit, newdata = self$data)
+
+            # Compute R-squared
+            ss_res <- sum((observed - predicted)^2)
+            ss_tot <- sum((observed - mean(observed))^2)
+            r_squared <- 1 - ss_res / ss_tot
+
+            # Create fitted model string
+            fitted_equation <- deparse(fit$formula)
+            for (param_name in names(coef(fit))) {
+              fitted_equation <- gsub(
+                paste0("\\b", param_name, "\\b"),
+                format(coef(fit)[[param_name]], digits = 4),
+                fitted_equation
+              )
+            }
+
+            # Compile metrics
+            list(
+              `Model Name` = model_name,
+              Formula = deparse(fit$formula),
+              Model = fitted_equation,  # Use the formula with coefficients
+              AIC = aic,
+              BIC = bic,
+              Resid_Std_Err = residual_std_error,
+              R_Sq = r_squared
+            )
           }
-
-          # Compile metrics
-          list(
-            `Model Name` = model_name,
-            Formula = deparse(formula),              # Original model formula
-            Model = format_equation(fitted_equation),     # Fitted model with parameter values
-            AIC = aic,
-            BIC = bic,
-            Resid_Std_Err = residual_std_error,
-            R_Sq = r_squared
-          )
         }, error = function(e) {
           message("Error processing model: ", e$message)
           NULL
@@ -102,33 +139,37 @@ NonLinearModelEvaluator <- R6::R6Class(
     #' @param x_col A string specifying the name of the x variable in the dataset.
     #' @param y_col A string specifying the name of the y variable in the dataset.
     #' @param theme Echarts theme
-    #' @param weighted_results Optional list of weighted model fits for comparison.
     #' @return An `echarts4r` plot showing observed vs. predicted data, with weighted comparisons if available.
-    generate_comparison_plot = function(data, x_col, y_col, theme = "macarons", weighted_results = NULL) {
+    generate_comparison_plot = function(data, x_col, y_col, theme = "macarons") {
       if (is.null(self$fit_results) || length(self$fit_results) == 0) {
         stop("No fitted models to evaluate.")
       }
       if (!all(c(x_col, y_col) %in% names(data))) stop("x_col and y_col must exist in the dataset.")
 
       # Retrieve metrics (including R-squared)
-      metrics <- self$generate_metrics(y_col = y_col)
+      metrics <- self$generate_metrics(y_col = y_col, x_col = x_col)
 
-      # Generate plots
+      # Check if metrics were generated successfully
+      if (nrow(metrics) == 0) {
+        stop("No metrics available for the models.")
+      }
+
+      # Generate plots for all models
       self$plots <- setNames(lapply(names(self$fit_results), function(model_name) {
         fit <- self$fit_results[[model_name]]
         tryCatch({
-          # Generate predictions for unweighted results
-          predictions_unweighted <- data.table::data.table(
-            x = data[[x_col]],
-            y_pred_unweighted = predict(fit, newdata = data)
-          )
 
-          # Generate predictions for weighted results (if available)
-          if (!is.null(weighted_results)) {
-            weighted_fit <- weighted_results[[model_name]]
-            predictions_weighted <- data.table::data.table(
+          # Handle weighted and unweighted models
+          is_weighted <- inherits(fit, "custom_nls")
+          if (is_weighted) {
+            predictions <- data.table::data.table(
               x = data[[x_col]],
-              y_pred_weighted = predict(weighted_fit, newdata = data)
+              y_pred = fit$fitted.values
+            )
+          } else {
+            predictions <- data.table::data.table(
+              x = data[[x_col]],
+              y_pred = predict(fit, newdata = data)
             )
           }
 
@@ -137,34 +178,23 @@ NonLinearModelEvaluator <- R6::R6Class(
             x = data[[x_col]],
             y = data[[y_col]]
           )
-          combined_data <- merge(combined_data, predictions_unweighted, by = "x", all = TRUE)
-          if (!is.null(weighted_results)) {
-            combined_data <- merge(combined_data, predictions_weighted, by = "x", all = TRUE)
-          }
+          combined_data <- merge(combined_data, predictions, by = "x", all = TRUE)
 
           # Get R-squared from metrics
           r_squared <- metrics[`Model Name` == eval(model_name)][["R_Sq"]]
 
           # Create plot
-          plot <- combined_data |>
+          combined_data |>
             echarts4r::e_charts(x) |>
             echarts4r::e_scatter(y, name = "Observed") |>
-            echarts4r::e_line(y_pred_unweighted, name = "Unweighted Predicted") |>
+            echarts4r::e_line(y_pred, name = "Predicted") |>
             echarts4r::e_theme(name = theme) |>
             echarts4r::e_title(
               text = paste("Model Fit:", model_name),
               subtext = paste("R-Sq: ", round(r_squared, 4))
             ) |>
-            echarts4r::e_datazoom(x_index = c(0,1)) |>
-            echarts4r::e_toolbox_feature(feature = c("saveAsImage","dataZoom"))
-
-          # Add weighted predictions if available
-          if (!is.null(weighted_results)) {
-            plot <- plot |>
-              echarts4r::e_line(y_pred_weighted, name = "Weighted Predicted")
-          }
-
-          plot
+            echarts4r::e_datazoom(x_index = c(0, 1)) |>
+            echarts4r::e_toolbox_feature(feature = c("saveAsImage", "dataZoom"))
         }, error = function(e) {
           message("Error processing model plot: ", e$message)
           NULL

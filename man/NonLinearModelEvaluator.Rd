@@ -57,13 +57,15 @@ A new instance of the NonLinearModelEvaluator class.
 \if{latex}{\out{\hypertarget{method-NonLinearModelEvaluator-generate_metrics}{}}}
 \subsection{Method \code{generate_metrics()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{NonLinearModelEvaluator$generate_metrics(y_col = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{NonLinearModelEvaluator$generate_metrics(y_col = NULL, x_col = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{y_col}}{target variable}
+
+\item{\code{x_col}}{x variable}
 }
 \if{html}{\out{</div>}}
 }
@@ -80,8 +82,7 @@ A data.table of evaluation metrics with fitted equations.
   data,
   x_col,
   y_col,
-  theme = "macarons",
-  weighted_results = NULL
+  theme = "macarons"
 )}\if{html}{\out{</div>}}
 }
 
@@ -95,8 +96,6 @@ A data.table of evaluation metrics with fitted equations.
 \item{\code{y_col}}{A string specifying the name of the y variable in the dataset.}
 
 \item{\code{theme}}{Echarts theme}
-
-\item{\code{weighted_results}}{Optional list of weighted model fits for comparison.}
 }
 \if{html}{\out{</div>}}
 }
