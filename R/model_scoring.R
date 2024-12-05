@@ -40,13 +40,13 @@ NonLinearModelScorer <- R6::R6Class(
 
             predictions <- data.table::data.table(
               x = new_data[[x_col]],
-              y_pred = model_function(x = new_data[[x_col]], params = params)
+              y_pred = fit$back_transform(model_function(x = new_data[[x_col]], params = params), scale_params = fit$scale_params)
             )
           } else {
             # Use standard predict() for nls models
             predictions <- data.table::data.table(
               x = new_data[[x_col]],
-              y_pred = predict(fit, newdata = new_data)
+              y_pred = fit$back_transform(predict(fit, newdata = new_data), scale_params = fit$scale_params)
             )
           }
           predictions

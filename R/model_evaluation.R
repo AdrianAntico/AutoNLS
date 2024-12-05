@@ -50,7 +50,8 @@ NonLinearModelEvaluator <- R6::R6Class(
 
             # Observed and predicted values
             observed <- self$data[[y_col]]
-            predicted <- model_function(x = self$data[[x_col]], params = params)
+            x_scaled <- (self$data[[x_col]] - fit$scale_params$min_x) / fit$scale_params$scale_factor_x
+            predicted <- fit$back_transform(predictions = model_function(x = x_scaled, params = params), scale_params = fit$scale_params)
             residuals <- observed - predicted
 
             # Weighted residual sum of squares
@@ -91,13 +92,13 @@ NonLinearModelEvaluator <- R6::R6Class(
           } else {
             # Use standard methods for unweighted models
             summary_fit <- summary(fit)
-            aic <- AIC(fit)
-            bic <- BIC(fit)
+            aic <- -AIC(fit)
+            bic <- -BIC(fit)
             residual_std_error <- summary_fit$sigma
 
             # Observed and predicted values
             observed <- self$data[[y_col]]
-            predicted <- predict(fit, newdata = self$data)
+            predicted <- fit$back_transform(predict(fit, newdata = fit$scaled_data), scale_params = fit$scale_params)
 
             # Compute R-squared
             ss_res <- sum((observed - predicted)^2)
@@ -164,12 +165,12 @@ NonLinearModelEvaluator <- R6::R6Class(
           if (is_weighted) {
             predictions <- data.table::data.table(
               x = data[[x_col]],
-              y_pred = fit$fitted.values
+              y_pred = fit$back_transform(fit$fitted.values, scale_params = fit$scale_params)
             )
           } else {
             predictions <- data.table::data.table(
-              x = data[[x_col]],
-              y_pred = predict(fit, newdata = data)
+              x = self$data[[x_col]],
+              y_pred = fit$back_transform(predict(fit, newdata = fit$scaled_data), scale_params = fit$scale_params)
             )
           }
 

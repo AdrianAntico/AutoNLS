@@ -591,11 +591,12 @@ server <- function(input, output, session) {
     data <- dataset()
     tryCatch({
       col <- input$transform_col
-      transform_result <- switch(input$transform_type,
-                                 "Log" = log(data[[col]]),
-                                 "Sqrt" = sqrt(data[[col]]),
-                                 "Standardize" = (data[[col]] - mean(data[[col]], na.rm = TRUE)) / sd(data[[col]], na.rm = TRUE),
-                                 "Scale" = (data[[col]] - min(data[[col]], na.rm = TRUE)) / (max(data[[col]], na.rm = TRUE) - min(data[[col]], na.rm = TRUE))
+      transform_result <- switch(
+        input$transform_type,
+        "Log" = log(data[[col]]),
+        "Sqrt" = sqrt(data[[col]]),
+        "Standardize" = (data[[col]] - mean(data[[col]], na.rm = TRUE)) / sd(data[[col]], na.rm = TRUE),
+        "Scale" = (data[[col]] - min(data[[col]], na.rm = TRUE)) / (max(data[[col]], na.rm = TRUE) - min(data[[col]], na.rm = TRUE))
       )
       data[, paste0(col, "_", tolower(input$transform_type)) := transform_result]
       dataset(data)
@@ -928,6 +929,7 @@ server <- function(input, output, session) {
     last_trigger("fit_models")
   })
 
+  # Observe button presses and update `last_trigger`
   observeEvent(input$plot_explore, {
     last_trigger("plot_explore")
   })
@@ -1095,6 +1097,7 @@ server <- function(input, output, session) {
     }
   })
 
+  # Update weights column selection
   observe({
     req(dataset())
     colnames <- names(dataset())

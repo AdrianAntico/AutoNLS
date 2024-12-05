@@ -101,7 +101,7 @@ NULL
   x_col,
   y_col,
   weights_col = NULL,
-  control = list(maxiter = 5000)
+  control = list(maxiter = 1024)
 )}\if{html}{\out{</div>}}
 }
 

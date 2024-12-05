@@ -239,7 +239,7 @@ NonLinearFitter <- R6::R6Class(
     #' @param control A list of control parameters for the optimizer, such as `maxiter`.
     #' Default is `list(maxiter = 200)`.
     #' @return A list of fitted model objects.
-    fit_models = function(x_col, y_col, weights_col = NULL, control = list(maxiter = 5000)) {
+    fit_models = function(x_col, y_col, weights_col = NULL, control = list(maxiter = 1024)) {
 
       if (is.null(self$models) || length(self$models) == 0) {
         stop("No models to fit. Use add_model() to add models.")
@@ -260,73 +260,35 @@ NonLinearFitter <- R6::R6Class(
       # Ensure no missing values in weights (only if weights are provided)
       if (!is.null(weights_vector) && any(is.na(weights_vector))) {
         stop("Weights column contains missing values.")
+      } else {
+        # Standardize weights to a sum of 1
+        weights_vector <- weights_vector / sum(weights_vector, na.rm = TRUE)
       }
 
       # Create a copy of the data with renamed columns for fitting
       temp_data <- data.table::copy(self$data)
       data.table::setnames(temp_data, old = c(x_col, y_col), new = c("x", "y"))
 
-      # ---------------------
-      # New Code
-      # ---------------------
-
-      # Min-Max Scale the data
       scale_params <- list(
-        x_min = min(temp_data$x, na.rm = TRUE),
-        x_max = max(temp_data$x, na.rm = TRUE),
-        y_min = min(temp_data$y, na.rm = TRUE),
-        y_max = max(temp_data$y, na.rm = TRUE)
+        min_x = min(temp_data$x, na.rm = TRUE),
+        max_x = max(temp_data$x, na.rm = TRUE),
+        min_y = min(temp_data$y, na.rm = TRUE),
+        max_y = max(temp_data$y, na.rm = TRUE),
+        scale_factor_x = max(temp_data$x, na.rm = TRUE) - min(temp_data$x, na.rm = TRUE),
+        scale_factor_y = max(temp_data$y, na.rm = TRUE) - min(temp_data$y, na.rm = TRUE)
       )
 
+      # Create updated data.table with scaled values
       temp_data_scaled <- data.table::copy(temp_data)
-      temp_data_scaled[, x := (x - scale_params$x_min) / (scale_params$x_max - scale_params$x_min)]
-      temp_data_scaled[, y := (y - scale_params$y_min) / (scale_params$y_max - scale_params$y_min)]
+      temp_data_scaled[, x := (x - scale_params$min_x) / (scale_params$max_x - scale_params$min_x)]
+      temp_data_scaled[, y := (y - scale_params$min_y) / (scale_params$max_y - scale_params$min_y)]
 
-      # Step 1: Fit models on scaled data
-      scaled_fit_results <- lapply(names(self$models), function(model_name) {
-        model <- self$models[[model_name]]
-        tryCatch({
-          minpack.lm::nlsLM(
-            formula = model$formula,
-            data = temp_data_scaled,
-            start = model$start_params,
-            control = control
-          )
-        }, error = function(e) {
-          message("Error fitting model on scaled data: ", model_name, " - ", e$message)
-          NULL
-        })
-      })
-
-      names(scaled_fit_results) <- names(self$models)
-
-      # Step 2: Adjust parameters for unscaled data
-      adjusted_start_params <- lapply(names(self$models), function(model_name) {
-        fit <- scaled_fit_results[[model_name]]
-        if (is.null(fit)) return(NULL)
-
-        params <- coef(fit)  # Extract fitted parameters
-        model <- self$models[[model_name]]
-
-        # Adjust parameters based on scaling
-        unscaled_params <- private$adjust_parameters_for_scaling(
-          params = params,
-          scale_params = scale_params,
-          model = model
-        )
-        unscaled_params
-      })
-
-      names(adjusted_start_params) <- names(self$models)
-
-      # --------------------------------------------------------------------------------------------
-
+      # Fit model
       self$fit_results <- lapply(names(self$models), function(model_name) {
         model <- self$models[[model_name]]
 
         # Use the unaltered formula from the model library
         formula <- model$formula
-        start_params <- adjusted_start_params[[model_name]]
 
         # Fit model with or without weights
         fit <- tryCatch({
@@ -334,7 +296,7 @@ NonLinearFitter <- R6::R6Class(
             # Unweighted fitting
             model_fit <- minpack.lm::nlsLM(
               formula = formula,
-              data = temp_data,
+              data = temp_data_scaled,
               start = model$start_params,
               control = control
             )
@@ -342,8 +304,8 @@ NonLinearFitter <- R6::R6Class(
 
             # Weighted fitting using custom optimization
             result_params <- private$optimize_with_weights(
-              x = temp_data$x,
-              y = temp_data$y,
+              x = temp_data_scaled$x,
+              y = temp_data_scaled$y,
               weights = weights_vector,
               model = model$model_function,
               start_params = model$start_params
@@ -352,8 +314,8 @@ NonLinearFitter <- R6::R6Class(
             model_fit <- list(
               coefficients = result_params,
               formula = formula,
-              residuals = temp_data$y - model$model_function(temp_data$x, result_params),
-              fitted.values = model$model_function(temp_data$x, result_params),
+              residuals = temp_data_scaled$y - model$model_function(temp_data_scaled$x, result_params),
+              fitted.values = model$model_function(temp_data_scaled$x, result_params),
               model_function = model$model_function,
               weights = weights_vector
             )
@@ -374,6 +336,20 @@ NonLinearFitter <- R6::R6Class(
           message("Successfully fitted model: ", model_name)
         }
 
+        # Attach scale parameters to the fit object
+        fit$scale_params <- scale_params
+        fit$original_x_col <- x_col
+        fit$original_y_col <- y_col
+        fit$model_function <- model$model_function
+        fit$scaled_data <- temp_data_scaled
+        fit$back_transform <- function(predictions, scale_params) {
+          if (is.null(scale_params$scale_factor_y) || is.null(scale_params$min_y)) {
+            stop("Error: Scale factor or minimum value is missing.")
+          }
+
+          # Back-transform the predictions from scaled to original space
+          predictions * scale_params$scale_factor_y + scale_params$min_y
+        }
         fit
       })
 
@@ -486,32 +462,6 @@ NonLinearFitter <- R6::R6Class(
       }
 
       return(result$par)  # Return optimized parameters
-    },
-
-    adjust_parameters_for_scaling = function(params, scale_params, model) {
-
-      # Extract scaling parameters
-      x_min <- scale_params$x_min
-      x_max <- scale_params$x_max
-      y_min <- scale_params$y_min
-      y_max <- scale_params$y_max
-
-      # Adjust each parameter as needed (this will vary based on the model)
-      adjusted_params <- lapply(names(params), function(param_name) {
-        param_value <- params[[param_name]]
-
-        # Example logic: Adjust scale-dependent parameters (specific to each model)
-        if (param_name %in% c("a", "b")) {
-          param_value * (y_max - y_min)  # Adjust for y-scale
-        } else if (param_name %in% c("c")) {
-          param_value * (x_max - x_min)  # Adjust for x-scale
-        } else {
-          param_value  # Leave other parameters unchanged
-        }
-      })
-
-      # Return adjusted parameters as a named list
-      setNames(adjusted_params, names(params))
     }
   )
 )
@@ -533,13 +483,17 @@ NonLinearFitter <- R6::R6Class(
 # self$data <- data
 # self$add_model(name = "Hill")
 # model_name = "Hill"
+# x_col = "X-Value"
+# y_col = "Target"
+#
 #
 #
 # # Initialize evaluator with unweighted models
 # evaluator <- NonLinearModelEvaluator$new(fit_results = model_no_weights, data = data)
+# self <- evaluator
 #
 # # Generate metrics for unweighted models
-# metrics_unweighted <- evaluator$generate_metrics(y_col = "Target")
+# metrics_unweighted <- evaluator$generate_metrics(y_col = "Target", x_col = "X-Value")
 # print(metrics_unweighted)
 #
 # # Generate comparison plots for unweighted models
@@ -590,6 +544,6 @@ NonLinearFitter <- R6::R6Class(
 #   x_col = "X-Value"
 # )
 # print(scored_unweighted$Hill)
-
-
-
+#
+#
+#
