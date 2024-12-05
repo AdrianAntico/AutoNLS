@@ -47,6 +47,7 @@ ui <- bs4DashPage(
         style = "flex-grow: 1;",  # Ensures menu items take up available space
         bs4SidebarMenu(
           bs4SidebarMenuItem("Home", tabName = "home", icon = icon("home")), # Add this line
+          bs4SidebarMenuItem("Data Preprocessing", tabName = "data_preprocessing", icon = icon("magic-wand-sparkles")),
           bs4SidebarMenuItem("EDA", tabName = "eda", icon = icon("chart-bar")),
           bs4SidebarMenuItem("Model Fitting", tabName = "model_fitting", icon = icon("cogs")),
           bs4SidebarMenuItem("Scoring", tabName = "scoring", icon = icon("table"))
@@ -138,21 +139,90 @@ ui <- bs4DashPage(
         )
       ),
 
-      # EDA Tab (Updated)
+      # Data Preprocessing Tab
+      bs4TabItem(
+        tabName = "data_preprocessing",
+        fluidRow(
+          # Data Upload Section
+          bs4Dash::box(
+            title = "Data Upload",
+            width = 12,
+            collapsible = TRUE,
+            solidHeader = TRUE,
+            status = "primary",
+            fileInput("upload_raw_data", "Upload Data (.csv)", accept = ".csv"),
+            tags$p("Please upload a CSV file to begin preprocessing.")
+          )
+        ),
+        fluidRow(
+          # Preprocessing Controls
+          bs4Dash::box(
+            title = "Preprocessing Controls",
+            width = 12,
+            collapsible = TRUE,
+            solidHeader = TRUE,
+            status = "info",
+            fluidRow(
+              column(
+                width = 4,
+                tags$h5("Weights Column"),
+                selectInput("weights_logic", "Weights Logic:",
+                            choices = c("Inverse Values", "Normalize", "Proportional", "Standard Deviation Scaling",
+                                        "Z-Score Scaling", "Range Scaling", "Log Transformation", "Exponential Scaling",
+                                        "Quantile-Based")),
+                selectInput(
+                  inputId = "reference_col",
+                  label = "Reference Column:",
+                  choices = NULL,  # Dynamically updated by server
+                  selected = NULL
+                ),
+                actionButton("create_weights", "Create Weights Column", class = "btn-secondary")
+              ),
+              column(
+                width = 4,
+                tags$h5("Transformations"),
+                selectInput("transform_col", "Select Column:", choices = NULL), # Dynamically updated
+                selectInput("transform_type", "Transformation Type:", choices = c("Log", "Sqrt", "Standardize", "Scale")),
+                actionButton("apply_transformation", "Apply Transformation", class = "btn-secondary")
+              ),
+              column(
+                width = 4,
+                tags$h5("Imputation"),
+                selectInput("impute_col", "Select Column:", choices = NULL), # Dynamically updated
+                selectInput("impute_method", "Imputation Method:", choices = c("Mean", "Median", "Mode")),
+                actionButton("apply_imputation", "Apply Imputation", class = "btn-secondary")
+              )
+            )
+          )
+        ),
+        fluidRow(
+          # Data Preview Section
+          bs4Dash::box(
+            title = tagList(
+              "Data Preview",
+              actionButton("refresh_table", "Refresh Table", class = "btn-primary btn-sm")
+            ),
+            width = 12,
+            collapsible = TRUE,
+            solidHeader = TRUE,
+            status = "success",
+            DT::DTOutput("data_preview")
+          )
+        )
+      ),
+
+      # EDA Tab
       bs4TabItem(
         tabName = "eda",
         fluidRow(
+          # EDA Controls
           bs4Dash::box(
             title = "EDA Controls",
-            width = 12,  # Full-width for smaller screens
+            width = 12,
             collapsible = TRUE,
             solidHeader = TRUE,
             status = "primary",
             fluidRow(
-              column(
-                width = 6,
-                fileInput("file", "Upload Data (.csv)", accept = ".csv")
-              ),
               column(
                 width = 6,
                 selectInput(
@@ -161,6 +231,10 @@ ui <- bs4DashPage(
                   choices = EchartsThemes,
                   selected = "macarons"  # Default selection
                 )
+              ),
+              column(
+                width = 6,
+                uiOutput("target_col_ui")
               )
             ),
             fluidRow(
@@ -174,66 +248,71 @@ ui <- bs4DashPage(
                   value = 10,
                   step = 1
                 )
-              ),
-              column(
-                width = 6,
-                selectInput(
-                  inputId = "target_col",
-                  label = "Select Target Column:",
-                  choices = NULL  # Choices will be updated dynamically
-                )
               )
             ),
+            # Generate EDA Results Buttons
             fluidRow(
               column(
                 width = 12,
-                # Title for action buttons
                 div(
                   style = "margin-top: 10px; font-weight: bold; font-size: 16px;",
                   "Generate EDA Results:"
                 ),
-                # Buttons distributed horizontally
                 fluidRow(
                   column(
                     width = 3,
-                    div(
-                      style = "margin-top: 10px;",  # Add margin for vertical alignment
-                      actionButton("run_summary", "Summary", class = "btn-secondary")
-                    )
+                    actionButton("run_summary", "Summary", class = "btn-secondary")
                   ),
                   column(
                     width = 3,
-                    div(
-                      style = "margin-top: 10px;",  # Add margin for vertical alignment
-                      actionButton("run_analysis", "Distributions", class = "btn-primary")
-                    )
+                    actionButton("run_analysis", "Distributions", class = "btn-primary")
                   ),
                   column(
                     width = 3,
-                    div(
-                      style = "margin-top: 10px;",  # Add margin for vertical alignment
-                      actionButton("run_corr", "Correlation", class = "btn-info")
-                    )
+                    actionButton("run_corr", "Correlation", class = "btn-info")
                   ),
                   column(
                     width = 3,
-                    div(
-                      style = "margin-top: 10px;",  # Add margin for vertical alignment
-                      actionButton("run_scatterplots", "Relationships", class = "btn-secondary")
-                    )
+                    actionButton("run_scatterplots", "Relationships", class = "btn-secondary")
                   )
                 )
               )
-            ),
-            uiOutput("dynamic_ui")
-          ),
+            )
+          )
+        ),
+        fluidRow(
+          # EDA Results
           column(
-            width = 12,  # Plots for EDA
-            tabsetPanel(
-              tabPanel("Summary", br(), uiOutput("eda_summary_ui")),
-              tabPanel("Distributions", br(), uiOutput("eda_plots_ui")),
-              tabPanel("Correlation", br(), uiOutput("eda_corr_ui")),
-              tabPanel("Relationships", br(), uiOutput("eda_scatterplots_ui"))
+            width = 12,
+            bs4Dash::bs4TabCard(
+              id = "eda_results_tabs",
+              title = "EDA Results",
+              width = 12,
+              closable = FALSE,
+              collapsible = TRUE,
+              maximizable = TRUE,
+              status = "success",
+              solidHeader = TRUE,
+              tabPanel(
+                title = "Summary",
+                br(),
+                uiOutput("eda_summary_ui")
+              ),
+              tabPanel(
+                title = "Distributions",
+                br(),
+                uiOutput("eda_plots_ui")
+              ),
+              tabPanel(
+                title = "Correlation",
+                br(),
+                uiOutput("eda_corr_ui")
+              ),
+              tabPanel(
+                title = "Relationships",
+                br(),
+                uiOutput("eda_scatterplots_ui")
+              )
             )
           )
         )
@@ -243,6 +322,7 @@ ui <- bs4DashPage(
       bs4TabItem(
         tabName = "model_fitting",
         fluidRow(
+          # Model Fitting Settings Box
           column(
             width = 12,
             bs4Dash::box(
@@ -278,9 +358,18 @@ ui <- bs4DashPage(
               ),
               div(
                 style = "margin-bottom: 10px;",
+                selectInput(
+                  inputId = "weights_col",
+                  label = "Select Weights Column:",
+                  choices = c("None"),  # Default option; dynamically updated by server
+                  selected = "None"     # Default selection
+                )
+              ),
+              div(
+                style = "margin-bottom: 10px;",
                 uiOutput("model_params_ui")  # UI for model parameters
               ),
-              # Place Fit Models and Plot Model buttons in the same row
+              # Buttons for Fitting and Plotting
               tags$label(
                 "Generate Results:",
                 style = "font-weight: bold; font-size: 1rem; display: block; margin-bottom: 5px;"
@@ -299,32 +388,39 @@ ui <- bs4DashPage(
           )
         ),
         fluidRow(
+          # Output Tabs
           column(
             width = 12,
-            bs4Dash::box(
-              title = "Model Fitting Results",
-              collapsible = TRUE,
+            bs4Dash::bs4TabCard(
+              id = "fitting_output_tabs",
+              title = "Model Outputs",
               width = 12,
+              closable = FALSE,
+              collapsible = TRUE,
+              maximizable = TRUE,
               status = "success",
               solidHeader = TRUE,
-              tabsetPanel(
-                tabPanel(
-                  "Metrics and Plots",
-                  br(),
-                  uiOutput("model_summary_ui"),
-                  br(),
-                  uiOutput("fitted_plots_ui")
-                ),
-                tabPanel(
-                  "Explore Models",
-                  br(),
-                  bs4Dash::box(
-                    title = "Model Preview",
+              tabPanel(
+                title = "Model Metrics and Fitted Plots",
+                fluidRow(
+                  column(
                     width = 12,
-                    collapsible = TRUE,
-                    solidHeader = TRUE,
-                    status = "info",
-                    echarts4r::echarts4rOutput("explore_plot", height = "400px")
+                    uiOutput("model_summary_ui")  # Metrics Summary
+                  )
+                ),
+                fluidRow(
+                  column(
+                    width = 12,
+                    uiOutput("fitted_plots_ui")  # Individual Fitted Plots
+                  )
+                )
+              ),
+              tabPanel(
+                title = "Model Visualization",
+                fluidRow(
+                  column(
+                    width = 12,
+                    uiOutput("model_explore_ui")  # Model Visualization Output
                   )
                 )
               )
@@ -342,53 +438,40 @@ ui <- bs4DashPage(
             bs4Dash::box(
               title = "Scoring Settings",
               collapsible = TRUE,
-              status = "info",
+              status = "success",  # Align with preferred look
               solidHeader = TRUE,
               width = 12,
-              # Inputs arranged in pairs (two per row)
               fluidRow(
                 column(
                   width = 6,
-                  div(
-                    style = "margin-bottom: 10px;",
-                    fileInput("score_file", "Upload Scoring Data (.csv)", accept = ".csv")
+                  fileInput(
+                    inputId = "score_file",
+                    label = "Upload Scoring Data (.csv)",
+                    accept = ".csv",
+                    buttonLabel = "Browse",
+                    placeholder = "No file selected"
                   )
                 ),
                 column(
                   width = 6,
-                  div(
-                    style = "margin-bottom: 10px;",
-                    uiOutput("score_variable_selector_ui")
-                  )
+                  uiOutput("score_variable_selector_ui")  # Dynamically updated variable selector
                 )
               ),
               fluidRow(
                 column(
-                  width = 6,
-                  div(
-                    style = "margin-bottom: 10px;",
-                    uiOutput("scoring_model_selector_ui")
+                  width = 4,
+                  selectInput(
+                    inputId = "scoring_theme",
+                    label = "Select Plot Theme:",
+                    choices = EchartsThemes,
+                    selected = "macarons"  # Default selection
                   )
                 ),
                 column(
-                  width = 6,
+                  width = 4,
                   div(
-                    style = "margin-bottom: 10px;",
-                    selectInput(
-                      inputId = "scoring_theme",
-                      label = "Select Plot Theme:",
-                      choices = EchartsThemes,
-                      selected = "macarons"  # Default selection
-                    )
-                  )
-                )
-              ),
-              fluidRow(
-                column(
-                  width = 6,
-                  div(
-                    style = "margin-bottom: 10px; text-align: center;",
-                    actionButton("run_scoring", "Score Data", class = "btn-warning")
+                    style = "margin-top: 25px;",  # Align button with other inputs
+                    actionButton("run_scoring", "Score Data", class = "btn-primary btn-lg")
                   )
                 )
               )
@@ -442,20 +525,139 @@ server <- function(input, output, session) {
   })
 
   # --------------------------------------
-  # EDA
+  # Data Preprocessing
   # --------------------------------------
 
-  # Load and validate uploaded data
-  observeEvent(input$file, {
-    req(input$file)
+  # Upload raw data
+  observeEvent(input$upload_raw_data, {
+    req(input$upload_raw_data)
+    ext <- tools::file_ext(input$upload_raw_data$name)
+    data <- switch(
+      ext,
+      csv = data.table::fread(input$upload_raw_data$datapath),
+      xlsx = readxl::read_excel(input$upload_raw_data$datapath),
+      stop("Unsupported file type.")
+    )
+    dataset(data)
+    updateSelectInput(session, "transform_column", choices = names(data))
+    updateSelectInput(session, "impute_column", choices = names(data))
+    showNotification("Data uploaded successfully!", type = "message")
+  })
+
+  # Dynamically populate column selection inputs
+  observe({
+    req(dataset())
+    colnames <- names(dataset())
+    updateSelectInput(session, "transform_col", choices = colnames)
+    updateSelectInput(session, "impute_col", choices = colnames)
+    updateSelectInput(session, "reference_col", choices = colnames)
+  })
+
+  # Create Weights Column
+  observeEvent(input$create_weights, {
+    req(dataset(), input$reference_col)  # Ensure dataset and reference column exist
+    data <- dataset()
+    ref_col <- input$reference_col  # Use the selected reference column
+
     tryCatch({
-      data <- data.table::fread(input$file$datapath)
+      weights_logic <- switch(
+        input$weights_logic,
+        "Inverse Values" = 1 / (data[[ref_col]]),
+        "Normalize" = (data[[ref_col]] - min(data[[ref_col]], na.rm = TRUE)) /
+          (max(data[[ref_col]], na.rm = TRUE) - min(data[[ref_col]], na.rm = TRUE)),
+        "Proportional" = data[[ref_col]] / sum(data[[ref_col]], na.rm = TRUE),
+        "Standard Deviation Scaling" = data[[ref_col]] / sd(data[[ref_col]], na.rm = TRUE),
+        "Z-Score Scaling" = (data[[ref_col]] - mean(data[[ref_col]], na.rm = TRUE)) /
+          sd(data[[ref_col]], na.rm = TRUE),
+        "Range Scaling" = (data[[ref_col]] - min(data[[ref_col]], na.rm = TRUE)) /
+          (max(data[[ref_col]], na.rm = TRUE) - min(data[[ref_col]], na.rm = TRUE)),
+        "Log Transformation" = log(data[[ref_col]] + 1),  # Add 1 to avoid log(0)
+        "Exponential Scaling" = exp(data[[ref_col]]),
+        "Quantile-Based" = as.numeric(cut(data[[ref_col]],
+                                          breaks = quantile(data[[ref_col]], probs = seq(0, 1, 0.25), na.rm = TRUE),
+                                          labels = 1:4))
+      )
+      data[, Weights := weights_logic]  # Add weights to the dataset
       dataset(data)
-      showNotification("Data uploaded successfully!", type = "message")
+      showNotification("Weights column created successfully!", type = "message")
     }, error = function(e) {
-      showNotification("Error: Please upload a valid CSV file.", type = "error")
+      showNotification(paste("Error:", e$message), type = "error")
     })
   })
+
+  # Apply Transformation
+  observeEvent(input$apply_transformation, {
+    req(dataset(), input$transform_col, input$transform_type)
+    data <- dataset()
+    tryCatch({
+      col <- input$transform_col
+      transform_result <- switch(input$transform_type,
+                                 "Log" = log(data[[col]]),
+                                 "Sqrt" = sqrt(data[[col]]),
+                                 "Standardize" = (data[[col]] - mean(data[[col]], na.rm = TRUE)) / sd(data[[col]], na.rm = TRUE),
+                                 "Scale" = (data[[col]] - min(data[[col]], na.rm = TRUE)) / (max(data[[col]], na.rm = TRUE) - min(data[[col]], na.rm = TRUE))
+      )
+      data[, paste0(col, "_", tolower(input$transform_type)) := transform_result]
+      dataset(data)
+      showNotification("Transformation applied successfully!", type = "message")
+    }, error = function(e) {
+      showNotification("Error: Unable to apply transformation.", type = "error")
+    })
+  })
+
+  # Apply Imputation
+  observeEvent(input$apply_imputation, {
+    req(dataset(), input$impute_col, input$impute_method)
+    data <- dataset()
+    tryCatch({
+      col <- input$impute_col
+      impute_value <- switch(input$impute_method,
+                             "Mean" = mean(data[[col]], na.rm = TRUE),
+                             "Median" = median(data[[col]], na.rm = TRUE),
+                             "Mode" = names(which.max(table(data[[col]])))
+      )
+      data[, paste0(col, "_imputed") := ifelse(is.na(data[[col]]), impute_value, data[[col]])]
+      dataset(data)
+      showNotification("Imputation applied successfully!", type = "message")
+    }, error = function(e) {
+      showNotification("Error: Unable to apply imputation.", type = "error")
+    })
+  })
+
+  # Data Preview
+  output$data_preview <- DT::renderDT({
+    req(dataset())  # Make sure dataset() is not NULL
+    data <- dataset()  # Isolate dataset to avoid reactive chain issues
+    DT::datatable(
+      data,
+      options = list(
+        scrollX = TRUE,
+        pageLength = 5,
+        lengthMenu = c(5, 10, 20) # Disable state saving to force refresh
+      ),
+      rownames = FALSE
+    )
+  })
+
+  # Preprocessing table refresh
+  observeEvent(input$refresh_table, {
+    req(dataset())  # Ensure dataset is valid
+    output$data_preview <- DT::renderDT({
+      DT::datatable(
+        dataset(),
+        options = list(
+          scrollX = TRUE,
+          pageLength = 5,
+          lengthMenu = c(5, 10, 20)
+        ),
+        rownames = FALSE
+      )
+    })
+  })
+
+  # --------------------------------------
+  # EDA
+  # --------------------------------------
 
   # EDA instance
   eda <- reactive({
@@ -547,14 +749,15 @@ server <- function(input, output, session) {
     })
   })
 
-  # Populate the target column selection
-  observeEvent(dataset(), {
-    req(dataset())
-    updateSelectInput(
-      session,
+  # Target Variable Selector
+  output$target_col_ui <- renderUI({
+    req(dataset())  # Ensure dataset is available
+    colnames <- names(dataset())  # Get the updated column names
+    selectInput(
       inputId = "target_col",
-      choices = names(dataset()),
-      selected = names(dataset())[1]  # Default to the first column
+      label = "Select Target Column:",
+      choices = colnames,  # Dynamically set choices
+      selected = colnames[1]  # Default to the first column
     )
   })
 
@@ -660,6 +863,32 @@ server <- function(input, output, session) {
   # Initialize reactive value for fitted results
   fit_results <- reactiveVal(NULL)
 
+  # Update weights column selector based on dataset
+  output$weights_selector_ui <- renderUI({
+    choices <- if (is.null(dataset())) "None" else c("None", names(dataset()))
+    selectInput(
+      inputId = "weights_column",
+      label = "Select Weights Column:",
+      choices = choices,
+      selected = "None"
+    )
+  })
+
+  # Dynamically populate the "Select Weights Column" dropdown
+  observe({
+    req(dataset())  # Ensure the dataset is loaded
+
+    colnames <- names(dataset())  # Get column names of the dataset
+
+    # Update the selectInput with "None" and dataset column names
+    updateSelectInput(
+      session,
+      inputId = "weights_col",
+      choices = c("None", colnames),  # Include "None" and dataset columns
+      selected = "None"              # Default selection
+    )
+  })
+
   # Populate model selector UI
   output$model_selector_ui <- renderUI({
     req(dataset())
@@ -707,17 +936,23 @@ server <- function(input, output, session) {
   observeEvent(c(input$fit_models, input$plot_explore), {
     req(dataset(), input$selected_models)
 
-    # Common functionality: Initialize the fitter and add selected models
+    # Initialize the fitter and add selected models
     fitter <- NonLinearFitter$new(dataset())
     lapply(input$selected_models, function(model_name) fitter$add_model(model_name))
 
-    # Plot Button
+    # Handle weights column selection
+    weights_column <- if (is.null(input$weights_col) || input$weights_col == "None") NULL else input$weights_col
+
+    # Plot Button Logic
     if (last_trigger() == "plot_explore") {
+      # Generate comparison plots for selected models
+      comparison_plot <- fitter$model_comparison_plot(
+        x_range = seq(1, 100, by = 1),
+        normalize = TRUE,
+        theme = input$model_theme
+      )
 
-      # Generate visualizations for selected models
-      comparison_plot <- fitter$model_comparison_plot(x_range = seq(1, 100, by = 1), normalize = TRUE, theme = "macarons")
-
-      # Render the plot for model exploration
+      # Render the model exploration plot below the Model Fitting Settings box
       output$model_explore_ui <- renderUI({
         bs4Dash::box(
           title = "Model Exploration",
@@ -732,25 +967,58 @@ server <- function(input, output, session) {
       output$explore_plot <- echarts4r::renderEcharts4r({
         comparison_plot
       })
+
+      return()  # Stop here for plot exploration
     }
 
-    # Fit Models Button
+    # Fit Models Button Logic
     if (last_trigger() == "fit_models") {
 
-      # Fit models
-      fit_results(fitter$fit_models(x_col = input$x_variable, y_col = input$y_variable))
+      # Fit the models based on weights selection
+      fitted_models  <- tryCatch({
+        fitter$fit_models(
+          x_col = input$x_variable,
+          y_col = input$y_variable,
+          weights_col = weights_column
+        )
+      }, error = function(e) {
+        showNotification(paste("Error during model fitting:", e$message), type = "error")
+        NULL
+      })
+
+      # Validate fit results
+      if (is.null(fit_results) || length(fit_results) == 0) {
+        showNotification("No models were successfully fitted.", type = "error")
+        return()
+      }
+
+      # Update the reactive value with fitted models
+      fit_results(fitted_models)  # Update the reactiveVal with the new results
 
       # Initialize evaluator
-      evaluator <- NonLinearModelEvaluator$new(fit_results(), data = dataset())
+      evaluator <- tryCatch({
+        NonLinearModelEvaluator$new(fit_results(), data = dataset())
+      }, error = function(e) {
+        showNotification(paste("Error initializing evaluator:", e$message), type = "error")
+        NULL
+      })
 
-      # Generate metrics using the evaluator
-      metrics <- evaluator$generate_metrics(y_col = input$y_variable)
+      # Generate metrics (include x_col as required)
+      metrics <- tryCatch({
+        evaluator$generate_metrics(y_col = input$y_variable, x_col = input$x_variable)
+      }, error = function(e) {
+        showNotification(paste("Error generating metrics:", e$message), type = "error")
+        NULL
+      })
 
-      # Update the summary table with a box wrapper
+      if (is.null(metrics)) {
+        showNotification("Failed to generate metrics.", type = "error")
+        return()
+      }
+
+      # Render Model Metrics Summary below the Model Fitting Settings box
       output$model_summary_ui <- renderUI({
-        req(fit_results())
-
-        # Wrap the summary table in a box
+        req(metrics)
         bs4Dash::box(
           title = "Model Metrics Summary",
           width = 12,
@@ -761,27 +1029,22 @@ server <- function(input, output, session) {
         )
       })
 
-      # Update the summary table
       output$model_summary_table <- DT::renderDataTable({
-        # metrics_with_model <- cbind(`Model Name` = names(fit_results), metrics)
         DT::datatable(
-          # metrics_with_model,
           metrics,
           options = list(
-            scrollX = TRUE,  # Enable horizontal scrolling for wide tables
-            pageLength = 5,  # Set the default number of rows displayed
-            lengthMenu = c(5, 10, 20)  # Options for rows per page
+            scrollX = TRUE,
+            pageLength = 5,
+            lengthMenu = c(5, 10, 20)
           ),
           rownames = FALSE
-        ) |>
-          DT::formatRound(columns = setdiff(colnames(metrics), c("Model Name", "Formula", "Model")), digits = 3)
+        ) |> DT::formatRound(columns = setdiff(names(metrics), c("Model Name", "Formula", "Model")), digits = 3)
       })
 
-      # Generate and render all model plots
+      # Render Fitted Model Evaluation Plots in their own box
       output$fitted_plots_ui <- renderUI({
-        req(evaluator, dataset(), input$x_variable, input$y_variable)
+        req(evaluator)
 
-        # Generate comparison plots for all models
         plots_list <- evaluator$generate_comparison_plot(
           data = dataset(),
           x_col = input$x_variable,
@@ -789,16 +1052,13 @@ server <- function(input, output, session) {
           theme = input$model_theme
         )
 
-        # Dynamically generate UI elements for plots
         if (is.null(plots_list) || length(plots_list) == 0) {
           return(h3("No fitted models to display."))
         }
 
-        # Generate a list of boxes for each plot
         ui_elements <- lapply(names(plots_list), function(model_name) {
           plotname <- paste0("fitted_plot_", model_name)
 
-          # Create a container for each plot
           bs4Dash::box(
             title = paste("Model Fit:", model_name),
             width = 12,
@@ -809,13 +1069,12 @@ server <- function(input, output, session) {
           )
         })
 
-        # Ensure the generated UI is returned properly
         do.call(tagList, ui_elements)
       })
 
-      # Render the plots themselves
+      # Render individual plots dynamically
       observe({
-        req(evaluator, dataset(), input$x_variable, input$y_variable)
+        req(evaluator)
 
         plots_list <- evaluator$generate_comparison_plot(
           data = dataset(),
@@ -824,15 +1083,22 @@ server <- function(input, output, session) {
           theme = input$model_theme
         )
 
-        # Render each plot individually
-        plots <- lapply(names(plots_list), function(model_name) {
+        lapply(names(plots_list), function(model_name) {
           plotname <- paste0("fitted_plot_", model_name)
           output[[plotname]] <- echarts4r::renderEcharts4r({
             plots_list[[model_name]]
           })
         })
       })
+
+      showNotification("Models fitted successfully!", type = "message")
     }
+  })
+
+  observe({
+    req(dataset())
+    colnames <- names(dataset())
+    updateSelectInput(session, "weights_column", choices = c("None", colnames), selected = "None")
   })
 
   # --------------------------------------
@@ -867,35 +1133,22 @@ server <- function(input, output, session) {
     )
   })
 
-  # Generate UI for selecting models in scoring
-  output$scoring_model_selector_ui <- renderUI({
-    req(fit_results())  # Requires previously fitted models
-
-    model_choices <- names(fit_results())
-
-    selectInput(
-      "scoring_models",
-      "Select Models for Scoring",
-      choices = model_choices,
-      selected = model_choices,  # Default to all models
-      multiple = TRUE
-    )
-  })
-
   # Perform scoring
   observeEvent(c(input$run_scoring, input$scoring_theme), {
-    req(scoring_data(), input$x_variable_scoring, input$scoring_models)
+    req(scoring_data(), input$x_variable_scoring)
     tryCatch({
+
+      print(class(fit_results()))
+      print(fit_results())
+
       # Initialize the scorer
       scorer <- NonLinearModelScorer$new(fit_results = fit_results())
 
       # Perform scoring for the selected models
-      score_results <- lapply(input$scoring_models, function(model_name) {
-        scorer$score_new_data(scoring_data(), input$x_variable_scoring)
-      })
+      score_results <- scorer$score_new_data(scoring_data(), input$x_variable_scoring)
 
       # Generate plots for scored data
-      scored_plots <- lapply(input$scoring_models, function(model_name) {
+      scored_plots <- lapply(names(fit_results()), function(model_name) {
         scorer$generate_score_plot(
           model_name = model_name,
           new_data = scoring_data(),
@@ -911,7 +1164,7 @@ server <- function(input, output, session) {
         }
 
         lapply(seq_along(scored_plots), function(i) {
-          model_name <- input$scoring_models[i]
+          model_name <- names(fit_results())[i]
           plotname <- paste0("scored_plot_", model_name)
 
           bs4Dash::box(
@@ -927,7 +1180,7 @@ server <- function(input, output, session) {
 
       # Render each plot dynamically
       lapply(seq_along(scored_plots), function(i) {
-        model_name <- input$scoring_models[i]
+        model_name <- names(fit_results())[i]
         plotname <- paste0("scored_plot_", model_name)
 
         output[[plotname]] <- echarts4r::renderEcharts4r({
