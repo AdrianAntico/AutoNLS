@@ -1,0 +1,23 @@
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>/404.html</loc></url>
+<url><loc>/authors.html</loc></url>
+<url><loc>/index.html</loc></url>
+<url><loc>/LICENSE-text.html</loc></url>
+<url><loc>/reference/AIC.custom_nls.html</loc></url>
+<url><loc>/reference/BIC.custom_nls.html</loc></url>
+<url><loc>/reference/coef.custom_nls.html</loc></url>
+<url><loc>/reference/dummy_data.html</loc></url>
+<url><loc>/reference/EDA.html</loc></url>
+<url><loc>/reference/fitted.custom_nls.html</loc></url>
+<url><loc>/reference/index.html</loc></url>
+<url><loc>/reference/logLik.custom_nls.html</loc></url>
+<url><loc>/reference/NonLinearFitter.html</loc></url>
+<url><loc>/reference/NonLinearModelEvaluator.html</loc></url>
+<url><loc>/reference/NonLinearModelScorer.html</loc></url>
+<url><loc>/reference/predict.custom_nls.html</loc></url>
+<url><loc>/reference/reexports.html</loc></url>
+<url><loc>/reference/residuals.custom_nls.html</loc></url>
+<url><loc>/reference/run_shiny_app.html</loc></url>
+<url><loc>/reference/summary.custom_nls.html</loc></url>
+</urlset>
+
