@@ -239,7 +239,7 @@ NonLinearFitter <- R6::R6Class(
     #' @param control A list of control parameters for the optimizer, such as `maxiter`.
     #' Default is `list(maxiter = 200)`.
     #' @return A list of fitted model objects.
-    fit_models = function(x_col, y_col, weights_col = NULL, control = list(maxiter = 200)) {
+    fit_models = function(x_col, y_col, weights_col = NULL, control = list(maxiter = 5000)) {
 
       if (is.null(self$models) || length(self$models) == 0) {
         stop("No models to fit. Use add_model() to add models.")
@@ -266,11 +266,67 @@ NonLinearFitter <- R6::R6Class(
       temp_data <- data.table::copy(self$data)
       data.table::setnames(temp_data, old = c(x_col, y_col), new = c("x", "y"))
 
+      # ---------------------
+      # New Code
+      # ---------------------
+
+      # Min-Max Scale the data
+      scale_params <- list(
+        x_min = min(temp_data$x, na.rm = TRUE),
+        x_max = max(temp_data$x, na.rm = TRUE),
+        y_min = min(temp_data$y, na.rm = TRUE),
+        y_max = max(temp_data$y, na.rm = TRUE)
+      )
+
+      temp_data_scaled <- data.table::copy(temp_data)
+      temp_data_scaled[, x := (x - scale_params$x_min) / (scale_params$x_max - scale_params$x_min)]
+      temp_data_scaled[, y := (y - scale_params$y_min) / (scale_params$y_max - scale_params$y_min)]
+
+      # Step 1: Fit models on scaled data
+      scaled_fit_results <- lapply(names(self$models), function(model_name) {
+        model <- self$models[[model_name]]
+        tryCatch({
+          minpack.lm::nlsLM(
+            formula = model$formula,
+            data = temp_data_scaled,
+            start = model$start_params,
+            control = control
+          )
+        }, error = function(e) {
+          message("Error fitting model on scaled data: ", model_name, " - ", e$message)
+          NULL
+        })
+      })
+
+      names(scaled_fit_results) <- names(self$models)
+
+      # Step 2: Adjust parameters for unscaled data
+      adjusted_start_params <- lapply(names(self$models), function(model_name) {
+        fit <- scaled_fit_results[[model_name]]
+        if (is.null(fit)) return(NULL)
+
+        params <- coef(fit)  # Extract fitted parameters
+        model <- self$models[[model_name]]
+
+        # Adjust parameters based on scaling
+        unscaled_params <- private$adjust_parameters_for_scaling(
+          params = params,
+          scale_params = scale_params,
+          model = model
+        )
+        unscaled_params
+      })
+
+      names(adjusted_start_params) <- names(self$models)
+
+      # --------------------------------------------------------------------------------------------
+
       self$fit_results <- lapply(names(self$models), function(model_name) {
         model <- self$models[[model_name]]
 
         # Use the unaltered formula from the model library
         formula <- model$formula
+        start_params <- adjusted_start_params[[model_name]]
 
         # Fit model with or without weights
         fit <- tryCatch({
@@ -430,6 +486,32 @@ NonLinearFitter <- R6::R6Class(
       }
 
       return(result$par)  # Return optimized parameters
+    },
+
+    adjust_parameters_for_scaling = function(params, scale_params, model) {
+
+      # Extract scaling parameters
+      x_min <- scale_params$x_min
+      x_max <- scale_params$x_max
+      y_min <- scale_params$y_min
+      y_max <- scale_params$y_max
+
+      # Adjust each parameter as needed (this will vary based on the model)
+      adjusted_params <- lapply(names(params), function(param_name) {
+        param_value <- params[[param_name]]
+
+        # Example logic: Adjust scale-dependent parameters (specific to each model)
+        if (param_name %in% c("a", "b")) {
+          param_value * (y_max - y_min)  # Adjust for y-scale
+        } else if (param_name %in% c("c")) {
+          param_value * (x_max - x_min)  # Adjust for x-scale
+        } else {
+          param_value  # Leave other parameters unchanged
+        }
+      })
+
+      # Return adjusted parameters as a named list
+      setNames(adjusted_params, names(params))
     }
   )
 )
@@ -446,11 +528,11 @@ NonLinearFitter <- R6::R6Class(
 #
 # model_no_weights <- fitter$fit_models(x_col = "X-Value", y_col = "Target")
 # model_weights <- fitter$fit_models(x_col = "X-Value", y_col = "Target", weights_col = "Weights")
-# self <- fitter
 #
 # self <- fitter
 # self$data <- data
 # self$add_model(name = "Hill")
+# model_name = "Hill"
 #
 #
 # # Initialize evaluator with unweighted models
