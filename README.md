@@ -10,16 +10,17 @@ Automated Non-Linear Least Squares and Exploratory Data Analysis in R
 
 ## **Overview**
 
-AutoNLS is an R package designed to streamline non-linear regression modeling, exploratory data analysis (EDA), and visualization. With support for a variety of non-linear models, automated evaluation, scoring, and GAM-enhanced scatterplot visualizations, AutoNLS empowers users to handle complex modeling tasks with ease.
+AutoNLS is an R package built for automating non-linear regression modeling, exploratory data analysis (EDA), and interactive visualization. Whether you're an analyst or a data scientist, AutoNLS streamlines your workflow with its extensive suite of tools, user-friendly interface, and Shiny-based app for intuitive data exploration and modeling.
 
 ---
 
 ## **Key Features**
 
 - **Non-Linear Regression**:
-  - Supports a wide variety of non-linear models (e.g., Hill Equation, Logistic Growth).
-  - Automatic model fitting and selection.
-  - Cross-validation for model evaluation.
+  - Supporp for 14 pre-defined models (e.g., Hill Equation, Logistic Growth, MichaelisMenten).
+  - Custom model addition with user-defined formulas.
+  - Weighted and unweighted regression support.
+  - Automated model evaluation with metrics like R², AIC, and BIC.
 
 - **Exploratory Data Analysis (EDA)**:
   - Automated correlation analysis (Pearson vs. Spearman).
@@ -37,7 +38,7 @@ AutoNLS is an R package designed to streamline non-linear regression modeling, e
 
 - **Shiny App:**
   - Intuitive graphical interface for non-linear regression and data analysis.
-  - Fully integrated with all AutoNLS features, including EDA, model fitting, and scoring.
+  - Fully integrated with all AutoNLS features, including data preprocessing, eda, model fitting, and scoring.
   - Ideal for users who prefer interactive analysis without writing code.
 
 ---
@@ -51,6 +52,12 @@ To install the development version from GitHub:
 ```r
 # Install devtools if not already installed
 install.packages("devtools")
+install.packages("R6")
+install.packages("data.table")
+install.packages("dplyr")
+install.packages("echarts4r")
+install.packages("minpack.lm")
+install.packages("mgcv")
 
 # Install AutoNLS
 devtools::install_github("AdrianAntico/AutoNLS")
@@ -283,9 +290,3 @@ For bugs or feature requests, please open an issue on https://github.com/AdrianA
 
 ## License
 This project is licensed under the AGPL-3.0 License with additional conditions.
-
-**Key Additional Terms:**
-
-Monetization of this software, including reselling, sublicensing, integrating it into proprietary paid services, offering it as part of a commercial product, or using it as part of a commercial training service, is strictly prohibited without prior written consent from the copyright holder.
-Use in corporate settings is permitted, but corporations are prohibited from monetizing the software in any form without permission.
-For the full license terms, please see the LICENSE file.
