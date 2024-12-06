@@ -248,6 +248,10 @@ ui <- bs4DashPage(
                   value = 10,
                   step = 1
                 )
+              ),
+              column(
+                width = 6,
+                uiOutput("inputs_col_ui")
               )
             ),
             # Generate EDA Results Buttons
@@ -758,7 +762,18 @@ server <- function(input, output, session) {
       inputId = "target_col",
       label = "Select Target Column:",
       choices = colnames,  # Dynamically set choices
-      selected = colnames[1]  # Default to the first column
+    )
+  })
+
+  # Target Variable Selector
+  output$inputs_col_ui <- renderUI({
+    req(dataset())  # Ensure dataset is available
+    colnames <- names(dataset())  # Get the updated column names
+    selectInput(
+      inputId = "input_cols",
+      label = "Select Input Columns:",
+      choices = colnames,  # Dynamically set choices
+      multiple = TRUE
     )
   })
 
@@ -767,7 +782,12 @@ server <- function(input, output, session) {
     req(eda())
 
     # Compute the correlation matrix
-    corr_matrix <- eda()$correlate(target_col = input$target_col)
+    if(length(input$input_cols) == 0) {
+      input_cols <- NULL
+    } else {
+      input_cols = input$input_cols
+    }
+    corr_matrix <- eda()$correlate(target_col = input$target_col, input_cols = input_cols)
 
     # Dynamically render correlation table in a box
     output$eda_corr_ui <- renderUI({
@@ -814,8 +834,18 @@ server <- function(input, output, session) {
   observeEvent(c(input$run_scatterplots, input$theme), {
     req(eda())
 
+    # Compute the correlation matrix
+    if(length(input$input_cols) == 0) {
+      input_cols <- NULL
+    } else {
+      input_cols = input$input_cols
+    }
+
     # Generate scatterplots
-    scatterplots <- eda()$visualize_scatterplots(theme = input$theme)
+    scatterplots <- eda()$visualize_scatterplots(
+      target_col = input$target_col,
+      input_cols = input_cols,
+      theme = input$theme)
 
     # Dynamically render scatterplots in individual boxes
     output$eda_scatterplots_ui <- renderUI({

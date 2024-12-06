@@ -41,7 +41,6 @@ Initialize the EDA class}
 \item \href{#method-EDA-correlate}{\code{EDA$correlate()}}
 \item \href{#method-EDA-visualize_distributions}{\code{EDA$visualize_distributions()}}
 \item \href{#method-EDA-visualize_scatterplots}{\code{EDA$visualize_scatterplots()}}
-\item \href{#method-EDA-render_all}{\code{EDA$render_all()}}
 \item \href{#method-EDA-clone}{\code{EDA$clone()}}
 }
 }
@@ -84,13 +83,15 @@ Calculates both Pearson and Spearman correlations between all numeric columns (e
 \if{latex}{\out{\hypertarget{method-EDA-correlate}{}}}
 \subsection{Method \code{correlate()}}{
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{EDA$correlate(target_col = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{EDA$correlate(target_col = NULL, input_cols = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{target_col}}{the target variable in the data set}
+
+\item{\code{input_cols}}{the independent variables}
 }
 \if{html}{\out{</div>}}
 }
@@ -147,6 +148,8 @@ fitted lines from Generalized Additive Models (GAM) for different \code{k} value
 \subsection{Method \code{visualize_scatterplots()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{EDA$visualize_scatterplots(
+  target_col = NULL,
+  input_cols = NULL,
   title_prefix = "Scatterplot of",
   theme = "dark",
   k_values = c(3, 5, 7)
@@ -156,6 +159,10 @@ fitted lines from Generalized Additive Models (GAM) for different \code{k} value
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
+\item{\code{target_col}}{Name of target variable}
+
+\item{\code{input_cols}}{Names of input variables}
+
 \item{\code{title_prefix}}{Character. Prefix for the plot title.}
 
 \item{\code{theme}}{Character. Theme for the plot (e.g., "light", "dark"). Defaults to \code{"light"}.}
@@ -166,47 +173,6 @@ fitted lines from Generalized Additive Models (GAM) for different \code{k} value
 }
 \subsection{Returns}{
 A list of \code{echarts4r} scatter plots with GAM fitted lines.
-Render All Visualizations
-
-This method generates all visualizations, including distributions and scatterplots.
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-EDA-render_all"></a>}}
-\if{latex}{\out{\hypertarget{method-EDA-render_all}{}}}
-\subsection{Method \code{render_all()}}{
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{EDA$render_all(
-  y_col = NULL,
-  dist_title_prefix = "Distribution of",
-  dist_bins = 10,
-  dist_add_density = TRUE,
-  dist_theme = "light",
-  scatter_title_prefix = "Scatterplot of"
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{y_col}}{Target variable of interest in data set}
-
-\item{\code{dist_title_prefix}}{Prefix for titles of distribution plots.}
-
-\item{\code{dist_bins}}{Number of bins for histograms in distribution plots.}
-
-\item{\code{dist_add_density}}{Logical. Whether to overlay a density line on histograms.}
-
-\item{\code{dist_theme}}{Visualization theme for the distribution plots.}
-
-\item{\code{scatter_title_prefix}}{Prefix for titles of scatterplot visualizations.}
-
-\item{\code{dist_density_color}}{Color for the density line.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A list of generated plots.
 }
 }
 \if{html}{\out{<hr>}}

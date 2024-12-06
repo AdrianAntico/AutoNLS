@@ -85,10 +85,23 @@ EDA <- R6::R6Class(
     #' Calculates both Pearson and Spearman correlations between all numeric columns (excluding the target variable) and the target variable.
     #'
     #' @param target_col the target variable in the data set
+    #' @param input_cols the independent variables
     #' @return A data.table with the Pearson and Spearman correlation values for each numeric predictor.
-    correlate = function(target_col = NULL) {
+    correlate = function(target_col = NULL, input_cols = NULL) {
+
       # Identify numeric columns excluding the target column
-      numeric_cols <- setdiff(names(self$data)[sapply(self$data, is.numeric)], target_col)
+      if(is.null(input_cols)) {
+        numeric_cols <- setdiff(names(self$data)[sapply(self$data, is.numeric)], target_col)
+        if (length(numeric_cols) == 0) {
+          stop("No columns are numeric")
+        }
+      } else {
+        numeric_cols <- setdiff(names(self$data)[sapply(self$data, is.numeric)], target_col)
+        numeric_cols <- numeric_cols[numeric_cols %in% input_cols]
+        if (length(numeric_cols) == 0) {
+          stop("No columns are numeric")
+        }
+      }
 
       if (length(numeric_cols) > 0) {
 
@@ -118,6 +131,7 @@ EDA <- R6::R6Class(
     #'
     #' Generates histograms for numeric columns and optionally overlays density lines.
     #'
+    #' @param input_cols Names of numeric variables to plot
     #' @param title_prefix Character. Prefix for the plot title.
     #' @param bins Integer. Number of bins for the histogram. Defaults to Sturges' formula.
     #' @param add_density Logical. Whether to add a density line. Defaults to `TRUE`.
@@ -126,6 +140,7 @@ EDA <- R6::R6Class(
     #' @param density_opacity numeric. default 0.4
     #' @return A list of `echarts4r` histogram plots.
     visualize_distributions = function(
+    input_cols = NULL,
     title_prefix = "Distribution of",
     bins = 20,
     add_density = TRUE,
@@ -136,7 +151,19 @@ EDA <- R6::R6Class(
       # Clear self$plots to avoid mixing states
       self$plots <- list()
 
-      numeric_cols <- names(self$data)[sapply(self$data, is.numeric)]
+      # Identify numeric columns excluding the target column
+      if(is.null(input_cols)) {
+        numeric_cols <- names(self$data)[sapply(self$data, is.numeric)]
+        if (length(numeric_cols) == 0) {
+          stop("No columns are numeric")
+        }
+      } else {
+        numeric_cols <- names(self$data)[sapply(self$data, is.numeric)]
+        numeric_cols <- numeric_cols[numeric_cols %in% input_cols]
+        if (length(numeric_cols) == 0) {
+          stop("No input_cols are numeric")
+        }
+      }
 
       # Validate numeric columns
       if (length(numeric_cols) == 0) {
@@ -187,41 +214,56 @@ EDA <- R6::R6Class(
     #' Generates scatterplots for all pairs of numeric columns and overlays
     #' fitted lines from Generalized Additive Models (GAM) for different `k` values.
     #'
+    #' @param target_col Name of target variable
+    #' @param input_cols Names of input variables
     #' @param title_prefix Character. Prefix for the plot title.
     #' @param theme Character. Theme for the plot (e.g., "light", "dark"). Defaults to `"light"`.
     #' @param k_values Numeric vector. Values of `k` (basis dimension) for GAM fits. Defaults to `c(3, 5, 7)`.
     #' @return A list of `echarts4r` scatter plots with GAM fitted lines.
     visualize_scatterplots = function(
+    target_col = NULL,
+    input_cols = NULL,
     title_prefix = "Scatterplot of",
     theme = "dark",
-    k_values = c(3, 5, 7)
-    ) {
+    k_values = c(3, 5, 7)) {
       # Check if mgcv is available
       if (!requireNamespace("mgcv", quietly = TRUE)) {
         stop("The 'mgcv' package is required for GAM fitting. Please install it.")
       }
 
+      if (length(target_col) == 0) {
+        stop("You need to supply a target_col.")
+      }
+
+      # Identify numeric columns excluding the target column
+      if(is.null(input_cols)) {
+        numeric_cols <- setdiff(names(self$data)[sapply(self$data, is.numeric)], target_col)
+        if (length(numeric_cols) == 0) {
+          stop("No columns are numeric")
+        }
+      } else {
+        numeric_cols <- setdiff(names(self$data)[sapply(self$data, is.numeric)], target_col)
+        numeric_cols <- numeric_cols[numeric_cols %in% input_cols]
+        if (length(numeric_cols) == 0) {
+          stop("No columns are numeric")
+        }
+      }
+
       # Reset Plots
       self$plots <- list()
 
-      # Get numeric columns
-      numeric_cols <- names(self$data)[sapply(self$data, is.numeric)]
-
       # Ensure there are at least two numeric columns for scatterplots
-      if (length(numeric_cols) < 2) {
+      if (length(numeric_cols) < 1) {
         stop("Not enough numeric columns to create scatterplots.")
       }
 
       # Reset the plots list
       self$plots <- list()
 
-      # Generate all unique combinations of numeric columns
-      col_pairs <- combn(numeric_cols, 2, simplify = FALSE)
-
       # Loop through column pairs
-      for (pair in col_pairs) { # pair = col_pairs[[1]]
-        x_col <- pair[1]
-        y_col <- pair[2]
+      for (col in numeric_cols) { # pair = col_pairs[[1]]
+        x_col <- col
+        y_col <- target_col
 
         # Prepare data for plotting
         plot_data <- self$data[, .(X = get(x_col), Y = get(y_col))]
@@ -264,54 +306,6 @@ EDA <- R6::R6Class(
       }
 
       return(self$plots)
-    },
-
-    #' Render All Visualizations
-    #'
-    #' This method generates all visualizations, including distributions and scatterplots.
-    #'
-    #' @param y_col Target variable of interest in data set
-    #' @param dist_title_prefix Prefix for titles of distribution plots.
-    #' @param dist_bins Number of bins for histograms in distribution plots.
-    #' @param dist_add_density Logical. Whether to overlay a density line on histograms.
-    #' @param dist_density_color Color for the density line.
-    #' @param dist_theme Visualization theme for the distribution plots.
-    #' @param scatter_title_prefix Prefix for titles of scatterplot visualizations.
-    #' @return A list of generated plots.
-    render_all = function(
-    y_col = NULL,
-    dist_title_prefix = "Distribution of",
-    dist_bins = 10,
-    dist_add_density = TRUE,
-    dist_theme = "light",
-    scatter_title_prefix = "Scatterplot of") {
-      # Run all methods and store the results
-      self$summary_stats <- self$summarize()
-      self$correlation_matrix <- self$correlate(target_col = y_col)
-
-      # Generate plots
-      distribution_plots <- self$visualize_distributions(
-        title_prefix = dist_title_prefix,
-        bins = dist_bins,
-        add_density = dist_add_density,
-        theme = dist_theme
-      )
-
-      scatter_plots <- self$visualize_scatterplots(
-        title_prefix = scatter_title_prefix
-      )
-
-      # Combine all plots into a single flat list
-      all_plots <- c(distribution_plots, scatter_plots)
-
-      # Combine results into a single list
-      results <- list(
-        Summary = self$summary_stats,
-        Correlation = self$correlation_matrix,
-        Plots = all_plots # Flattened list of all plots
-      )
-
-      return(results)
     }
   )
 )

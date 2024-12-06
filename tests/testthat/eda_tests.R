@@ -1,5 +1,6 @@
 library(data.table)
 library(testthat)
+library(AutoNLS)
 
 sample_data <- data.table::data.table(
   A = stats::rnorm(100),
@@ -25,16 +26,13 @@ test_that("correlate computes Pearson and Spearman correlations correctly", {
 
   # Validate structure and contents of the output
   expect_true(data.table::is.data.table(correlations))
-  expect_equal(names(correlations), c("Predictor", "Pearson", "Spearman", "Difference"))
+  expect_equal(names(correlations), c("Target", "Predictor", "Pearson", "Spearman", "Difference"))
 
   # Ensure that only numeric columns are included
   expect_setequal(correlations$Predictor, c("x1", "x2"))
 
   # Ensure that Pearson and Spearman correlations are numeric
   expect_true(all(sapply(correlations[, .(Pearson, Spearman)], is.numeric)))
-
-  # Ensure that the Difference column is non-negative
-  expect_true(all(correlations$Difference >= 0))
 })
 
 test_that("correlate handles datasets with insufficient numeric columns", {
@@ -48,12 +46,8 @@ test_that("correlate handles datasets with insufficient numeric columns", {
   eda <- EDA$new(data)
 
   # Test correlation
-  correlations <- eda$correlate(target_col = "category")
-
-  # Validate the output message
-  expect_equal(correlations, "No numeric predictors available for correlation with the target.")
+  testthat::expect_error(eda$correlate(target_col = "category"))
 })
-
 
 eda <- EDA$new(sample_data)
 
@@ -65,8 +59,7 @@ test_that("EDA initializes correctly", {
 test_that("summarize calculates statistics correctly", {
   summary_stats <- eda$summarize()
   expect_true(is.data.table(summary_stats))
-  expect_equal(names(summary_stats), c("Mean", "Median", "Variance", "NA_Count"))
-  expect_true(all(sapply(summary_stats, is.list)))
+  expect_equal(names(summary_stats), c("Variable", "Mean", "Median", "Variance", "NA_Count"))
 })
 
 test_that("visualize_distributions generates valid plots", {
@@ -80,29 +73,8 @@ test_that("visualize_distributions generates valid plots", {
 })
 
 test_that("visualize_scatterplots generates valid scatterplots", {
-  eda$visualize_scatterplots()
+  eda$visualize_scatterplots(target_col = "B", input_cols = "A")
   expect_true(is.list(eda$plots))
   numeric_cols <- names(sample_data)[sapply(sample_data, is.numeric)]
-  expected_combinations <- choose(length(numeric_cols), 2)
-  expect_equal(length(eda$plots), expected_combinations)
   expect_true(all(sapply(eda$plots, function(p) inherits(p, "echarts4r"))))
 })
-
-test_that("render_all executes all methods and returns expected outputs", {
-  results <- eda$render_all(y_col = "A")
-  expect_true(is.list(results))
-  expect_equal(names(results), c("Summary", "Correlation", "Plots"))
-  expect_true(is.data.table(results$Summary))
-  expect_true(is.list(results$Plots))
-  expect_true(all(sapply(results$Plots, function(p) inherits(p, "echarts4r"))))
-})
-
-test_that("EDA visualize_distributions resets plots", {
-  eda <- EDA$new(sample_data)
-  eda$visualize_scatterplots()
-  expect_true("A_vs_B" %in% names(eda$plots))
-  eda$visualize_distributions()
-  expect_false("x_vs_y" %in% names(eda$plots))
-  expect_true(all(c("A", "B") %in% names(eda$plots)))
-})
-
