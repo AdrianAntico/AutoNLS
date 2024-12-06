@@ -15,7 +15,6 @@ statistics, correlation matrices, and customizable visualizations using \code{ec
 \item \code{correlate()}: Computes a correlation matrix for numeric columns.
 \item \code{visualize_distributions()}: Creates histogram and density visualizations for numeric columns.
 \item \code{visualize_scatterplots()}: Creates pairwise scatterplots for numeric columns.
-\item \code{render_all()}: Runs all methods and returns their results.
 }
 }
 
@@ -108,6 +107,7 @@ Generates histograms for numeric columns and optionally overlays density lines.
 \subsection{Method \code{visualize_distributions()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{EDA$visualize_distributions(
+  input_cols = NULL,
   title_prefix = "Distribution of",
   bins = 20,
   add_density = TRUE,
@@ -120,6 +120,8 @@ Generates histograms for numeric columns and optionally overlays density lines.
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
+\item{\code{input_cols}}{Names of numeric variables to plot}
+
 \item{\code{title_prefix}}{Character. Prefix for the plot title.}
 
 \item{\code{bins}}{Integer. Number of bins for the histogram. Defaults to Sturges' formula.}

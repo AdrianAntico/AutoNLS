@@ -83,7 +83,7 @@ NonLinearModelEvaluator <- R6::R6Class(
             list(
               `Model Name` = model_name,
               Formula = deparse(fit$formula),
-              Model = fitted_equation,  # Use the formula with coefficients
+              `Model (standardized)` = fitted_equation,  # Use the formula with coefficients
               AIC = aic,
               BIC = bic,
               Resid_Std_Err = sqrt(mean(residuals^2)),
@@ -119,7 +119,7 @@ NonLinearModelEvaluator <- R6::R6Class(
             list(
               `Model Name` = model_name,
               Formula = deparse(fit$formula),
-              Model = fitted_equation,  # Use the formula with coefficients
+              `Model (standardized)` = fitted_equation,  # Use the formula with coefficients
               AIC = aic,
               BIC = bic,
               Resid_Std_Err = residual_std_error,

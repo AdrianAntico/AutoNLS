@@ -9,7 +9,6 @@
 #' - `correlate()`: Computes a correlation matrix for numeric columns.
 #' - `visualize_distributions()`: Creates histogram and density visualizations for numeric columns.
 #' - `visualize_scatterplots()`: Creates pairwise scatterplots for numeric columns.
-#' - `render_all()`: Runs all methods and returns their results.
 #'
 #'@export
 EDA <- R6::R6Class(
@@ -49,7 +48,7 @@ EDA <- R6::R6Class(
             Variable = col_name,
             Mean = mean(col, na.rm = TRUE),
             Median = median(col, na.rm = TRUE),
-            Variance = var(col, na.rm = TRUE),
+            StDev = sd(col, na.rm = TRUE),
             NA_Count = sum(is.na(col))
           )
         })

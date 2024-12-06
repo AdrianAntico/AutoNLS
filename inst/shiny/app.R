@@ -1070,7 +1070,7 @@ server <- function(input, output, session) {
             lengthMenu = c(5, 10, 20)
           ),
           rownames = FALSE
-        ) |> DT::formatRound(columns = setdiff(names(metrics), c("Model Name", "Formula", "Model")), digits = 3)
+        ) |> DT::formatRound(columns = setdiff(names(metrics), c("Model Name", "Formula", "Model (standardized)")), digits = 3)
       })
 
       # Render Fitted Model Evaluation Plots in their own box
