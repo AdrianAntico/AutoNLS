@@ -250,19 +250,17 @@ NonLinearFitter <- R6::R6Class(
       }
 
       # Extract weights if weights_col is specified
-      weights_vector <- if (!is.null(weights_col)) {
-        if (!weights_col %in% names(self$data)) stop("Weights column not found in dataset.")
-        self$data[[weights_col]]
+      if (!is.null(weights_col)) {
+        weights_vector <- self$data[[weights_col]]
+        standardized_weights_vector <- weights_vector / sum(weights_vector, na.rm = TRUE)
+        if (any(is.na(standardized_weights))) stop("Weights contain NA values.")
       } else {
-        NULL  # Use NULL for unweighted fitting
+        standardized_weights_vector <- NULL
       }
 
       # Ensure no missing values in weights (only if weights are provided)
-      if (!is.null(weights_vector) && any(is.na(weights_vector))) {
+      if (!is.null(standardized_weights_vector) && any(is.na(standardized_weights_vector))) {
         stop("Weights column contains missing values.")
-      } else {
-        # Standardize weights to a sum of 1
-        weights_vector <- weights_vector / sum(weights_vector, na.rm = TRUE)
       }
 
       # Create a copy of the data with renamed columns for fitting
@@ -292,7 +290,7 @@ NonLinearFitter <- R6::R6Class(
 
         # Fit model with or without weights
         fit <- tryCatch({
-          if (is.null(weights_vector)) {
+          if (is.null(standardized_weights_vector)) {
             # Unweighted fitting
             model_fit <- minpack.lm::nlsLM(
               formula = formula,
@@ -306,7 +304,7 @@ NonLinearFitter <- R6::R6Class(
             result_params <- private$optimize_with_weights(
               x = temp_data_scaled$x,
               y = temp_data_scaled$y,
-              weights = weights_vector,
+              weights = standardized_weights_vector,
               model = model$model_function,
               start_params = model$start_params
             )
@@ -317,7 +315,7 @@ NonLinearFitter <- R6::R6Class(
               residuals = temp_data_scaled$y - model$model_function(temp_data_scaled$x, result_params),
               fitted.values = model$model_function(temp_data_scaled$x, result_params),
               model_function = model$model_function,
-              weights = weights_vector
+              weights = standardized_weights_vector
             )
 
             # Set the class properly

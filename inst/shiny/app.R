@@ -119,7 +119,7 @@ ui <- bs4DashPage(
             tags$p("AutoNLS is a powerful tool for non-linear regression modeling."),
             tags$ul(
               tags$li("Analyze your data with the EDA tab."),
-              tags$li("Fit up to 18 different non-linear models in the Model Fitting tab."),
+              tags$li("Fit up to 14 different non-linear models in the Model Fitting tab."),
               tags$li("Score predictions in the Scoring tab.")
             ),
             br(),
