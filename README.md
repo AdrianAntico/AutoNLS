@@ -247,7 +247,13 @@ custom_start_params <- list(a = 1, b = 0.1)
 fitter$add_model(
   name = "CustomExponentialDecay", 
   formula = custom_formula, 
-  start_params = custom_start_params
+  start_params = custom_start_params,
+  model_function = function(x, params) {
+    a <- params[["a"]]
+    b <- params[["b"]]
+    if (!is.numeric(x)) stop("x must be numeric in model_function.")
+    a * exp(-b * x)
+  }
 )
 
 # Fit the custom model
