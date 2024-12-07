@@ -101,7 +101,8 @@ NULL
   x_col,
   y_col,
   weights_col = NULL,
-  control = list(maxiter = 1024)
+  control = list(maxiter = 1024),
+  ...
 )}\if{html}{\out{</div>}}
 }
 
@@ -116,6 +117,10 @@ NULL
 
 \item{\code{control}}{A list of control parameters for the optimizer, such as \code{maxiter}.
 Default is \code{list(maxiter = 200)}.}
+
+\item{\code{...}}{Additional arguments to be passed to the underlying fitting functions
+(\code{nlsLM} for unweighted models or \code{optim} for weighted models). Examples include
+\code{trace}, \code{lower}, and \code{upper} for \code{nlsLM}, or \code{reltol}, \code{parscale}, and others for \code{optim}.}
 }
 \if{html}{\out{</div>}}
 }

@@ -238,8 +238,12 @@ NonLinearFitter <- R6::R6Class(
     #' @param weights_col The name of the weights variable.
     #' @param control A list of control parameters for the optimizer, such as `maxiter`.
     #' Default is `list(maxiter = 200)`.
+    #' @param ... Additional arguments to be passed to the underlying fitting functions
+    #' (`nlsLM` for unweighted models or `optim` for weighted models). Examples include
+    #' `trace`, `lower`, and `upper` for `nlsLM`, or `reltol`, `parscale`, and others for `optim`.
+    #'
     #' @return A list of fitted model objects.
-    fit_models = function(x_col, y_col, weights_col = NULL, control = list(maxiter = 1024)) {
+    fit_models = function(x_col, y_col, weights_col = NULL, control = list(maxiter = 1024), ...) {
 
       if (is.null(self$models) || length(self$models) == 0) {
         stop("No models to fit. Use add_model() to add models.")
@@ -297,7 +301,8 @@ NonLinearFitter <- R6::R6Class(
               formula = formula,
               data = temp_data_scaled,
               start = model$start_params,
-              control = control
+              control = control,
+              ...
             )
           } else {
 
@@ -307,7 +312,8 @@ NonLinearFitter <- R6::R6Class(
               y = temp_data_scaled$y,
               weights = standardized_weights_vector,
               model = model$model_function,
-              start_params = model$start_params
+              start_params = model$start_params,
+              ...
             )
 
             model_fit <- list(
@@ -428,7 +434,7 @@ NonLinearFitter <- R6::R6Class(
   ),
 
   private = list(
-    optimize_with_weights = function(x, y, weights, model, start_params) {
+    optimize_with_weights = function(x, y, weights, model, start_params, ...) {
 
       # Convert start_params into a named vector
       params <- unlist(start_params)
@@ -457,7 +463,8 @@ NonLinearFitter <- R6::R6Class(
         par = params,
         fn = wrss,
         method = "BFGS",
-        control = list(maxit = 500, reltol = 1e-6)
+        control = list(maxit = 500, reltol = 1e-6),
+        ...
       )
 
       if (result$convergence != 0) {

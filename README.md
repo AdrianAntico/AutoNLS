@@ -284,6 +284,12 @@ AutoNLS relies on the following R packages:
 - minpack.lm
 - R6
 
+The Shiny App relies on the following R packages:
+- shiny
+- bs4Dash
+- bslib
+- DT
+
 ## Contributing
 We welcome contributions! If you'd like to contribute, please:
 
