@@ -57,7 +57,7 @@ Initialize the EDA class}
 \item{\code{data}}{A \code{data.table} containing the dataset for analysis.
 Compute summary statistics
 
-Calculates mean, median, variance, and the count of missing values for each column.}
+Calculates mean, median, sd, and the count of missing values for each column.}
 }
 \if{html}{\out{</div>}}
 }
@@ -112,7 +112,7 @@ Generates histograms for numeric columns and optionally overlays density lines.
   bins = 20,
   add_density = TRUE,
   tooltip_trigger = "axis",
-  theme = "dark",
+  theme = "westeros",
   density_opacity = 0.4
 )}\if{html}{\out{</div>}}
 }
@@ -130,7 +130,7 @@ Generates histograms for numeric columns and optionally overlays density lines.
 
 \item{\code{tooltip_trigger}}{"axis"}
 
-\item{\code{theme}}{Character. Theme for the plot (e.g., "light", "dark"). Defaults to \code{"light"}.}
+\item{\code{theme}}{Character. Theme for the plot}
 
 \item{\code{density_opacity}}{numeric. default 0.4}
 }
@@ -153,7 +153,7 @@ fitted lines from Generalized Additive Models (GAM) for different \code{k} value
   target_col = NULL,
   input_cols = NULL,
   title_prefix = "Scatterplot of",
-  theme = "dark",
+  theme = "westeros",
   k_values = c(3, 5, 7)
 )}\if{html}{\out{</div>}}
 }
@@ -167,7 +167,7 @@ fitted lines from Generalized Additive Models (GAM) for different \code{k} value
 
 \item{\code{title_prefix}}{Character. Prefix for the plot title.}
 
-\item{\code{theme}}{Character. Theme for the plot (e.g., "light", "dark"). Defaults to \code{"light"}.}
+\item{\code{theme}}{Character. Theme for the plot}
 
 \item{\code{k_values}}{Numeric vector. Values of \code{k} (basis dimension) for GAM fits. Defaults to \code{c(3, 5, 7)}.}
 }

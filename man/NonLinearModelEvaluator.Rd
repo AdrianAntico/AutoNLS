@@ -82,7 +82,7 @@ A data.table of evaluation metrics with fitted equations.
   data,
   x_col,
   y_col,
-  theme = "macarons"
+  theme = "westeros"
 )}\if{html}{\out{</div>}}
 }
 

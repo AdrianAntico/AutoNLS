@@ -76,7 +76,7 @@ A list of data.tables with predicted values for each model.
   model_name,
   new_data,
   x_col,
-  theme = "macarons"
+  theme = "westeros"
 )}\if{html}{\out{</div>}}
 }
 

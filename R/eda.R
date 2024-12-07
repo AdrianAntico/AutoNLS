@@ -35,7 +35,7 @@ EDA <- R6::R6Class(
 
     #' Compute summary statistics
     #'
-    #' Calculates mean, median, variance, and the count of missing values for each column.
+    #' Calculates mean, median, sd, and the count of missing values for each column.
     #'
     #' @return A `data.table` containing the summary statistics.
     summarize = function() {
@@ -65,7 +65,7 @@ EDA <- R6::R6Class(
             Variable = col_name,
             Mean = NA_real_,
             Median = NA_real_,
-            Variance = NA_real_,
+            StDev = NA_real_,
             NA_Count = sum(is.na(col))
           )
         })
@@ -135,7 +135,7 @@ EDA <- R6::R6Class(
     #' @param bins Integer. Number of bins for the histogram. Defaults to Sturges' formula.
     #' @param add_density Logical. Whether to add a density line. Defaults to `TRUE`.
     #' @param tooltip_trigger "axis"
-    #' @param theme Character. Theme for the plot (e.g., "light", "dark"). Defaults to `"light"`.
+    #' @param theme Character. Theme for the plot
     #' @param density_opacity numeric. default 0.4
     #' @return A list of `echarts4r` histogram plots.
     visualize_distributions = function(
@@ -144,7 +144,7 @@ EDA <- R6::R6Class(
     bins = 20,
     add_density = TRUE,
     tooltip_trigger = "axis",
-    theme = "dark",
+    theme = "westeros",
     density_opacity = 0.4) {
 
       # Clear self$plots to avoid mixing states
@@ -216,14 +216,14 @@ EDA <- R6::R6Class(
     #' @param target_col Name of target variable
     #' @param input_cols Names of input variables
     #' @param title_prefix Character. Prefix for the plot title.
-    #' @param theme Character. Theme for the plot (e.g., "light", "dark"). Defaults to `"light"`.
+    #' @param theme Character. Theme for the plot
     #' @param k_values Numeric vector. Values of `k` (basis dimension) for GAM fits. Defaults to `c(3, 5, 7)`.
     #' @return A list of `echarts4r` scatter plots with GAM fitted lines.
     visualize_scatterplots = function(
     target_col = NULL,
     input_cols = NULL,
     title_prefix = "Scatterplot of",
-    theme = "dark",
+    theme = "westeros",
     k_values = c(3, 5, 7)) {
       # Check if mgcv is available
       if (!requireNamespace("mgcv", quietly = TRUE)) {

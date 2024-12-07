@@ -79,13 +79,19 @@ NonLinearModelEvaluator <- R6::R6Class(
               )
             }
 
+            # Replace double negatives (-- becomes "")
+            fitted_equation <- gsub("--", "", fitted_equation, fixed = TRUE)
+
+            # Replace double negatives (- - becomes " + ")
+            fitted_equation <- gsub("- -", "+ ", fitted_equation, fixed = TRUE)
+
             # Compile metrics
             list(
               `Model Name` = model_name,
               Formula = deparse(fit$formula),
               `Model (standardized)` = fitted_equation,  # Use the formula with coefficients
-              AIC = aic,
-              BIC = bic,
+              AIC = -1.0 * aic,
+              BIC = -1.0 * bic,
               Resid_Std_Err = sqrt(mean(residuals^2)),
               R_Sq = r_squared
             )
@@ -115,13 +121,19 @@ NonLinearModelEvaluator <- R6::R6Class(
               )
             }
 
+            # Replace double negatives (-- becomes "")
+            fitted_equation <- gsub("--", "", fitted_equation, fixed = TRUE)
+
+            # Replace double negatives (- - becomes " + ")
+            fitted_equation <- gsub("- -", "+ ", fitted_equation, fixed = TRUE)
+
             # Compile metrics
             list(
               `Model Name` = model_name,
               Formula = deparse(fit$formula),
               `Model (standardized)` = fitted_equation,  # Use the formula with coefficients
-              AIC = aic,
-              BIC = bic,
+              AIC = -1.0 * aic,
+              BIC = -1.0 * bic,
               Resid_Std_Err = residual_std_error,
               R_Sq = r_squared
             )
@@ -141,7 +153,7 @@ NonLinearModelEvaluator <- R6::R6Class(
     #' @param y_col A string specifying the name of the y variable in the dataset.
     #' @param theme Echarts theme
     #' @return An `echarts4r` plot showing observed vs. predicted data, with weighted comparisons if available.
-    generate_comparison_plot = function(data, x_col, y_col, theme = "macarons") {
+    generate_comparison_plot = function(data, x_col, y_col, theme = "westeros") {
       if (is.null(self$fit_results) || length(self$fit_results) == 0) {
         stop("No fitted models to evaluate.")
       }
@@ -151,7 +163,7 @@ NonLinearModelEvaluator <- R6::R6Class(
       metrics <- self$generate_metrics(y_col = y_col, x_col = x_col)
 
       # Check if metrics were generated successfully
-      if (nrow(metrics) == 0) {
+      if (nrow(metrics) == 0 || is.null(metrics)) {
         stop("No metrics available for the models.")
       }
 

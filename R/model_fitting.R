@@ -267,6 +267,7 @@ NonLinearFitter <- R6::R6Class(
       temp_data <- data.table::copy(self$data)
       data.table::setnames(temp_data, old = c(x_col, y_col), new = c("x", "y"))
 
+      # Create a list of scale parameters
       scale_params <- list(
         min_x = min(temp_data$x, na.rm = TRUE),
         max_x = max(temp_data$x, na.rm = TRUE),
@@ -334,21 +335,25 @@ NonLinearFitter <- R6::R6Class(
           message("Successfully fitted model: ", model_name)
         }
 
-        # Attach scale parameters to the fit object
-        fit$scale_params <- scale_params
-        fit$original_x_col <- x_col
-        fit$original_y_col <- y_col
-        fit$model_function <- model$model_function
-        fit$scaled_data <- temp_data_scaled
-        fit$back_transform <- function(predictions, scale_params) {
-          if (is.null(scale_params$scale_factor_y) || is.null(scale_params$min_y)) {
-            stop("Error: Scale factor or minimum value is missing.")
-          }
+        if(!is.null(fit)) {
+          # Attach scale parameters to the fit object
+          fit$scale_params <- scale_params
+          fit$original_x_col <- x_col
+          fit$original_y_col <- y_col
+          fit$model_function <- model$model_function
+          fit$scaled_data <- temp_data_scaled
+          fit$back_transform <- function(predictions, scale_params) {
+            if (is.null(scale_params$scale_factor_y) || is.null(scale_params$min_y)) {
+              stop("Error: Scale factor or minimum value is missing.")
+            }
 
-          # Back-transform the predictions from scaled to original space
-          predictions * scale_params$scale_factor_y + scale_params$min_y
+            # Back-transform the predictions from scaled to original space
+            predictions * scale_params$scale_factor_y + scale_params$min_y
+          }
+          fit
+        } else {
+          fit
         }
-        fit
       })
 
       # Name the list using the model names

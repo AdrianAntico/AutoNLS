@@ -65,7 +65,7 @@ NonLinearModelScorer <- R6::R6Class(
     #' @param x_col The predictor column in `new_data`.
     #' @param theme Echarts theme
     #' @return A plot visualizing the scored data.
-    generate_score_plot = function(model_name, new_data, x_col, theme = "macarons") {
+    generate_score_plot = function(model_name, new_data, x_col, theme = "westeros") {
       # Validate x_col exists in new_data
       if (!x_col %in% names(new_data)) stop("x_col must exist in the dataset.")
 
