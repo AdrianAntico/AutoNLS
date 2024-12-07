@@ -1,4 +1,4 @@
-![Version:0.1.0](https://img.shields.io/static/v1?label=Version&message=1.0.0&color=blue&?style=plastic)
+![Version:0.1.0](https://img.shields.io/static/v1?label=Version&message=0.1.0&color=blue&?style=plastic)
 [![metacran downloads](https://cranlogs.r-pkg.org/badges/last-week/AutoNLS)](https://cran.r-project.org/package=AutoNLS)
 
 <img src="https://raw.githubusercontent.com/AdrianAntico/AutoNLS/master/inst/Logo.PNG" align="center" width="800" />
