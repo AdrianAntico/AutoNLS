@@ -96,7 +96,7 @@ How to run the Shiny App:
 1. Install and load AutoNLS
 2. Launch the app with:
 ```r
-run_shiny_app()
+run_shiny_app(launch_browser = TRUE)
 ```
 3. Interact with the app:
   * Use the sidebar to navigate between EDA, Model Fitting, and Scoring pages.

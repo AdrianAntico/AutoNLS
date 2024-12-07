@@ -4,7 +4,11 @@
 \alias{run_shiny_app}
 \title{Run the AutoNLS Shiny App}
 \usage{
-run_shiny_app()
+run_shiny_app(launch_browser = TRUE)
+}
+\arguments{
+\item{launch_browser}{Logical. If TRUE, the app opens in the default web browser.
+Defaults to TRUE.}
 }
 \description{
 This function launches the interactive Shiny application for AutoNLS.

@@ -156,7 +156,6 @@ edaServer <- function(id, dataset) {
 
       output$summary_table <- DT::renderDataTable({
         rounded_columns <- intersect(c("Mean", "Median", "StDev"), names(summary_data))
-
         DT::datatable(
           summary_data,
           options = list(
