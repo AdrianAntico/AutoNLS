@@ -3,6 +3,10 @@
 
 <img src="https://raw.githubusercontent.com/AdrianAntico/AutoNLS/master/inst/Logo.PNG" align="center" width="800" />
 
+
+## AutoNLS Shiny App Demo
+https://github.com/user-attachments/assets/7a9d02de-ae1b-41b3-bedc-264915e055da
+
 # **AutoNLS**
 Automated Non-Linear Least Squares and Exploratory Data Analysis in R
 
