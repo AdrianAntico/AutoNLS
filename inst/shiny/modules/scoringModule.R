@@ -88,7 +88,6 @@ scoringServer <- function(id, scoring_data, fit_results) {
     # Generate UI for variable selection in scoring
     output$score_variable_selector_ui <- renderUI({
       req(scoring_data())
-
       variables <- names(scoring_data())
       fluidRow(
         column(
@@ -106,15 +105,31 @@ scoringServer <- function(id, scoring_data, fit_results) {
     # Perform scoring
     observeEvent(c(input$run_scoring, input$scoring_theme), {
       req(scoring_data(), input$x_variable_scoring)
-      tryCatch({
-        # Initialize the scorer
-        scorer <- NonLinearModelScorer$new(fit_results = fit_results())
 
-        # Perform scoring for the selected models
-        score_results <- scorer$score_new_data(scoring_data(), input$x_variable_scoring)
+      # Filter out failed models from fit_results()
+      valid_fit_results <- fit_results()[!sapply(fit_results(), is.null)]
+
+      # Check if any models are valid for scoring
+      if (length(valid_fit_results) == 0) {
+        showNotification("No valid models available for scoring.", type = "error")
+        output$scored_plots_ui <- renderUI({
+          h3("No valid models available for scoring.")
+        })
+        return()
+      }
+
+      # Score
+      tryCatch({
+        # Initialize the scorer with valid models
+        scorer <- NonLinearModelScorer$new(fit_results = valid_fit_results)
+
+        # Perform scoring for the valid models
+        score_results <- lapply(names(valid_fit_results), function(model_name) {
+          scorer$score_new_data(scoring_data(), input$x_variable_scoring)
+        })
 
         # Generate plots for scored data
-        scored_plots <- lapply(names(fit_results()), function(model_name) {
+        scored_plots <- lapply(names(valid_fit_results), function(model_name) {
           scorer$generate_score_plot(
             model_name = model_name,
             new_data = scoring_data(),
@@ -130,7 +145,7 @@ scoringServer <- function(id, scoring_data, fit_results) {
           }
 
           lapply(seq_along(scored_plots), function(i) {
-            model_name <- names(fit_results())[i]
+            model_name <- names(valid_fit_results)[i]
             plotname <- paste0("scored_plot_", model_name)
 
             bs4Dash::box(
@@ -146,13 +161,16 @@ scoringServer <- function(id, scoring_data, fit_results) {
 
         # Render each plot dynamically
         lapply(seq_along(scored_plots), function(i) {
-          model_name <- names(fit_results())[i]
+          model_name <- names(valid_fit_results)[i]
           plotname <- paste0("scored_plot_", model_name)
 
           output[[plotname]] <- echarts4r::renderEcharts4r({
             scored_plots[[i]]
           })
         })
+
+        showNotification("Scoring completed successfully!", type = "message")
+
       }, error = function(e) {
         showNotification(paste("Error during scoring:", e$message), type = "error")
       })
