@@ -2,8 +2,15 @@
 % Please edit documentation in R/model_fitting.R
 \name{NonLinearFitter}
 \alias{NonLinearFitter}
-\title{NonLinearFitter}
+\title{Fit nonlinear regression models}
 \description{
+Fit nonlinear regression models
+
+Fit nonlinear regression models
+}
+\details{
+NonLinearFitter
+
 An R6 class for automatically fitting non-linear regression models.
 Includes a library of pre-defined models to simplify selection.
 }
@@ -96,6 +103,10 @@ NULL
 \if{html}{\out{<a id="method-NonLinearFitter-fit_models"></a>}}
 \if{latex}{\out{\hypertarget{method-NonLinearFitter-fit_models}{}}}
 \subsection{Method \code{fit_models()}}{
+fit_models standardizes your data first and they, depending on whether you supply
+a weights_col with utilize nls for unweighted fitting and optim for weighted fitting. Returned
+parameters will be based on the standardized fit, however, scoring models will back-transform
+the results so they will be on the same scale as the original data.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{NonLinearFitter$fit_models(
   x_col,
