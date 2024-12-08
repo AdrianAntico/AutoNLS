@@ -183,19 +183,37 @@ dataPreprocessingServer <- function(id, dataset) {
       })
     })
 
-    # Data Preview
+    # Data Preview with dynamic rounding for numeric (non-integer) columns
     output$data_preview <- DT::renderDT({
-      req(dataset())  # Make sure dataset() is not NULL
-      data <- dataset()
-      DT::datatable(
-        data,
-        options = list(
-          scrollX = TRUE,
-          pageLength = 5,
-          lengthMenu = c(5, 10, 20) # Disable state saving to force refresh
-        ),
-        rownames = FALSE
-      )
+      req(dataset())  # Ensure dataset() is not NULL
+      data <- dataset()  # Retrieve the dataset
+
+      # Identify numeric (non-integer) columns
+      numeric_columns <- names(data)[sapply(data, function(col) is.numeric(col) && !all(col == floor(col)))]
+
+      # Create datatable with formatting for numeric (non-integer) columns
+      if (length(numeric_columns) > 0) {
+        DT::datatable(
+          data,
+          options = list(
+            scrollX = TRUE,  # Enable horizontal scrolling
+            pageLength = 5,  # Default number of rows per page
+            lengthMenu = c(5, 10, 20)  # Options for rows per page
+          ),
+          rownames = FALSE
+        ) |>
+          DT::formatRound(columns = numeric_columns, digits = 2)  # Round non-integer numeric columns to 2 digits
+      } else {
+        DT::datatable(
+          data,
+          options = list(
+            scrollX = TRUE,  # Enable horizontal scrolling
+            pageLength = 5,  # Default number of rows per page
+            lengthMenu = c(5, 10, 20)  # Options for rows per page
+          ),
+          rownames = FALSE
+        )
+      }
     })
 
     # Preprocessing table refresh
