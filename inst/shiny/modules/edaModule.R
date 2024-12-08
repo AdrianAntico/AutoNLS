@@ -159,11 +159,15 @@ edaServer <- function(id, dataset) {
         DT::datatable(
           summary_data,
           options = list(
-            scrollX = TRUE,
             pageLength = 10,
-            lengthMenu = c(5, 10, 20)
+            lengthMenu = c(5, 10, 25, 50),
+            dom = 'Blfrtip',
+            scrollX = TRUE,
+            processing = TRUE
           ),
-          rownames = FALSE
+          selection = 'single',
+          rownames = FALSE,
+          class = 'cell-border stripe'
         ) |>
           DT::formatRound(columns = rounded_columns, digits = 2)
       })
@@ -261,8 +265,16 @@ edaServer <- function(id, dataset) {
       output$corr_table <- DT::renderDataTable({
         DT::datatable(
           corr_matrix,
-          options = list(scrollX = TRUE, pageLength = 5, lengthMenu = c(5, 10, 20)),
-          rownames = FALSE
+          options = list(
+            pageLength = 10,
+            lengthMenu = c(5, 10, 25, 50),
+            dom = 'Blfrtip',
+            scrollX = TRUE,
+            processing = TRUE
+          ),
+          selection = 'single',
+          rownames = FALSE,
+          class = 'cell-border stripe'
         ) |>
           DT::formatRound(columns = setdiff(colnames(corr_matrix), c("Target", "Predictor")), digits = 2)
       })

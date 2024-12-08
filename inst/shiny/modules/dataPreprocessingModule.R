@@ -196,22 +196,30 @@ dataPreprocessingServer <- function(id, dataset) {
         DT::datatable(
           data,
           options = list(
-            scrollX = TRUE,  # Enable horizontal scrolling
-            pageLength = 5,  # Default number of rows per page
-            lengthMenu = c(5, 10, 20)  # Options for rows per page
+            pageLength = 10,
+            lengthMenu = c(5, 10, 25, 50),
+            dom = 'Blfrtip',
+            scrollX = TRUE,
+            processing = TRUE
           ),
-          rownames = FALSE
+          selection = 'single',
+          rownames = FALSE,
+          class = 'cell-border stripe'
         ) |>
           DT::formatRound(columns = numeric_columns, digits = 2)  # Round non-integer numeric columns to 2 digits
       } else {
         DT::datatable(
           data,
           options = list(
-            scrollX = TRUE,  # Enable horizontal scrolling
-            pageLength = 5,  # Default number of rows per page
-            lengthMenu = c(5, 10, 20)  # Options for rows per page
+            pageLength = 10,
+            lengthMenu = c(5, 10, 25, 50),
+            dom = 'Blfrtip',
+            scrollX = TRUE,
+            processing = TRUE
           ),
-          rownames = FALSE
+          selection = 'single',
+          rownames = FALSE,
+          class = 'cell-border stripe'
         )
       }
     })
@@ -223,11 +231,15 @@ dataPreprocessingServer <- function(id, dataset) {
         DT::datatable(
           dataset(),
           options = list(
+            pageLength = 10,
+            lengthMenu = c(5, 10, 25, 50),
+            dom = 'Blfrtip',
             scrollX = TRUE,
-            pageLength = 5,
-            lengthMenu = c(5, 10, 20)
+            processing = TRUE
           ),
-          rownames = FALSE
+          selection = 'single',
+          rownames = FALSE,
+          class = 'cell-border stripe'
         )
       })
     })

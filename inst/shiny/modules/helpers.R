@@ -2,105 +2,185 @@
 generateDTStyling <- function() {
   tags$head(
     tags$style(HTML("
+      /* Common styles for both modes */
+      .dataTables_wrapper {
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin: 15px 0;
+      }
+
+      .dataTables_filter input,
+      .dataTables_length select {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 6px 12px;
+        margin-left: 8px;
+        transition: border-color 0.3s ease;
+      }
+
+      .dataTables_filter input:focus,
+      .dataTables_length select:focus {
+        outline: none;
+        border-color: #2196F3;
+        box-shadow: 0 0 0 2px rgba(33,150,243,0.2);
+      }
+
+      .dataTables_paginate .paginate_button {
+        border-radius: 4px !important;
+        margin: 0 4px;
+        padding: 6px 12px !important;
+        border: none !important;
+        transition: all 0.3s ease;
+      }
+
+      table.dataTable {
+        border-collapse: separate !important;
+        border-spacing: 0;
+        width: 100% !important;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
       /* Light mode styles */
-      body.light-mode table.dataTable td,
-      body.light-mode table.dataTable th,
-      body.light-mode .dataTables_info,
-      body.light-mode .dataTables_paginate,
-      body.light-mode .dataTables_filter label,
-      body.light-mode .dataTables_length label {
-        color: #333; /* Dark text for light mode */
-        font-size: 14px; /* Standardized font size */
+      body.light-mode .dataTables_wrapper {
+        background: #ffffff;
       }
 
       body.light-mode table.dataTable thead th {
-        background-color: #0056b3; /* Dark blue header */
-        color: white; /* White text for header */
-        font-weight: bold;
-        text-align: center;
-        border-bottom: 3px solid #003f7f; /* Add a subtle bottom border */
+        background: linear-gradient(145deg, #2196F3, #1976D2);
+        color: white;
+        font-weight: 600;
+        padding: 12px 18px;
+        border: none;
+        text-transform: uppercase;
+        font-size: 13px;
+        letter-spacing: 0.5px;
       }
 
-      body.light-mode table.dataTable tfoot th {
-        background-color: #0056b3; /* Dark blue footer */
-        color: white;
-        font-weight: bold;
-        border-top: 3px solid #003f7f; /* Add a subtle top border */
+      body.light-mode table.dataTable tbody td {
+        padding: 12px 18px;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        font-size: 14px;
+        color: #333;
       }
 
       body.light-mode table.dataTable tbody tr:nth-child(odd) {
-        background-color: #e3f2fd !important; /* Light blue for odd rows */
+        background-color: #f8f9fa !important;
       }
 
       body.light-mode table.dataTable tbody tr:nth-child(even) {
-        background-color: #ffffff !important; /* White for even rows */
+        background-color: #ffffff !important;
       }
 
       body.light-mode table.dataTable tbody tr:hover {
-        background-color: #bbdefb !important; /* Highlight on hover */
+        background-color: #e3f2fd !important;
+        transform: translateY(-1px);
+        transition: all 0.2s ease;
+      }
+
+      body.light-mode .dataTables_paginate .paginate_button {
+        background: #f8f9fa !important;
+        color: #333 !important;
+      }
+
+      body.light-mode .dataTables_paginate .paginate_button.current {
+        background: #2196F3 !important;
+        color: white !important;
+      }
+
+      body.light-mode .dataTables_paginate .paginate_button:hover {
+        background: #e3f2fd !important;
+        color: #2196F3 !important;
       }
 
       /* Dark mode styles */
-      body.dark-mode table.dataTable td,
-      body.dark-mode table.dataTable th,
-      body.dark-mode .dataTables_info,
-      body.dark-mode .dataTables_paginate,
-      body.dark-mode .dataTables_filter label,
-      body.dark-mode .dataTables_length label {
-        color: #ccc; /* Light text for dark mode */
-        font-size: 14px; /* Standardized font size */
+      body.dark-mode .dataTables_wrapper {
+        background: #1a1a1a;
       }
 
       body.dark-mode table.dataTable thead th {
-        background-color: #222; /* Dark header background */
-        color: #bbb; /* Light gray text for header */
-        font-weight: bold;
-        text-align: center;
-        border-bottom: 3px solid #444; /* Add a subtle bottom border */
+        background: linear-gradient(145deg, #424242, #333333);
+        color: #fff;
+        font-weight: 600;
+        padding: 12px 18px;
+        border: none;
+        text-transform: uppercase;
+        font-size: 13px;
+        letter-spacing: 0.5px;
       }
 
-      body.dark-mode table.dataTable tfoot th {
-        background-color: #222; /* Dark footer background */
-        color: #bbb; /* Light gray text for footer */
-        font-weight: bold;
-        border-top: 3px solid #444; /* Add a subtle top border */
+      body.dark-mode table.dataTable tbody td {
+        padding: 12px 18px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        font-size: 14px;
+        color: #e0e0e0;
       }
 
       body.dark-mode table.dataTable tbody tr:nth-child(odd) {
-        background-color: #333 !important; /* Slightly lighter dark for odd rows */
+        background-color: #2a2a2a !important;
       }
 
       body.dark-mode table.dataTable tbody tr:nth-child(even) {
-        background-color: #444 !important; /* Slightly darker dark for even rows */
+        background-color: #333333 !important;
       }
 
       body.dark-mode table.dataTable tbody tr:hover {
-        background-color: #555 !important; /* Highlight on hover */
+        background-color: #404040 !important;
+        transform: translateY(-1px);
+        transition: all 0.2s ease;
       }
 
-      /* General table styling */
-      table.dataTable {
-        border-collapse: collapse; /* Remove gaps between cells */
-        width: 100%;
-        font-family: Arial, sans-serif; /* Clean font style */
+      body.dark-mode .dataTables_paginate .paginate_button {
+        background: #333 !important;
+        color: #fff !important;
       }
 
-      table.dataTable thead th {
-        padding: 10px; /* Add padding for headers */
+      body.dark-mode .dataTables_paginate .paginate_button.current {
+        background: #2196F3 !important;
+        color: white !important;
       }
 
-      table.dataTable tfoot th {
-        padding: 10px; /* Add padding for footers */
+      body.dark-mode .dataTables_paginate .paginate_button:hover {
+        background: #404040 !important;
+        color: #2196F3 !important;
       }
 
-      table.dataTable tbody td {
-        padding: 8px; /* Add padding for table cells */
-        vertical-align: middle; /* Align text to the middle */
+      /* Responsive adjustments */
+      @media screen and (max-width: 767px) {
+        .dataTables_wrapper {
+          padding: 10px;
+        }
+
+        table.dataTable thead th,
+        table.dataTable tbody td {
+          padding: 8px 12px;
+          font-size: 13px;
+        }
+
+        .dataTables_filter input,
+        .dataTables_length select {
+          max-width: 120px;
+        }
       }
 
-      table.dataTable thead th,
-      table.dataTable tbody td {
-        border: 1px solid #ddd; /* Add border for all cells */
+      /* Loading state */
+      table.dataTable.processing tbody tr {
+        opacity: 0.5;
+      }
+
+      /* Selection styles */
+      table.dataTable tbody tr.selected {
+        background-color: rgba(33,150,243,0.1) !important;
+      }
+
+      /* Sorting icons */
+      table.dataTable thead th.sorting:after,
+      table.dataTable thead th.sorting_asc:after,
+      table.dataTable thead th.sorting_desc:after {
+        opacity: 0.7;
+        font-size: 12px;
       }
     "))
   )
