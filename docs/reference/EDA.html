@@ -18,7 +18,7 @@ statistics, correlation matrices, and customizable visualizations using echarts4
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">AutoNLS</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
       </span>
     </div>
 
@@ -61,7 +61,6 @@ statistics, correlation matrices, and customizable visualizations using <code>ec
 <li><p><code>correlate()</code>: Computes a correlation matrix for numeric columns.</p></li>
 <li><p><code>visualize_distributions()</code>: Creates histogram and density visualizations for numeric columns.</p></li>
 <li><p><code>visualize_scatterplots()</code>: Creates pairwise scatterplots for numeric columns.</p></li>
-<li><p><code>render_all()</code>: Runs all methods and returns their results.</p></li>
 </ul></div>
     <div id="public-fields">
     <h2>Public fields</h2>
@@ -95,7 +94,6 @@ Initialize the EDA class</p></dd>
 <li><p><a href="#method-EDA-correlate"><code>EDA$correlate()</code></a></p></li>
 <li><p><a href="#method-EDA-visualize_distributions"><code>EDA$visualize_distributions()</code></a></p></li>
 <li><p><a href="#method-EDA-visualize_scatterplots"><code>EDA$visualize_scatterplots()</code></a></p></li>
-<li><p><a href="#method-EDA-render_all"><code>EDA$render_all()</code></a></p></li>
 <li><p><a href="#method-EDA-clone"><code>EDA$clone()</code></a></p></li>
 </ul></div><p></p><hr><a id="method-EDA-new"></a><div class="section">
 <h3 id="method-new-">Method <code>new()</code><a class="anchor" aria-label="anchor" href="#method-new-"></a></h3>
@@ -110,7 +108,7 @@ Initialize the EDA class</p></dd>
 <p></p><div class="arguments"><dl><dt><code>data</code></dt>
 <dd><p>A <code>data.table</code> containing the dataset for analysis.
 Compute summary statistics</p>
-<p>Calculates mean, median, variance, and the count of missing values for each column.</p></dd>
+<p>Calculates mean, median, sd, and the count of missing values for each column.</p></dd>
 
 
 </dl><p></p></div>
@@ -136,13 +134,17 @@ Compute correlation with the target variable</p>
 
 <div class="section">
 <h4 id="usage-2">Usage<a class="anchor" aria-label="anchor" href="#usage-2"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">EDA</span><span class="op">$</span><span class="fu">correlate</span><span class="op">(</span>target_col <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">EDA</span><span class="op">$</span><span class="fu">correlate</span><span class="op">(</span>target_col <span class="op">=</span> <span class="cn">NULL</span>, input_cols <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
 <h4 id="arguments-1">Arguments<a class="anchor" aria-label="anchor" href="#arguments-1"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>target_col</code></dt>
 <dd><p>the target variable in the data set</p></dd>
+
+
+<dt><code>input_cols</code></dt>
+<dd><p>the independent variables</p></dd>
 
 
 </dl><p></p></div>
@@ -160,18 +162,23 @@ Visualize distributions with histograms and optional density lines</p>
 <div class="section">
 <h4 id="usage-3">Usage<a class="anchor" aria-label="anchor" href="#usage-3"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">EDA</span><span class="op">$</span><span class="fu">visualize_distributions</span><span class="op">(</span></span>
+<span>  input_cols <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  title_prefix <span class="op">=</span> <span class="st">"Distribution of"</span>,</span>
 <span>  bins <span class="op">=</span> <span class="fl">20</span>,</span>
 <span>  add_density <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  tooltip_trigger <span class="op">=</span> <span class="st">"axis"</span>,</span>
-<span>  theme <span class="op">=</span> <span class="st">"dark"</span>,</span>
+<span>  theme <span class="op">=</span> <span class="st">"westeros"</span>,</span>
 <span>  density_opacity <span class="op">=</span> <span class="fl">0.4</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
 <h4 id="arguments-2">Arguments<a class="anchor" aria-label="anchor" href="#arguments-2"></a></h4>
-<p></p><div class="arguments"><dl><dt><code>title_prefix</code></dt>
+<p></p><div class="arguments"><dl><dt><code>input_cols</code></dt>
+<dd><p>Names of numeric variables to plot</p></dd>
+
+
+<dt><code>title_prefix</code></dt>
 <dd><p>Character. Prefix for the plot title.</p></dd>
 
 
@@ -188,7 +195,7 @@ Visualize distributions with histograms and optional density lines</p>
 
 
 <dt><code>theme</code></dt>
-<dd><p>Character. Theme for the plot (e.g., "light", "dark"). Defaults to <code>"light"</code>.</p></dd>
+<dd><p>Character. Theme for the plot</p></dd>
 
 
 <dt><code>density_opacity</code></dt>
@@ -211,20 +218,30 @@ fitted lines from Generalized Additive Models (GAM) for different <code>k</code>
 <div class="section">
 <h4 id="usage-4">Usage<a class="anchor" aria-label="anchor" href="#usage-4"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">EDA</span><span class="op">$</span><span class="fu">visualize_scatterplots</span><span class="op">(</span></span>
+<span>  target_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  input_cols <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  title_prefix <span class="op">=</span> <span class="st">"Scatterplot of"</span>,</span>
-<span>  theme <span class="op">=</span> <span class="st">"dark"</span>,</span>
+<span>  theme <span class="op">=</span> <span class="st">"westeros"</span>,</span>
 <span>  k_values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">5</span>, <span class="fl">7</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
 <h4 id="arguments-3">Arguments<a class="anchor" aria-label="anchor" href="#arguments-3"></a></h4>
-<p></p><div class="arguments"><dl><dt><code>title_prefix</code></dt>
+<p></p><div class="arguments"><dl><dt><code>target_col</code></dt>
+<dd><p>Name of target variable</p></dd>
+
+
+<dt><code>input_cols</code></dt>
+<dd><p>Names of input variables</p></dd>
+
+
+<dt><code>title_prefix</code></dt>
 <dd><p>Character. Prefix for the plot title.</p></dd>
 
 
 <dt><code>theme</code></dt>
-<dd><p>Character. Theme for the plot (e.g., "light", "dark"). Defaults to <code>"light"</code>.</p></dd>
+<dd><p>Character. Theme for the plot</p></dd>
 
 
 <dt><code>k_values</code></dt>
@@ -235,72 +252,18 @@ fitted lines from Generalized Additive Models (GAM) for different <code>k</code>
 </div>
 <div class="section">
 <h4 id="returns-3">Returns<a class="anchor" aria-label="anchor" href="#returns-3"></a></h4>
-<p>A list of <code>echarts4r</code> scatter plots with GAM fitted lines.
-Render All Visualizations</p>
-<p>This method generates all visualizations, including distributions and scatterplots.</p>
-</div>
-
-</div><p></p><hr><a id="method-EDA-render_all"></a><div class="section">
-<h3 id="method-render-all-">Method <code>render_all()</code><a class="anchor" aria-label="anchor" href="#method-render-all-"></a></h3>
-
-<div class="section">
-<h4 id="usage-5">Usage<a class="anchor" aria-label="anchor" href="#usage-5"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">EDA</span><span class="op">$</span><span class="fu">render_all</span><span class="op">(</span></span>
-<span>  y_col <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  dist_title_prefix <span class="op">=</span> <span class="st">"Distribution of"</span>,</span>
-<span>  dist_bins <span class="op">=</span> <span class="fl">10</span>,</span>
-<span>  dist_add_density <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  dist_theme <span class="op">=</span> <span class="st">"light"</span>,</span>
-<span>  scatter_title_prefix <span class="op">=</span> <span class="st">"Scatterplot of"</span></span>
-<span><span class="op">)</span></span></code></pre></div><p></p></div>
-</div>
-
-<div class="section">
-<h4 id="arguments-4">Arguments<a class="anchor" aria-label="anchor" href="#arguments-4"></a></h4>
-<p></p><div class="arguments"><dl><dt><code>y_col</code></dt>
-<dd><p>Target variable of interest in data set</p></dd>
-
-
-<dt><code>dist_title_prefix</code></dt>
-<dd><p>Prefix for titles of distribution plots.</p></dd>
-
-
-<dt><code>dist_bins</code></dt>
-<dd><p>Number of bins for histograms in distribution plots.</p></dd>
-
-
-<dt><code>dist_add_density</code></dt>
-<dd><p>Logical. Whether to overlay a density line on histograms.</p></dd>
-
-
-<dt><code>dist_theme</code></dt>
-<dd><p>Visualization theme for the distribution plots.</p></dd>
-
-
-<dt><code>scatter_title_prefix</code></dt>
-<dd><p>Prefix for titles of scatterplot visualizations.</p></dd>
-
-
-<dt><code>dist_density_color</code></dt>
-<dd><p>Color for the density line.</p></dd>
-
-
-</dl><p></p></div>
-</div>
-<div class="section">
-<h4 id="returns-4">Returns<a class="anchor" aria-label="anchor" href="#returns-4"></a></h4>
-<p>A list of generated plots.</p>
+<p>A list of <code>echarts4r</code> scatter plots with GAM fitted lines.</p>
 </div>
 
 </div><p></p><hr><a id="method-EDA-clone"></a><div class="section">
 <h3 id="method-clone-">Method <code>clone()</code><a class="anchor" aria-label="anchor" href="#method-clone-"></a></h3>
 <p>The objects of this class are cloneable with this method.</p><div class="section">
-<h4 id="usage-6">Usage<a class="anchor" aria-label="anchor" href="#usage-6"></a></h4>
+<h4 id="usage-5">Usage<a class="anchor" aria-label="anchor" href="#usage-5"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">EDA</span><span class="op">$</span><span class="fu">clone</span><span class="op">(</span>deep <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="arguments-5">Arguments<a class="anchor" aria-label="anchor" href="#arguments-5"></a></h4>
+<h4 id="arguments-4">Arguments<a class="anchor" aria-label="anchor" href="#arguments-4"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>deep</code></dt>
 <dd><p>Whether to make a deep clone.</p></dd>
 

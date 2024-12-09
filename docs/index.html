@@ -33,7 +33,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">AutoNLS</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
       </span>
     </div>
 
@@ -65,6 +65,11 @@
 
 
 <p><img src="https://raw.githubusercontent.com/AdrianAntico/AutoNLS/master/inst/Logo.PNG" align="center" width="800"></p>
+<div class="section level2">
+<h2 id="autonls-shiny-app-demo">AutoNLS Shiny App Demo<a class="anchor" aria-label="anchor" href="#autonls-shiny-app-demo"></a>
+</h2>
+<p><a href="https://github.com/user-attachments/assets/8640fc53-f69d-4114-ad0e-f8c7f64767e4" class="external-link uri">https://github.com/user-attachments/assets/8640fc53-f69d-4114-ad0e-f8c7f64767e4</a></p>
+</div>
 <div class="section level1">
 <div class="page-header"><h1 id="autonls">
 <strong>AutoNLS</strong><a class="anchor" aria-label="anchor" href="#autonls"></a>
@@ -86,7 +91,7 @@
 <li>
 <strong>Non-Linear Regression</strong>:
 <ul>
-<li>Supporp for 14 pre-defined models (e.g., Hill Equation, Logistic Growth, MichaelisMenten).</li>
+<li>Supporp for 23 pre-defined models (e.g., Hill Equation, Logistic Growth, MichaelisMenten).</li>
 <li>Custom model addition with user-defined formulas.</li>
 <li>Weighted and unweighted regression support.</li>
 <li>Automated model evaluation with metrics like R², AIC, and BIC.</li>
@@ -146,10 +151,10 @@
 <span></span>
 <span><span class="co"># Install AutoNLS</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"AdrianAntico/AutoNLS"</span><span class="op">)</span></span></code></pre></div>
-<p>To run the Shiny app, ensure you have the following packages installed: <code>shiny</code>, <code>bs4Dash</code>, <code>bslib</code>, and <code>DT</code>.</p>
+<p>To run the Shiny app, ensure you have the following packages installed: <code>shiny</code>, <code>bs4Dash</code>, <code>readxl</code>, and <code>DT</code>.</p>
 <p>You can install them using:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"shiny"</span>, <span class="st">"bs4Dash"</span>, <span class="st">"bslib"</span>, <span class="st">"DT"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"shiny"</span>, <span class="st">"bs4Dash"</span>, <span class="st">"readxl"</span>, <span class="st">"DT"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -162,7 +167,7 @@
 <p>Key Features * Exploratory Data Analysis (EDA): * Visualize variable distributions with customizable bin sizes and themes. * Compute and display correlation matrices. * Explore pairwise relationships using scatterplots and GAM (Generalized Additive Model) fits. * Model Fitting: * Select and fit multiple non-linear regression models to your data. * Evaluate models with metrics like R-squared and RMSE. * Visualize and compare model fits side-by-side. * Scoring: * Use fitted models to make predictions on new datasets. * Compare scoring plots across multiple models. * Customization: * Choose from a variety of plot themes. * Interactively select variables and adjust model parameters.</p>
 <p>How to run the Shiny App: 1. Install and load AutoNLS 2. Launch the app with:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/run_shiny_app.html">run_shiny_app</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="reference/run_shiny_app.html">run_shiny_app</a></span><span class="op">(</span>launch_browser <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <ol start="3" style="list-style-type: decimal">
 <li>Interact with the app:</li>
 </ol>
@@ -237,7 +242,7 @@
 <span><span class="va">evaluator</span> <span class="op">&lt;-</span> <span class="va"><a href="reference/NonLinearModelEvaluator.html">NonLinearModelEvaluator</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">fit_results</span>, data <span class="op">=</span> <span class="va">dummy_data</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Generate metrics</span></span>
-<span><span class="va">metrics</span> <span class="op">&lt;-</span> <span class="va">evaluator</span><span class="op">$</span><span class="fu">generate_metrics</span><span class="op">(</span>y_col <span class="op">=</span> <span class="st">"Target"</span><span class="op">)</span></span>
+<span><span class="va">metrics</span> <span class="op">&lt;-</span> <span class="va">evaluator</span><span class="op">$</span><span class="fu">generate_metrics</span><span class="op">(</span>y_col <span class="op">=</span> <span class="st">"Target"</span>, x_col <span class="op">=</span> <span class="st">"X-Value"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">metrics</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Generate comparison plots</span></span>
@@ -254,14 +259,11 @@
 <p>We use the NonLinearModelScorer class to score new data based on the fitted models. For this example, we’ll assume new_data.csv is another dataset in the same format as dummy_data.csv.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Load new data for scoring</span></span>
-<span><span class="va">file_path_new</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata"</span>, <span class="st">"new_data.csv"</span>, package <span class="op">=</span> <span class="st">"AutoNLS"</span><span class="op">)</span></span>
-<span><span class="va">new_data</span> <span class="op">&lt;-</span> <span class="fu">fread</span><span class="op">(</span><span class="va">file_path_new</span><span class="op">)</span></span>
-<span></span>
 <span><span class="co"># Initialize the scorer</span></span>
-<span><span class="va">scorer</span> <span class="op">&lt;-</span> <span class="va"><a href="reference/NonLinearModelScorer.html">NonLinearModelScorer</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">fit_results</span>, <span class="va">new_data</span><span class="op">)</span></span>
+<span><span class="va">scorer</span> <span class="op">&lt;-</span> <span class="va"><a href="reference/NonLinearModelScorer.html">NonLinearModelScorer</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">fit_results</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Score new data for all models</span></span>
-<span><span class="va">score_results</span> <span class="op">&lt;-</span> <span class="va">scorer</span><span class="op">$</span><span class="fu">score_all_models</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">score_results</span> <span class="op">&lt;-</span> <span class="va">scorer</span><span class="op">$</span><span class="fu">score_new_data</span><span class="op">(</span>new_data <span class="op">=</span> <span class="va">dummy_data</span>, x_col <span class="op">=</span> <span class="st">"X-Value"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Print scored results</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">score_results</span><span class="op">)</span></span>
@@ -304,7 +306,13 @@
 <span><span class="va">fitter</span><span class="op">$</span><span class="fu">add_model</span><span class="op">(</span></span>
 <span>  name <span class="op">=</span> <span class="st">"CustomExponentialDecay"</span>, </span>
 <span>  formula <span class="op">=</span> <span class="va">custom_formula</span>, </span>
-<span>  start_params <span class="op">=</span> <span class="va">custom_start_params</span></span>
+<span>  start_params <span class="op">=</span> <span class="va">custom_start_params</span>,</span>
+<span>  model_function <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">params</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">a</span> <span class="op">&lt;-</span> <span class="va">params</span><span class="op">[[</span><span class="st">"a"</span><span class="op">]</span><span class="op">]</span></span>
+<span>    <span class="va">b</span> <span class="op">&lt;-</span> <span class="va">params</span><span class="op">[[</span><span class="st">"b"</span><span class="op">]</span><span class="op">]</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">is.numeric</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span> <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"x must be numeric in model_function."</span><span class="op">)</span></span>
+<span>    <span class="va">a</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">b</span> <span class="op">*</span> <span class="va">x</span><span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Fit the custom model</span></span>
@@ -336,6 +344,7 @@
 <li>minpack.lm</li>
 <li>R6</li>
 </ul>
+<p>The Shiny App relies on the following R packages: - shiny - bs4Dash - readxl - DT</p>
 </div>
 <div class="section level2">
 <h2 id="contributing">Contributing<a class="anchor" aria-label="anchor" href="#contributing"></a>
