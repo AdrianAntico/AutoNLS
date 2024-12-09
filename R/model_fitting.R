@@ -253,6 +253,17 @@ NonLinearFitter <- R6::R6Class(
           if (!is.numeric(x)) stop("x must be numeric in model_function.")
           d + (a - d) / (1 + (x / c)^b)^g
         }
+      ),
+      LinearModel = list(
+        description = "Simple linear regression model.",
+        formula = y ~ a + b * x,
+        start_params = list(a = 0, b = 1),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          a + b * x
+        }
       )
     ),
 
