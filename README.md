@@ -21,7 +21,7 @@ AutoNLS is an R package built for automating non-linear regression modeling, exp
 ## **Key Features**
 
 - **Non-Linear Regression**:
-  - Supporp for 14 pre-defined models (e.g., Hill Equation, Logistic Growth, MichaelisMenten).
+  - Supporp for 19 pre-defined models (e.g., Hill Equation, Logistic Growth, MichaelisMenten).
   - Custom model addition with user-defined formulas.
   - Weighted and unweighted regression support.
   - Automated model evaluation with metrics like R², AIC, and BIC.

@@ -187,6 +187,72 @@ NonLinearFitter <- R6::R6Class(
           if (!is.numeric(x)) stop("x must be numeric in model_function.")
           a * tanh(b * x + c)
         }
+      ),
+      BetaModel = list(
+        description = "Beta model for dose-response with hook effects.",
+        formula = y ~ a + (b - a) * (1 + (x / c)^d)^-e,
+        start_params = list(a = 1, b = 1, c = 1, d = 1, e = 1),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          c <- params[["c"]]
+          d <- params[["d"]]
+          e <- params[["e"]]
+          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          a + (b - a) * (1 + (x / c)^d)^-e
+        }
+      ),
+      Exp2OrderDecay = list(
+        description = "Second-order exponential decay model.",
+        formula = y ~ a * exp(-b * x) + c * exp(-d * x),
+        start_params = list(a = 1, b = 0.1, c = 0.5, d = 0.05),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          c <- params[["c"]]
+          d <- params[["d"]]
+          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          a * exp(-b * x) + c * exp(-d * x)
+        }
+      ),
+      ExpDecayPlateau = list(
+        description = "Exponential decay with a plateau.",
+        formula = y ~ a * exp(-b * x) + c,
+        start_params = list(a = 1, b = 0.1, c = 0.1),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          c <- params[["c"]]
+          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          a * exp(-b * x) + c
+        }
+      ),
+      HillQuad = list(
+        description = "Quadratic Hill model for dose-response relationships.",
+        formula = y ~ a * (x^b) / (c + x^b) + d * (x^2),
+        start_params = list(a = 1, b = 1, c = 1, d = 0.01),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          c <- params[["c"]]
+          d <- params[["d"]]
+          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          a * (x^b) / (c + x^b) + d * (x^2)
+        }
+      ),
+      Logistic5Param = list(
+        description = "Five-parameter logistic growth model.",
+        formula = y ~ d + (a - d) / (1 + (x / c)^b)^g,
+        start_params = list(a = 1, b = 1, c = 1, d = 0, g = 1),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          c <- params[["c"]]
+          d <- params[["d"]]
+          g <- params[["g"]]
+          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          d + (a - d) / (1 + (x / c)^b)^g
+        }
       )
     ),
 
