@@ -43,101 +43,63 @@ NonLinearModelEvaluator <- R6::R6Class(
         if (is.null(fit)) return(NULL)
 
         tryCatch({
-          if (inherits(fit, "custom_nls")) {
-            # Extract parameters
-            params <- coef(fit)
-            model_function <- fit$model_function
 
-            # Observed and predicted values
-            observed <- self$data[[y_col]]
-            x_scaled <- (self$data[[x_col]] - fit$scale_params$min_x) / fit$scale_params$scale_factor_x
-            predicted <- fit$back_transform(predictions = model_function(x = x_scaled, params = params), scale_params = fit$scale_params)
-            residuals <- observed - predicted
+          # Extract parameters
+          params <- coef(fit)
+          model_function <- fit$model_function
 
-            # Weighted residual sum of squares
+          # Observed and predicted values
+          observed <- self$data[[y_col]]
+          x_scaled <- (self$data[[x_col]] - fit$scale_params$min_x) / fit$scale_params$scale_factor_x
+          predicted <- fit$back_transform(predictions = model_function(x = x_scaled, params = params), scale_params = fit$scale_params)
+          residuals <- observed - predicted
+
+          # Weighted residual sum of squares
+          if (!is.null(fit$weights)) {
             wrss <- sum(residuals^2 * fit$weights)
-
-            # Compute R-squared
-            ss_res <- sum(residuals^2)
-            ss_tot <- sum((observed - mean(observed))^2)
-            r_squared <- 1 - ss_res / ss_tot
-
-            # Compute AIC and BIC manually
-            n <- length(observed)
-            k <- length(params)
-            log_likelihood <- n/2 * (log(2 * pi) + log(wrss / n) + 1)
-            aic <- -2 * log_likelihood + 2 * k
-            bic <- -2 * log_likelihood + log(n) * k
-
-            # Create fitted model string
-            fitted_equation <- deparse(fit$formula)
-            for (param_name in names(params)) {
-              fitted_equation <- gsub(
-                paste0("\\b", param_name, "\\b"),
-                format(params[[param_name]], digits = 4),
-                fitted_equation
-              )
-            }
-
-            # Replace double negatives (-- becomes "")
-            fitted_equation <- gsub("--", "", fitted_equation, fixed = TRUE)
-
-            # Replace double negatives (- - becomes " + ")
-            fitted_equation <- gsub("- -", "+ ", fitted_equation, fixed = TRUE)
-
-            # Compile metrics
-            list(
-              `Model Name` = model_name,
-              Formula = deparse(fit$formula),
-              `Model (standardized)` = fitted_equation,  # Use the formula with coefficients
-              AIC = -1.0 * aic,
-              BIC = -1.0 * bic,
-              Resid_Std_Err = sqrt(mean(residuals^2)),
-              R_Sq = r_squared
-            )
           } else {
-            # Use standard methods for unweighted models
-            summary_fit <- summary(fit)
-            aic <- -AIC(fit)
-            bic <- -BIC(fit)
-            residual_std_error <- summary_fit$sigma
+            wrss <- sum(residuals^2)
+          }
 
-            # Observed and predicted values
-            observed <- self$data[[y_col]]
-            predicted <- fit$back_transform(predict(fit, newdata = fit$scaled_data), scale_params = fit$scale_params)
+          # Compute R-squared
+          ss_res <- sum(residuals^2)
+          ss_tot <- sum((observed - mean(observed))^2)
+          r_squared <- 1 - ss_res / ss_tot
 
-            # Compute R-squared
-            ss_res <- sum((observed - predicted)^2)
-            ss_tot <- sum((observed - mean(observed))^2)
-            r_squared <- 1 - ss_res / ss_tot
+          # Compute AIC and BIC manually
+          n <- length(observed)
+          k <- length(params)
+          log_likelihood <- -1.0 * (n/2 * (log(2 * pi) + log(wrss / n) + 1))
+          aic <- -2 * log_likelihood + 2 * k
+          bic <- -2 * log_likelihood + log(n) * k
 
-            # Create fitted model string
-            fitted_equation <- deparse(fit$formula)
-            for (param_name in names(coef(fit))) {
-              fitted_equation <- gsub(
-                paste0("\\b", param_name, "\\b"),
-                format(coef(fit)[[param_name]], digits = 4),
-                fitted_equation
-              )
-            }
-
-            # Replace double negatives (-- becomes "")
-            fitted_equation <- gsub("--", "", fitted_equation, fixed = TRUE)
-
-            # Replace double negatives (- - becomes " + ")
-            fitted_equation <- gsub("- -", "+ ", fitted_equation, fixed = TRUE)
-
-            # Compile metrics
-            list(
-              `Model Name` = model_name,
-              Formula = deparse(fit$formula),
-              `Model (standardized)` = fitted_equation,  # Use the formula with coefficients
-              AIC = -1.0 * aic,
-              BIC = -1.0 * bic,
-              Resid_Std_Err = residual_std_error,
-              R_Sq = r_squared
+          # Create fitted model string
+          fitted_equation <- deparse(fit$formula)
+          for (param_name in names(params)) {
+            fitted_equation <- gsub(
+              paste0("\\b", param_name, "\\b"),
+              format(params[[param_name]], digits = 4),
+              fitted_equation
             )
           }
+
+          # Replace double negatives (-- becomes "")
+          fitted_equation <- gsub("--", "", fitted_equation, fixed = TRUE)
+
+          # Replace double negatives (- - becomes " + ")
+          fitted_equation <- gsub("- -", "+ ", fitted_equation, fixed = TRUE)
+
+          # Compile metrics
+          list(
+            `Model Name` = model_name,
+            Formula = deparse(fit$formula),
+            `Model (standardized)` = fitted_equation,  # Use the formula with coefficients
+            AIC = aic,
+            BIC = bic,
+            Resid_Std_Err = sqrt(mean(residuals^2)),
+            R_Sq = r_squared
+          )
+
         }, error = function(e) {
           message("Error processing model: ", e$message)
           NULL

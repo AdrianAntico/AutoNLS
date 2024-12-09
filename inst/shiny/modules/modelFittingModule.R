@@ -411,7 +411,6 @@ modelFittingServer <- function(id, dataset, fit_results) {
           }
         })
         showNotification("Models fitted successfully!", type = "message")
-
       }
     })
   })

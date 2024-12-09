@@ -320,6 +320,7 @@ NonLinearFitter <- R6::R6Class(
         # Fit model with or without weights
         fit <- tryCatch({
           if (is.null(standardized_weights_vector) && !force_optim) {
+
             # Unweighted fitting
             model_fit <- minpack.lm::nlsLM(
               formula = formula,
@@ -500,9 +501,6 @@ NonLinearFitter <- R6::R6Class(
       if (result$convergence != 0) {
         stop("Optimization did not converge for the weighted model.")
       }
-
-      print(result$par)
-
       return(result$par)  # Return optimized parameters
     }
   )
