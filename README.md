@@ -200,14 +200,11 @@ We use the NonLinearModelScorer class to score new data based on the fitted mode
 
 ```r
 # Load new data for scoring
-file_path_new <- system.file("extdata", "new_data.csv", package = "AutoNLS")
-new_data <- fread(file_path_new)
-
 # Initialize the scorer
-scorer <- NonLinearModelScorer$new(fit_results, new_data)
+scorer <- NonLinearModelScorer$new(fit_results)
 
 # Score new data for all models
-score_results <- scorer$score_all_models()
+score_results <- scorer$score_new_data(new_data = dummy_data, x_col = "X-Value")
 
 # Print scored results
 print(score_results)
