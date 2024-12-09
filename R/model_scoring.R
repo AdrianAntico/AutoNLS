@@ -35,14 +35,27 @@ NonLinearModelScorer <- R6::R6Class(
         tryCatch({
           if (inherits(fit, "custom_nls")) {
             # Use custom model function for scoring
-            params <- coef(fit)  # Extract fitted parameters
+            params <- fit$coefficients  # Extract fitted parameters
             model_function <- fit$model_function  # Retrieve model-specific function
+            scale_params <- fit$scale_params
 
+            # Scale x_col
+            scaled_x <- (new_data[[x_col]] - scale_params$min_x) / (scale_params$max_x - scale_params$min_x)
+
+            # Generate predictions
             predictions <- data.table::data.table(
               x = new_data[[x_col]],
-              y_pred = fit$back_transform(model_function(x = new_data[[x_col]], params = params), scale_params = fit$scale_params)
+              y_pred = fit$back_transform(
+                predictions = model_function(
+                  x = scaled_x,
+                  params = params
+                ),
+                scale_params = fit$scale_params
+              )
             )
+
           } else {
+
             # Use standard predict() for nls models
             predictions <- data.table::data.table(
               x = new_data[[x_col]],

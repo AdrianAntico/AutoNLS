@@ -5,7 +5,7 @@
 
 
 ## AutoNLS Shiny App Demo
-https://github.com/user-attachments/assets/7a9d02de-ae1b-41b3-bedc-264915e055da
+https://github.com/user-attachments/assets/8640fc53-f69d-4114-ad0e-f8c7f64767e4
 
 # **AutoNLS**
 Automated Non-Linear Least Squares and Exploratory Data Analysis in R
