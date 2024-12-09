@@ -36,6 +36,37 @@ NonLinearFitter <- R6::R6Class(
           a * x^b / (c + x^b)
         }
       ),
+      Hill5Model = list(
+        description = "Five-parameter Hill equation for dose-response.",
+        formula = y ~ a * (x^b) / (c^b + x^b) + d + e * x,
+        start_params = list(a = 1, b = 1, c = 1, d = 0, e = 0),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          c <- params[["c"]]
+          d <- params[["d"]]
+          e <- params[["e"]]
+          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          a * (x^b) / (c^b + x^b) + d + e * x
+        }
+      ),
+      HillSwitchpointModel = list(
+        description = "Hill equation with a smooth switch point for dose-response.",
+        formula = y ~ (1 / (1 + exp(-k * (x - s)))) * (a * (x^b) / (c^b + x^b)) + (1 - (1 / (1 + exp(-k * (x - s))))) * (d * (x^e) / (f^e + x^e)),
+        start_params = list(a = 1, b = 1, c = 1, d = 1, e = 1, f = 1, s = 50, k = 10),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          c <- params[["c"]]
+          d <- params[["d"]]
+          e <- params[["e"]]
+          f <- params[["f"]]
+          s <- params[["s"]]
+          k <- params[["k"]]  # Slope of the transition
+          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          1 / (1 + exp(-k * (x - s))) * (a * (x^b) / (c^b + x^b)) + (1 - 1 / (1 + exp(-k * (x - s)))) * (d * (x^e) / (f^e + x^e))
+        }
+      ),
       Logistic = list(
         description = "Logistic growth model.",
         formula = y ~ a / (1 + exp(-b * (x - c))),
@@ -69,6 +100,19 @@ NonLinearFitter <- R6::R6Class(
           c <- params[["c"]]
           if (!is.numeric(x)) stop("x must be numeric in model_function.")
           a * exp(-b * exp(-c * x))
+        }
+      ),
+      Gompertz4Param = list(
+        description = "Four-parameter Gompertz model.",
+        formula = y ~ a * exp(-exp(b - c * x)) + d,
+        start_params = list(a = 1, b = 1, c = 0.1, d = 0),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          c <- params[["c"]]
+          d <- params[["d"]]
+          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          a * exp(-exp(b - c * x)) + d
         }
       ),
       MichaelisMenten = list(

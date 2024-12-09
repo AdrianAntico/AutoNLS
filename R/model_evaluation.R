@@ -45,7 +45,7 @@ NonLinearModelEvaluator <- R6::R6Class(
         tryCatch({
 
           # Extract parameters
-          params <- coef(fit)
+          params <- fit$coefficients
           model_function <- fit$model_function
 
           # Observed and predicted values
@@ -75,6 +75,9 @@ NonLinearModelEvaluator <- R6::R6Class(
 
           # Create fitted model string
           fitted_equation <- deparse(fit$formula)
+
+          # Replace new line issues
+          fitted_equation <- gsub("\\s+", " ", paste(fitted_equation, collapse = ""))
           for (param_name in names(params)) {
             fitted_equation <- gsub(
               paste0("\\b", param_name, "\\b"),
@@ -92,7 +95,7 @@ NonLinearModelEvaluator <- R6::R6Class(
           # Compile metrics
           list(
             `Model Name` = model_name,
-            Formula = deparse(fit$formula),
+            Formula = gsub("\\s+", " ", paste(deparse(fit$formula), collapse = "")),
             `Model (standardized)` = fitted_equation,  # Use the formula with coefficients
             AIC = aic,
             BIC = bic,
