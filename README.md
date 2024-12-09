@@ -68,11 +68,11 @@ devtools::install_github("AdrianAntico/AutoNLS")
 ```
 
 To run the Shiny app, ensure you have the following packages installed:
-`shiny`, `bs4Dash`, `bslib`, and `DT`.
+`shiny`, `bs4Dash`, `readxl`, and `DT`.
 
 You can install them using:
 ```R
-install.packages(c("shiny", "bs4Dash", "bslib", "DT"))
+install.packages(c("shiny", "bs4Dash", "readxl", "DT"))
 ```
 
 ## Shiny App Usage
@@ -291,7 +291,7 @@ AutoNLS relies on the following R packages:
 The Shiny App relies on the following R packages:
 - shiny
 - bs4Dash
-- bslib
+- readxl
 - DT
 
 ## Contributing

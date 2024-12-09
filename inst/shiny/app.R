@@ -1,6 +1,5 @@
 library(shiny)
 library(bs4Dash)
-library(bslib)
 library(echarts4r)
 library(data.table)
 library(AutoNLS)
@@ -18,15 +17,19 @@ source("modules/scoringModule.R")
 
 # App Main UI
 ui <- bs4DashPage(
+  dark = TRUE,
   title = "AutoNLS",
   header = headerUI("header"),
   sidebar = sidebarUI("sidebar"),
   body = bs4DashBody(
 
     # DT styling for light / dark mode transitions
-    generateDTStyling(),
+    applyAppStyling(
+      generateDTStyling,
+      removeHelpSwitchStyling
+    ),
 
-    # Tab Items
+    # UI Modules
     bs4TabItems(
       bs4TabItem(tabName = "home", homeUI("home")),
       bs4TabItem(tabName = "data_preprocessing", dataPreprocessingUI("data_preprocessing")),

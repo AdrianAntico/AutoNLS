@@ -235,22 +235,35 @@ NonLinearFitter <- R6::R6Class(
 
     #' @title Fit nonlinear regression models
     #'
-    #' @description fit_models standardizes your data first and they, depending on whether you supply
-    #' a weights_col with utilize nls for unweighted fitting and optim for weighted fitting. Returned
-    #' parameters will be based on the standardized fit, however, scoring models will back-transform
-    #' the results so they will be on the same scale as the original data.
+    #' @description `fit_models()` first standardizes your data before fitting the model.
+    #' The fitting method depends on whether a `weights_col` is provided: `nls()` is used
+    #' for unweighted fitting, while `optim()` is used for weighted fitting. The returned
+    #' parameters are based on the standardized data. However, when scoring models, the
+    #' results are back-transformed to align with the original data scale.
     #'
     #' @param x_col The name of the predictor variable.
     #' @param y_col The name of the response variable.
     #' @param weights_col The name of the weights variable.
     #' @param control A list of control parameters for the optimizer, such as `maxiter`.
     #' Default is `list(maxiter = 200)`.
+    #' @param force_optim Logical; if `TRUE`, forces the use of `optim()` regardless of whether weights are supplied. Defaults to `FALSE`.
     #' @param ... Additional arguments to be passed to the underlying fitting functions
     #' (`nlsLM` for unweighted models or `optim` for weighted models). Examples include
     #' `trace`, `lower`, and `upper` for `nlsLM`, or `reltol`, `parscale`, and others for `optim`.
     #'
+    #' @details
+    #' The choice of fitting method depends on the arguments:
+    #' - If `force_optim = TRUE`, the function will use `optim()` regardless of whether weights are supplied.
+    #' - If `weights` is supplied, `optim()` will be used even if `force_optim = FALSE`.
+    #' - If neither `force_optim` nor `weights` is supplied, the function defaults to `nls()` for unweighted fitting.
+    #'
+    #' **Behavior Examples**:
+    #' 1. **Default behavior**: `nls()` is used when `weights = NULL` and `force_optim = FALSE`.
+    #' 2. **Weighted fitting**: `optim()` is used when `weights` is provided, even if `force_optim = FALSE`.
+    #' 3. **Forced optimization**: `optim()` is used when `force_optim = TRUE`, regardless of whether `weights` is supplied.
+    #'
     #' @return A list of fitted model objects.
-    fit_models = function(x_col, y_col, weights_col = NULL, control = list(maxiter = 1024), ...) {
+    fit_models = function(x_col, y_col, weights_col = NULL, control = list(maxiter = 1024), force_optim = FALSE, ...) {
 
       if (is.null(self$models) || length(self$models) == 0) {
         stop("No models to fit. Use add_model() to add models.")
@@ -263,8 +276,12 @@ NonLinearFitter <- R6::R6Class(
       # Extract weights if weights_col is specified
       if (!is.null(weights_col)) {
         weights_vector <- self$data[[weights_col]]
-        standardized_weights_vector <- weights_vector / sum(weights_vector, na.rm = TRUE)
-        if (any(is.na(standardized_weights))) stop("Weights contain NA values.")
+        if(all(weights_vector) == 1) {
+          standardized_weights_vector <- weights_vector
+        } else {
+          standardized_weights_vector <- weights_vector / sum(weights_vector, na.rm = TRUE)
+        }
+        if (any(is.na(standardized_weights_vector))) stop("Weights contain NA values.")
       } else {
         standardized_weights_vector <- NULL
       }
@@ -302,7 +319,7 @@ NonLinearFitter <- R6::R6Class(
 
         # Fit model with or without weights
         fit <- tryCatch({
-          if (is.null(standardized_weights_vector)) {
+          if (is.null(standardized_weights_vector) && !force_optim) {
             # Unweighted fitting
             model_fit <- minpack.lm::nlsLM(
               formula = formula,
@@ -311,6 +328,7 @@ NonLinearFitter <- R6::R6Class(
               control = control,
               ...
             )
+
           } else {
 
             # Weighted fitting using custom optimization
@@ -462,7 +480,12 @@ NonLinearFitter <- R6::R6Class(
 
         # Calculate weighted residuals
         residuals <- y - predicted
-        sum(weights * residuals^2)  # Return WRSS
+
+        if (!is.null(weights)) {
+          sum(weights * residuals^2)  # Return WRSS
+        } else {
+          sum(residuals^2)  # Return WRSS
+        }
       }
 
       # Use optim() for minimization
@@ -470,13 +493,15 @@ NonLinearFitter <- R6::R6Class(
         par = params,
         fn = wrss,
         method = "BFGS",
-        control = list(maxit = 500, reltol = 1e-6),
+        control = list(maxit = 5000, reltol = 1e-9),
         ...
       )
 
       if (result$convergence != 0) {
         stop("Optimization did not converge for the weighted model.")
       }
+
+      print(result$par)
 
       return(result$par)  # Return optimized parameters
     }

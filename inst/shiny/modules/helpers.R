@@ -1,3 +1,22 @@
+# Collection of styling functions
+# Generalized function to apply multiple styling functions
+applyAppStyling <- function(...) {
+  # Capture all passed functions
+  styling_functions <- list(...)
+
+  # Evaluate each function to get its output
+  styles <- lapply(styling_functions, function(func) {
+    if (is.function(func)) {
+      func()
+    } else {
+      stop("All arguments must be functions that return UI elements.")
+    }
+  })
+
+  # Combine all styles into a single tagList
+  do.call(tagList, styles)
+}
+
 # Helper function to generate enhanced DT styling
 generateDTStyling <- function() {
   tags$head(
@@ -183,5 +202,20 @@ generateDTStyling <- function() {
         font-size: 12px;
       }
     "))
+  )
+}
+
+removeHelpSwitchStyling <- function() {
+  tags$head(
+    tags$style(HTML(
+      "
+      /* Remove ? on / off switch at top */
+      #help_switch {
+        display: none !important;
+      }
+      #help_switch + label {
+        display: none !important; /* Hides the associated label */
+      }
+      "))
   )
 }

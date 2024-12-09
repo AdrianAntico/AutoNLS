@@ -13,6 +13,20 @@ NonLinearFitter
 
 An R6 class for automatically fitting non-linear regression models.
 Includes a library of pre-defined models to simplify selection.
+
+The choice of fitting method depends on the arguments:
+\itemize{
+\item If \code{force_optim = TRUE}, the function will use \code{optim()} regardless of whether weights are supplied.
+\item If \code{weights} is supplied, \code{optim()} will be used even if \code{force_optim = FALSE}.
+\item If neither \code{force_optim} nor \code{weights} is supplied, the function defaults to \code{nls()} for unweighted fitting.
+}
+
+\strong{Behavior Examples}:
+\enumerate{
+\item \strong{Default behavior}: \code{nls()} is used when \code{weights = NULL} and \code{force_optim = FALSE}.
+\item \strong{Weighted fitting}: \code{optim()} is used when \code{weights} is provided, even if \code{force_optim = FALSE}.
+\item \strong{Forced optimization}: \code{optim()} is used when \code{force_optim = TRUE}, regardless of whether \code{weights} is supplied.
+}
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
@@ -103,16 +117,18 @@ NULL
 \if{html}{\out{<a id="method-NonLinearFitter-fit_models"></a>}}
 \if{latex}{\out{\hypertarget{method-NonLinearFitter-fit_models}{}}}
 \subsection{Method \code{fit_models()}}{
-fit_models standardizes your data first and they, depending on whether you supply
-a weights_col with utilize nls for unweighted fitting and optim for weighted fitting. Returned
-parameters will be based on the standardized fit, however, scoring models will back-transform
-the results so they will be on the same scale as the original data.
+\code{fit_models()} first standardizes your data before fitting the model.
+The fitting method depends on whether a \code{weights_col} is provided: \code{nls()} is used
+for unweighted fitting, while \code{optim()} is used for weighted fitting. The returned
+parameters are based on the standardized data. However, when scoring models, the
+results are back-transformed to align with the original data scale.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{NonLinearFitter$fit_models(
   x_col,
   y_col,
   weights_col = NULL,
   control = list(maxiter = 1024),
+  force_optim = FALSE,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -128,6 +144,8 @@ the results so they will be on the same scale as the original data.
 
 \item{\code{control}}{A list of control parameters for the optimizer, such as \code{maxiter}.
 Default is \code{list(maxiter = 200)}.}
+
+\item{\code{force_optim}}{Logical; if \code{TRUE}, forces the use of \code{optim()} regardless of whether weights are supplied. Defaults to \code{FALSE}.}
 
 \item{\code{...}}{Additional arguments to be passed to the underlying fitting functions
 (\code{nlsLM} for unweighted models or \code{optim} for weighted models). Examples include

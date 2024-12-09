@@ -25,17 +25,17 @@ dataPreprocessingUI <- function(id) {
           column(
             width = 4,
             tags$h5("Weights Column"),
-            selectInput(ns("weights_logic"), "Weights Logic:",
-                        choices = c("Inverse Values", "Normalize", "Proportional",
-                                    "Standard Deviation Scaling", "Z-Score Scaling",
-                                    "Range Scaling", "Log Transformation",
-                                    "Exponential Scaling", "Quantile-Based")),
             selectInput(
               inputId = ns("reference_col"),
               label = "Reference Column:",
               choices = NULL,
               selected = NULL
             ),
+            selectInput(ns("weights_logic"), "Weights Logic:",
+                        choices = c("Inverse Values", "Normalize", "Proportional",
+                                    "Standard Deviation Scaling", "Z-Score Scaling",
+                                    "Range Scaling", "Log Transformation",
+                                    "Exponential Scaling", "Quantile-Based")),
             actionButton(ns("create_weights"), "Create Weights Column", class = "btn-secondary")
           ),
           column(

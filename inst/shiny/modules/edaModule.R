@@ -60,7 +60,7 @@ edaUI <- function(id) {
           column(
             width = 12,
             div(
-              style = "margin-top: 10px; font-weight: bold; font-size: 16px;",
+              style = "font-weight: bold; font-size: 1rem; display: block; margin-bottom: 5px;",
               "Generate EDA Results:"
             ),
             fluidRow(

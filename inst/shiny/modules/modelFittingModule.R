@@ -51,16 +51,26 @@ modelFittingUI <- function(id) {
           ),
           div(
             style = "margin-bottom: 10px;",
-            selectInput(
-              inputId = ns("weights_col"),
-              label = "Select Weights Column:",
-              choices = c("None"),  # Default option; dynamically updated by server
-              selected = "None"     # Default selection
+            fluidRow(
+              column(
+                width = 6,
+                selectInput(
+                  inputId = ns("weights_col"),
+                  label = "Select Weights Column:",
+                  choices = c("None"),  # Default option; dynamically updated by server
+                  selected = "None"     # Default selection
+                )
+              ),
+              column(
+                width = 6,
+                p("Force use of stats::optim() when fitting instead of stats::nls()"),
+                checkboxInput(
+                  inputId = ns("force_optim"),
+                  label = "Fit with optim",
+                  value = FALSE
+                )
+              )
             )
-          ),
-          div(
-            style = "margin-bottom: 10px;",
-            uiOutput(ns("model_params_ui"))  # UI for model parameters
           ),
           # Buttons for Fitting and Plotting
           tags$label(
@@ -126,6 +136,10 @@ modelFittingUI <- function(id) {
 # Model Fitting Server
 modelFittingServer <- function(id, dataset, fit_results) {
   moduleServer(id, function(input, output, session) {
+
+    observe({
+      shinyjs::runjs("$('[data-toggle=\"tooltip\"]').tooltip();")
+    })
 
     # Update weights column selector based on dataset
     output$weights_selector_ui <- renderUI({
@@ -250,7 +264,8 @@ modelFittingServer <- function(id, dataset, fit_results) {
           fitter$fit_models(
             x_col = input$x_variable,
             y_col = input$y_variable,
-            weights_col = weights_column
+            weights_col = weights_column,
+            force_optim = input$force_optim
           )
         }, error = function(e) {
           showNotification(paste("Error during model fitting:", e$message), type = "error")
@@ -264,8 +279,16 @@ modelFittingServer <- function(id, dataset, fit_results) {
         }
 
         # Update fit_results reactive value
+        fitted_models <- fitted_models[!sapply(fitted_models, is.null)]
+
+        # Check if any models were successfully fitted
+        if (length(fitted_models) == 0) {
+          showNotification("No models were successfully fitted.", type = "error")
+          return()
+        }
+
+        # Store in reactiveVal
         fit_results(fitted_models)
-        showNotification("Models fitted successfully!", type = "message")
 
         # Initialize evaluator
         evaluator <- tryCatch({
@@ -387,8 +410,8 @@ modelFittingServer <- function(id, dataset, fit_results) {
             })
           }
         })
-
         showNotification("Models fitted successfully!", type = "message")
+
       }
     })
   })
