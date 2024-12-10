@@ -1,10 +1,11 @@
 # Use the official rocker/shiny base image
-FROM rocker/shiny:4.4.1
+FROM rocker/shiny:latest
 
 # Set environment variables for Shiny
 ENV SHINY_PORT=3838 \
     CRAN_REPO=https://cloud.r-project.org \
-    _R_SHLIB_STRIP_=true
+    _R_SHLIB_STRIP_=true \
+    SHINY_SERVER_VERSION=1.5.20.1002
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -34,13 +35,12 @@ RUN install2.r --error --skipinstalled \
   shiny \
   DT \
   bs4Dash \
-  readxl \
-  here
+  readxl
 
 RUN R -e "devtools::install_github('AdrianAntico/AutoNLS', upgrade = FALSE, dependencies = FALSE, force = TRUE)"
 
 # CMD /bin/bash \
-CMD ["R", "-e", "options('shiny.port'=3838, shiny.host='0.0.0.0'); library(AutoNLS); AutoNLS::run_shiny_app(launch_browser = FALSE)"]
+CMD ["R", "-e", "options(shiny.minServerVersion = '0.0.0', 'shiny.port'=3838, shiny.host='0.0.0.0'); library(AutoNLS); AutoNLS::run_shiny_app(launch_browser = FALSE)"]
 
 EXPOSE 3838
 

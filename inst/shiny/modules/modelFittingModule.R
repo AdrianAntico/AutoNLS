@@ -137,10 +137,6 @@ modelFittingUI <- function(id) {
 modelFittingServer <- function(id, dataset, fit_results) {
   moduleServer(id, function(input, output, session) {
 
-    observe({
-      shinyjs::runjs("$('[data-toggle=\"tooltip\"]').tooltip();")
-    })
-
     # Update weights column selector based on dataset
     output$weights_selector_ui <- renderUI({
       choices <- if (is.null(dataset())) "None" else c("None", names(dataset()))
