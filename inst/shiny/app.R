@@ -5,6 +5,9 @@ library(data.table)
 library(AutoNLS)
 library(DT)
 
+# Force working directory here
+setwd(here::here())
+
 # Load Modules
 source("modules/helpers.R")
 source("modules/headerModule.R")

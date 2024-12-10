@@ -21,6 +21,7 @@ Imports:
     mgcv
 Suggests:
     testthat,
+    here,
     shiny,
     DT,
     bs4Dash,
