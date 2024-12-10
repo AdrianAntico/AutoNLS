@@ -34,7 +34,8 @@ RUN install2.r --error --skipinstalled \
   shiny \
   DT \
   bs4Dash \
-  readxl
+  readxl \
+  here
 
 RUN R -e "devtools::install_github('AdrianAntico/AutoNLS', upgrade = FALSE, dependencies = FALSE, force = TRUE)"
 

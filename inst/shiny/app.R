@@ -5,18 +5,15 @@ library(data.table)
 library(AutoNLS)
 library(DT)
 
-# Force working directory here
-setwd(here::here())
-
 # Load Modules
-source("modules/helpers.R")
-source("modules/headerModule.R")
-source("modules/sidebarModule.R")
-source("modules/homeModule.R")
-source("modules/dataPreprocessingModule.R")
-source("modules/edaModule.R")
-source("modules/modelFittingModule.R")
-source("modules/scoringModule.R")
+source(system.file("shiny", "modules", "helpers.R", package = "AutoNLS"))
+source(system.file("shiny", "modules", "headerModule.R", package = "AutoNLS"))
+source(system.file("shiny", "modules", "sidebarModule.R", package = "AutoNLS"))
+source(system.file("shiny", "modules", "homeModule.R", package = "AutoNLS"))
+source(system.file("shiny", "modules", "dataPreprocessingModule.R", package = "AutoNLS"))
+source(system.file("shiny", "modules", "edaModule.R", package = "AutoNLS"))
+source(system.file("shiny", "modules", "modelFittingModule.R", package = "AutoNLS"))
+source(system.file("shiny", "modules", "scoringModule.R", package = "AutoNLS"))
 
 # App Main UI
 ui <- bs4DashPage(
