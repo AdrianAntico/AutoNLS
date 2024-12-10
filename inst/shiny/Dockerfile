@@ -1,13 +1,10 @@
 # Use the official rocker/shiny base image
-FROM rocker/shiny:latest
+FROM rocker/shiny:4.4.1
 
 # Set environment variables for Shiny
 ENV SHINY_PORT=3838 \
     CRAN_REPO=https://cloud.r-project.org \
     _R_SHLIB_STRIP_=true
-
-# Copy application files
-COPY . ${APP_HOME}
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -26,10 +23,25 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install R dependencies
-RUN R -e "install.packages(c('R6','data.table','dplyr','echarts4r','minpack.lm','mgcv','shiny','DT','bs4Dash','readxl'), repos='${CRAN_REPO}')"
+RUN install2.r --error --skipinstalled \
+  devtools \
+  R6 \
+  data.table \
+  dplyr \
+  echarts4r \
+  minpack.lm \
+  mgcv \
+  shiny \
+  DT \
+  bs4Dash \
+  readxl
+
 RUN R -e "devtools::install_github('AdrianAntico/AutoNLS', upgrade = FALSE, dependencies = FALSE, force = TRUE)"
 
-CMD /bin/bash \
-&& R -e "options('shiny.port'=3838,shiny.host='0.0.0.0'); library(AutoNLS); AutoNLS::run_shiny_app(launch_browswer = TRUE)"
+# CMD /bin/bash \
+CMD ["R", "-e", "options('shiny.port'=3838, shiny.host='0.0.0.0'); library(AutoNLS); AutoNLS::run_shiny_app(launch_browser = FALSE)"]
 
-EXPOSE ${SHINY_PORT}
+EXPOSE 3838
+
+# Optional: Add a health check
+HEALTHCHECK CMD curl --fail http://localhost:3838 || exit 1
