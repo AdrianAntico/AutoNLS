@@ -11,6 +11,7 @@ https://github.com/user-attachments/assets/8640fc53-f69d-4114-ad0e-f8c7f64767e4
 Automated Non-Linear Least Squares and Exploratory Data Analysis in R
 
 [Download the AutoNLS Reference Manual](docs/AutoNLS-manual.pdf)
+
 [Dockerfile can be found here](inst/shiny/Dockerfile)
 
 
