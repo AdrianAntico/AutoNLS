@@ -322,7 +322,17 @@ NonLinearFitter <- R6::R6Class(
       self$models <- list()
     },
 
-    #' @return A data.table summarizing available models.
+    #' @description Retrieves a list of all non-linear models available for fitting in the `NonLinearFitter` class,
+    #' along with their descriptions and key details. This method provides an overview of the models
+    #' users can select for analysis.
+    #'
+    #' @details This method returns a list containing information about the supported
+    #' non-linear models, including their names, descriptions, and the formulas they use. It serves
+    #' as a convenient reference for users to understand the available options and select the most
+    #' appropriate models for their dataset and objectives.
+    #'
+    #' @return A list summarizing available models.
+    #' @export
     list_models = function() {
       data.table::data.table(
         Model = names(self$model_library),
@@ -331,14 +341,29 @@ NonLinearFitter <- R6::R6Class(
       )
     },
 
-    #' Add a non-linear model for testing
+    #' @description Adds a specified non-linear model to the list of models to be fitted. This method allows users
+    #' to include predefined models or define their own custom models for analysis.
+    #'
+    #' @details This method enables the inclusion of both built-in and custom models in the fitting
+    #' process. Users can select a predefined model from the library or provide the necessary
+    #' components to define a custom model, including a formula, starting parameters, and a function
+    #' to calculate predictions.
+    #'
+    #' For custom models, the following components must be provided:
+    #' - `name`: Name of the model
+    #' - `formula`: A mathematical representation of the model.
+    #' - `start_params`: A named list of starting parameter values for optimization.
+    #' - `model_function`: A function that takes input `x` and parameter values as arguments
+    #'   and returns the predicted `y` values.
     #'
     #' @param name The name of the model (e.g., "Hill").
     #' @param formula The non-linear formula for the model (optional if using pre-defined model).
     #' @param start_params A list of starting parameters for the model (optional if using pre-defined model).
+    #' @param model_function A function used in fitting and prediction. See model_library for examples
     #' @return NULL
-    add_model = function(name, formula = NULL, start_params = NULL) {
-      if (is.null(formula) || is.null(start_params)) {
+    #' @export
+    add_model = function(name, formula = NULL, start_params = NULL, model_function = NULL) {
+      if (is.null(formula) || is.null(start_params) || is.null(model_function)) {
         if (!name %in% names(self$model_library)) {
           stop("Model not found in library. Use list_models() to see available models.")
         }
@@ -354,23 +379,11 @@ NonLinearFitter <- R6::R6Class(
       )
     },
 
-    #' @title Fit nonlinear regression models
-    #'
     #' @description `fit_models()` first standardizes your data before fitting the model.
     #' The fitting method depends on whether a `weights_col` is provided: `nls()` is used
     #' for unweighted fitting, while `optim()` is used for weighted fitting. The returned
     #' parameters are based on the standardized data. However, when scoring models, the
     #' results are back-transformed to align with the original data scale.
-    #'
-    #' @param x_col The name of the predictor variable.
-    #' @param y_col The name of the response variable.
-    #' @param weights_col The name of the weights variable.
-    #' @param control A list of control parameters for the optimizer, such as `maxiter`.
-    #' Default is `list(maxiter = 200)`.
-    #' @param force_optim Logical; if `TRUE`, forces the use of `optim()` regardless of whether weights are supplied. Defaults to `FALSE`.
-    #' @param ... Additional arguments to be passed to the underlying fitting functions
-    #' (`nlsLM` for unweighted models or `optim` for weighted models). Examples include
-    #' `trace`, `lower`, and `upper` for `nlsLM`, or `reltol`, `parscale`, and others for `optim`.
     #'
     #' @details
     #' The choice of fitting method depends on the arguments:
@@ -383,7 +396,18 @@ NonLinearFitter <- R6::R6Class(
     #' 2. **Weighted fitting**: `optim()` is used when `weights` is provided, even if `force_optim = FALSE`.
     #' 3. **Forced optimization**: `optim()` is used when `force_optim = TRUE`, regardless of whether `weights` is supplied.
     #'
+    #' @param x_col The name of the predictor variable.
+    #' @param y_col The name of the response variable.
+    #' @param weights_col The name of the weights variable.
+    #' @param control A list of control parameters for the optimizer, such as `maxiter`.
+    #' Default is `list(maxiter = 200)`.
+    #' @param force_optim Logical; if `TRUE`, forces the use of `optim()` regardless of whether weights are supplied. Defaults to `FALSE`.
+    #' @param ... Additional arguments to be passed to the underlying fitting functions
+    #' (`nlsLM` for unweighted models or `optim` for weighted models). Examples include
+    #' `trace`, `lower`, and `upper` for `nlsLM`, or `reltol`, `parscale`, and others for `optim`.
+    #'
     #' @return A list of fitted model objects.
+    #' @export
     fit_models = function(x_col, y_col, weights_col = NULL, control = list(maxiter = 1024), force_optim = FALSE, ...) {
 
       if (is.null(self$models) || length(self$models) == 0) {
@@ -514,13 +538,24 @@ NonLinearFitter <- R6::R6Class(
       return(self$fit_results)
     },
 
-    #' Generate a comparison plot for model shapes
+    #' @description Creates a visual comparison of multiple fitted non-linear models against the observed data.
+    #' This method helps evaluate the performance and fit of different models in a single, intuitive plot.
+    #'
+    #' @details This method overlays the predictions of selected fitted models onto the observed data
+    #' across a specified range of the independent variable. The output is an interactive plot
+    #' generated using the `echarts4r` package, allowing users to visually assess the goodness of fit,
+    #' trends, and differences among models.
+    #'
+    #' By default, predictions are normalized to allow fair comparison across models with different
+    #' scales. Users can customize the plotting range and apply specific visual themes for enhanced
+    #' interpretability.
     #'
     #' @param x_range A numeric vector specifying the range of x values to evaluate.
     #' @param normalize Logical. If TRUE, normalizes the y values for each model to fall between 0 and 1.
     #' Defaults to TRUE.
     #' @param theme A string specifying the plot theme (e.g., "macarons").
     #' @return An `echarts4r` object representing the comparison plot.
+    #' @export
     model_comparison_plot = function(x_range = seq(1, 100, by = 1), normalize = TRUE, theme = "macarons") {
       if (is.null(self$models) || length(self$models) == 0) {
         stop("No models available for visualization. Use add_model() to add models.")

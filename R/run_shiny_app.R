@@ -1,6 +1,6 @@
-#' Run the AutoNLS Shiny App
+#' @title Run the AutoNLS Shiny App
 #'
-#' This function launches the interactive Shiny application for AutoNLS.
+#' @description This function launches the interactive Shiny application for AutoNLS.
 #' @param launch_browser Logical. If TRUE, the app opens in the default web browser.
 #' Defaults to TRUE.
 #' @export

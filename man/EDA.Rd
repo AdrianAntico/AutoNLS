@@ -54,10 +54,7 @@ Initialize the EDA class}
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{data}}{A \code{data.table} containing the dataset for analysis.
-Compute summary statistics
-
-Calculates mean, median, sd, and the count of missing values for each column.}
+\item{\code{data}}{A \code{data.table} containing the dataset for analysis.}
 }
 \if{html}{\out{</div>}}
 }
@@ -66,21 +63,20 @@ Calculates mean, median, sd, and the count of missing values for each column.}
 \if{html}{\out{<a id="method-EDA-summarize"></a>}}
 \if{latex}{\out{\hypertarget{method-EDA-summarize}{}}}
 \subsection{Method \code{summarize()}}{
+Calculates mean, median, sd, and the count of missing values for each column.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{EDA$summarize()}\if{html}{\out{</div>}}
 }
 
 \subsection{Returns}{
 A \code{data.table} containing the summary statistics.
-Compute correlation with the target variable
-
-Calculates both Pearson and Spearman correlations between all numeric columns (excluding the target variable) and the target variable.
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-EDA-correlate"></a>}}
 \if{latex}{\out{\hypertarget{method-EDA-correlate}{}}}
 \subsection{Method \code{correlate()}}{
+Calculates both Pearson and Spearman correlations between the \code{target_col} and all (or listed via \code{input_cols}) numeric columns.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{EDA$correlate(target_col = NULL, input_cols = NULL)}\if{html}{\out{</div>}}
 }
@@ -96,15 +92,13 @@ Calculates both Pearson and Spearman correlations between all numeric columns (e
 }
 \subsection{Returns}{
 A data.table with the Pearson and Spearman correlation values for each numeric predictor.
-Visualize distributions with histograms and optional density lines
-
-Generates histograms for numeric columns and optionally overlays density lines.
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-EDA-visualize_distributions"></a>}}
 \if{latex}{\out{\hypertarget{method-EDA-visualize_distributions}{}}}
 \subsection{Method \code{visualize_distributions()}}{
+Generates histograms for numeric columns and optionally overlays density lines.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{EDA$visualize_distributions(
   input_cols = NULL,
@@ -138,16 +132,14 @@ Generates histograms for numeric columns and optionally overlays density lines.
 }
 \subsection{Returns}{
 A list of \code{echarts4r} histogram plots.
-Visualize pairwise scatterplots with GAM fits
-
-Generates scatterplots for all pairs of numeric columns and overlays
-fitted lines from Generalized Additive Models (GAM) for different \code{k} values.
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-EDA-visualize_scatterplots"></a>}}
 \if{latex}{\out{\hypertarget{method-EDA-visualize_scatterplots}{}}}
 \subsection{Method \code{visualize_scatterplots()}}{
+Generates scatterplots for all target and input pairs of numeric columns and overlays
+fitted lines from Generalized Additive Models (GAM) for different \code{k} values.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{EDA$visualize_scatterplots(
   target_col = NULL,

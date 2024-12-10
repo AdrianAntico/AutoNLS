@@ -2,17 +2,34 @@
 % Please edit documentation in R/model_fitting.R
 \name{NonLinearFitter}
 \alias{NonLinearFitter}
-\title{Fit nonlinear regression models}
+\title{NonLinearFitter}
 \description{
-Fit nonlinear regression models
-
-Fit nonlinear regression models
-}
-\details{
 NonLinearFitter
 
+NonLinearFitter
+}
+\details{
 An R6 class for automatically fitting non-linear regression models.
 Includes a library of pre-defined models to simplify selection.
+
+This method returns a list containing information about the supported
+non-linear models, including their names, descriptions, and the formulas they use. It serves
+as a convenient reference for users to understand the available options and select the most
+appropriate models for their dataset and objectives.
+
+This method enables the inclusion of both built-in and custom models in the fitting
+process. Users can select a predefined model from the library or provide the necessary
+components to define a custom model, including a formula, starting parameters, and a function
+to calculate predictions.
+
+For custom models, the following components must be provided:
+\itemize{
+\item \code{name}: Name of the model
+\item \code{formula}: A mathematical representation of the model.
+\item \code{start_params}: A named list of starting parameter values for optimization.
+\item \code{model_function}: A function that takes input \code{x} and parameter values as arguments
+and returns the predicted \code{y} values.
+}
 
 The choice of fitting method depends on the arguments:
 \itemize{
@@ -27,6 +44,15 @@ The choice of fitting method depends on the arguments:
 \item \strong{Weighted fitting}: \code{optim()} is used when \code{weights} is provided, even if \code{force_optim = FALSE}.
 \item \strong{Forced optimization}: \code{optim()} is used when \code{force_optim = TRUE}, regardless of whether \code{weights} is supplied.
 }
+
+This method overlays the predictions of selected fitted models onto the observed data
+across a specified range of the independent variable. The output is an interactive plot
+generated using the \code{echarts4r} package, allowing users to visually assess the goodness of fit,
+trends, and differences among models.
+
+By default, predictions are normalized to allow fair comparison across models with different
+scales. Users can customize the plotting range and apply specific visual themes for enhanced
+interpretability.
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
@@ -81,21 +107,30 @@ A new instance of the NonLinearFitter class.
 \if{html}{\out{<a id="method-NonLinearFitter-list_models"></a>}}
 \if{latex}{\out{\hypertarget{method-NonLinearFitter-list_models}{}}}
 \subsection{Method \code{list_models()}}{
+Retrieves a list of all non-linear models available for fitting in the \code{NonLinearFitter} class,
+along with their descriptions and key details. This method provides an overview of the models
+users can select for analysis.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{NonLinearFitter$list_models()}\if{html}{\out{</div>}}
 }
 
 \subsection{Returns}{
-A data.table summarizing available models.
-Add a non-linear model for testing
+A list summarizing available models.
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-NonLinearFitter-add_model"></a>}}
 \if{latex}{\out{\hypertarget{method-NonLinearFitter-add_model}{}}}
 \subsection{Method \code{add_model()}}{
+Adds a specified non-linear model to the list of models to be fitted. This method allows users
+to include predefined models or define their own custom models for analysis.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{NonLinearFitter$add_model(name, formula = NULL, start_params = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{NonLinearFitter$add_model(
+  name,
+  formula = NULL,
+  start_params = NULL,
+  model_function = NULL
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -106,6 +141,8 @@ Add a non-linear model for testing
 \item{\code{formula}}{The non-linear formula for the model (optional if using pre-defined model).}
 
 \item{\code{start_params}}{A list of starting parameters for the model (optional if using pre-defined model).}
+
+\item{\code{model_function}}{A function used in fitting and prediction. See model_library for examples}
 }
 \if{html}{\out{</div>}}
 }
@@ -155,13 +192,14 @@ Default is \code{list(maxiter = 200)}.}
 }
 \subsection{Returns}{
 A list of fitted model objects.
-Generate a comparison plot for model shapes
 }
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-NonLinearFitter-model_comparison_plot"></a>}}
 \if{latex}{\out{\hypertarget{method-NonLinearFitter-model_comparison_plot}{}}}
 \subsection{Method \code{model_comparison_plot()}}{
+Creates a visual comparison of multiple fitted non-linear models against the observed data.
+This method helps evaluate the performance and fit of different models in a single, intuitive plot.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{NonLinearFitter$model_comparison_plot(
   x_range = seq(1, 100, by = 1),

@@ -4,9 +4,26 @@
 \alias{NonLinearModelEvaluator}
 \title{NonLinearModelEvaluator}
 \description{
+NonLinearModelEvaluator
+
+NonLinearModelEvaluator
+}
+\details{
 An R6 class to evaluate non-linear regression models.
 Includes tools to generate tables of statistics and visualizations
 to compare models against data.
+
+This method evaluates each fitted model by calculating various metrics such as
+Akaike Information Criterion (AIC), Bayesian Information Criterion (BIC), residual
+standard error, and R-squared values. It ensures compatibility across all models
+and gracefully handles cases where a model fails to fit properly by excluding it from
+the final summary.
+
+This method generates a comparison plot for each fitted model, allowing
+users to visually assess how well the models align with the observed data. It
+supports customization options such as theming and dynamic adjustment of the
+x-axis range. Models that fail to fit are gracefully excluded, ensuring clean
+and informative outputs.
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
@@ -56,6 +73,10 @@ A new instance of the NonLinearModelEvaluator class.
 \if{html}{\out{<a id="method-NonLinearModelEvaluator-generate_metrics"></a>}}
 \if{latex}{\out{\hypertarget{method-NonLinearModelEvaluator-generate_metrics}{}}}
 \subsection{Method \code{generate_metrics()}}{
+Computes and summarizes key performance metrics for all fitted models,
+including goodness-of-fit statistics, residual standard errors, and information criteria.
+The metrics provide a comprehensive evaluation of each model's performance on the
+given dataset.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{NonLinearModelEvaluator$generate_metrics(y_col = NULL, x_col = NULL)}\if{html}{\out{</div>}}
 }
@@ -77,6 +98,9 @@ A data.table of evaluation metrics with fitted equations.
 \if{html}{\out{<a id="method-NonLinearModelEvaluator-generate_comparison_plot"></a>}}
 \if{latex}{\out{\hypertarget{method-NonLinearModelEvaluator-generate_comparison_plot}{}}}
 \subsection{Method \code{generate_comparison_plot()}}{
+Creates visualizations comparing the fitted models against the observed data
+to assess their fit and predictive behavior. The plots include the fitted curves
+overlaid on the original data points for easy comparison.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{NonLinearModelEvaluator$generate_comparison_plot(
   data,

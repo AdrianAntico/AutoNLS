@@ -22,9 +22,21 @@ NonLinearModelScorer <- R6::R6Class(
       self$fit_results <- fit_results
     },
 
+    #' @description Generates predictions for new data using the fitted non-linear models.
+    #' This method applies each model to the new dataset and returns the predicted values.
+    #'
+    #' @details The `score_new_data` method enables users to evaluate how well the fitted models generalize
+    #' to unseen data. It uses the stored parameters of the fitted models and applies them to the specified
+    #' independent variable (`x_col`) in the new dataset. If the fitted models include transformations,
+    #' the predictions are back-transformed to match the scale of the original data.
+    #'
+    #' The output is a data frame containing the original data and the predicted values for each model,
+    #' making it easy to compare model predictions side-by-side.
+    #'
     #' @param new_data A data.table containing the new data to score.
     #' @param x_col The predictor column in `new_data`.
     #' @return A list of data.tables with predicted values for each model.
+    #' @export
     score_new_data = function(new_data, x_col) {
       if (!data.table::is.data.table(new_data)) stop("new_data must be a data.table.")
       if (!x_col %in% names(new_data)) stop("x_col must exist in the dataset.")
@@ -73,11 +85,23 @@ NonLinearModelScorer <- R6::R6Class(
       return(self$scored_data)
     },
 
+    #' @description Creates a visual representation of predictions versus actual values for a given fitted model
+    #' and a new dataset. This plot helps evaluate the model's performance on unseen data.
+    #'
+    #' @details The `generate_score_plot` method produces an interactive plot comparing the predicted values
+    #' of a fitted model against the actual observed values from the new dataset. The independent variable
+    #' (`x_col`) is used on the x-axis, while the predicted and actual dependent variable values are
+    #' displayed on the y-axis. This visualization can be used to assess how well the model generalizes
+    #' to new data and to identify areas where predictions deviate from observations.
+    #'
+    #' The plot leverages the `echarts4r` package for interactive and customizable visualizations.
+    #'
     #' @param model_name The name of the model to plot.
     #' @param new_data The original new data used for scoring.
     #' @param x_col The predictor column in `new_data`.
     #' @param theme Echarts theme
     #' @return A plot visualizing the scored data.
+    #' @export
     generate_score_plot = function(model_name, new_data, x_col, theme = "westeros") {
       # Validate x_col exists in new_data
       if (!x_col %in% names(new_data)) stop("x_col must exist in the dataset.")

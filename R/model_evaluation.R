@@ -32,9 +32,21 @@ NonLinearModelEvaluator <- R6::R6Class(
       self$data <- data
     },
 
+    #' @description Computes and summarizes key performance metrics for all fitted models,
+    #' including goodness-of-fit statistics, residual standard errors, and information criteria.
+    #' The metrics provide a comprehensive evaluation of each model's performance on the
+    #' given dataset.
+    #'
+    #' @details This method evaluates each fitted model by calculating various metrics such as
+    #' Akaike Information Criterion (AIC), Bayesian Information Criterion (BIC), residual
+    #' standard error, and R-squared values. It ensures compatibility across all models
+    #' and gracefully handles cases where a model fails to fit properly by excluding it from
+    #' the final summary.
+    #'
     #' @param y_col target variable
     #' @param x_col x variable
     #' @return A data.table of evaluation metrics with fitted equations.
+    #' @export
     generate_metrics = function(y_col = NULL, x_col = NULL) {
       if (is.null(self$fit_results)) stop("No fitted models to evaluate.")
 
@@ -113,11 +125,22 @@ NonLinearModelEvaluator <- R6::R6Class(
       return(self$evaluation_metrics)
     },
 
+    #' @description Creates visualizations comparing the fitted models against the observed data
+    #' to assess their fit and predictive behavior. The plots include the fitted curves
+    #' overlaid on the original data points for easy comparison.
+    #'
+    #' @details This method generates a comparison plot for each fitted model, allowing
+    #' users to visually assess how well the models align with the observed data. It
+    #' supports customization options such as theming and dynamic adjustment of the
+    #' x-axis range. Models that fail to fit are gracefully excluded, ensuring clean
+    #' and informative outputs.
+    #'
     #' @param data A `data.table` or `data.frame` containing the dataset used for evaluation.
     #' @param x_col A string specifying the name of the x variable in the dataset.
     #' @param y_col A string specifying the name of the y variable in the dataset.
     #' @param theme Echarts theme
     #' @return An `echarts4r` plot showing observed vs. predicted data, with weighted comparisons if available.
+    #' @export
     generate_comparison_plot = function(data, x_col, y_col, theme = "westeros") {
       if (is.null(self$fit_results) || length(self$fit_results) == 0) {
         stop("No fitted models to evaluate.")

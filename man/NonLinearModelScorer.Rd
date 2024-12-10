@@ -4,8 +4,29 @@
 \alias{NonLinearModelScorer}
 \title{NonLinearModelScorer}
 \description{
+NonLinearModelScorer
+
+NonLinearModelScorer
+}
+\details{
 An R6 class to score non-linear regression models on new data
 and visualize the results.
+
+The \code{score_new_data} method enables users to evaluate how well the fitted models generalize
+to unseen data. It uses the stored parameters of the fitted models and applies them to the specified
+independent variable (\code{x_col}) in the new dataset. If the fitted models include transformations,
+the predictions are back-transformed to match the scale of the original data.
+
+The output is a data frame containing the original data and the predicted values for each model,
+making it easy to compare model predictions side-by-side.
+
+The \code{generate_score_plot} method produces an interactive plot comparing the predicted values
+of a fitted model against the actual observed values from the new dataset. The independent variable
+(\code{x_col}) is used on the x-axis, while the predicted and actual dependent variable values are
+displayed on the y-axis. This visualization can be used to assess how well the model generalizes
+to new data and to identify areas where predictions deviate from observations.
+
+The plot leverages the \code{echarts4r} package for interactive and customizable visualizations.
 }
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
@@ -50,6 +71,8 @@ A new instance of the NonLinearModelScorer class.
 \if{html}{\out{<a id="method-NonLinearModelScorer-score_new_data"></a>}}
 \if{latex}{\out{\hypertarget{method-NonLinearModelScorer-score_new_data}{}}}
 \subsection{Method \code{score_new_data()}}{
+Generates predictions for new data using the fitted non-linear models.
+This method applies each model to the new dataset and returns the predicted values.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{NonLinearModelScorer$score_new_data(new_data, x_col)}\if{html}{\out{</div>}}
 }
@@ -71,6 +94,8 @@ A list of data.tables with predicted values for each model.
 \if{html}{\out{<a id="method-NonLinearModelScorer-generate_score_plot"></a>}}
 \if{latex}{\out{\hypertarget{method-NonLinearModelScorer-generate_score_plot}{}}}
 \subsection{Method \code{generate_score_plot()}}{
+Creates a visual representation of predictions versus actual values for a given fitted model
+and a new dataset. This plot helps evaluate the model's performance on unseen data.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{NonLinearModelScorer$generate_score_plot(
   model_name,

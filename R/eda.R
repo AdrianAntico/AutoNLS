@@ -1,6 +1,6 @@
-#' EDA (Exploratory Data Analysis) Class
+#' @title EDA (Exploratory Data Analysis) Class
 #'
-#' Provides tools for automated exploratory data analysis, including summary
+#' @description Provides tools for automated exploratory data analysis, including summary
 #' statistics, correlation matrices, and customizable visualizations using `echarts4r`.
 #'
 #' @section Methods:
@@ -33,11 +33,10 @@ EDA <- R6::R6Class(
       self$data <- data
     },
 
-    #' Compute summary statistics
-    #'
-    #' Calculates mean, median, sd, and the count of missing values for each column.
+    #' @description Calculates mean, median, sd, and the count of missing values for each column.
     #'
     #' @return A `data.table` containing the summary statistics.
+    #' @export
     summarize = function() {
       # Process numeric columns
       numeric_cols <- names(self$data)[sapply(self$data, is.numeric)]
@@ -79,13 +78,12 @@ EDA <- R6::R6Class(
       return(self$summary_stats)
     },
 
-    #' Compute correlation with the target variable
-    #'
-    #' Calculates both Pearson and Spearman correlations between all numeric columns (excluding the target variable) and the target variable.
+    #' @description Calculates both Pearson and Spearman correlations between the `target_col` and all (or listed via `input_cols`) numeric columns.
     #'
     #' @param target_col the target variable in the data set
     #' @param input_cols the independent variables
     #' @return A data.table with the Pearson and Spearman correlation values for each numeric predictor.
+    #' @export
     correlate = function(target_col = NULL, input_cols = NULL) {
 
       # Identify numeric columns excluding the target column
@@ -126,9 +124,7 @@ EDA <- R6::R6Class(
       return(self$correlation_matrix)
     },
 
-    #' Visualize distributions with histograms and optional density lines
-    #'
-    #' Generates histograms for numeric columns and optionally overlays density lines.
+    #' @description Generates histograms for numeric columns and optionally overlays density lines.
     #'
     #' @param input_cols Names of numeric variables to plot
     #' @param title_prefix Character. Prefix for the plot title.
@@ -138,6 +134,7 @@ EDA <- R6::R6Class(
     #' @param theme Character. Theme for the plot
     #' @param density_opacity numeric. default 0.4
     #' @return A list of `echarts4r` histogram plots.
+    #' @export
     visualize_distributions = function(
     input_cols = NULL,
     title_prefix = "Distribution of",
@@ -208,9 +205,7 @@ EDA <- R6::R6Class(
       return(self$plots)
     },
 
-    #' Visualize pairwise scatterplots with GAM fits
-    #'
-    #' Generates scatterplots for all pairs of numeric columns and overlays
+    #' @description Generates scatterplots for all target and input pairs of numeric columns and overlays
     #' fitted lines from Generalized Additive Models (GAM) for different `k` values.
     #'
     #' @param target_col Name of target variable
@@ -219,6 +214,7 @@ EDA <- R6::R6Class(
     #' @param theme Character. Theme for the plot
     #' @param k_values Numeric vector. Values of `k` (basis dimension) for GAM fits. Defaults to `c(3, 5, 7)`.
     #' @return A list of `echarts4r` scatter plots with GAM fitted lines.
+    #' @export
     visualize_scatterplots = function(
     target_col = NULL,
     input_cols = NULL,
