@@ -3,10 +3,6 @@
 
 <img src="https://raw.githubusercontent.com/AdrianAntico/AutoNLS/master/inst/Logo.PNG" align="center" width="800" />
 
-
-## AutoNLS Shiny App Demo
-https://github.com/user-attachments/assets/8640fc53-f69d-4114-ad0e-f8c7f64767e4
-
 # **AutoNLS**
 Automated Non-Linear Least Squares and Exploratory Data Analysis in R
 
@@ -79,6 +75,9 @@ You can install them using:
 ```R
 install.packages(c("shiny", "bs4Dash", "readxl", "DT"))
 ```
+
+## AutoNLS Shiny App Demo
+https://github.com/user-attachments/assets/8640fc53-f69d-4114-ad0e-f8c7f64767e4
 
 ## Shiny App Usage
 
