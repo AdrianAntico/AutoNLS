@@ -556,7 +556,7 @@ NonLinearFitter <- R6::R6Class(
     #' @param theme A string specifying the plot theme (e.g., "macarons").
     #' @return An `echarts4r` object representing the comparison plot.
     #' @export
-    model_comparison_plot = function(x_range = seq(1, 100, by = 1), normalize = TRUE, theme = "macarons") {
+    model_comparison_plot = function(x_range = seq(1, 100, by = 1), normalize = TRUE, theme = "westeros") {
       if (is.null(self$models) || length(self$models) == 0) {
         stop("No models available for visualization. Use add_model() to add models.")
       }

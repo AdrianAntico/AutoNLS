@@ -204,7 +204,7 @@ This method helps evaluate the performance and fit of different models in a sing
 \if{html}{\out{<div class="r">}}\preformatted{NonLinearFitter$model_comparison_plot(
   x_range = seq(1, 100, by = 1),
   normalize = TRUE,
-  theme = "macarons"
+  theme = "westeros"
 )}\if{html}{\out{</div>}}
 }
 

@@ -226,9 +226,17 @@ If you want to perform a pre-investigation into what the models' shapes look lik
 # Initialize the fitter
 fitter <- NonLinearFitter$new(dummy_data)
 
+# Add models to explore
+fitter$add_model("Hill")
+fitter$add_model("Logistic")
+fitter$add_model("ExponentialDecay")
+
 # Use model visualizer to explore model shapes
 x_range <- seq(1, 100, by = 1)
-plot <- fitter$model_visualizer$generate_comparison_plot(x_range = x_range)
+plot <- fitter$model_comparison_plot(
+  x_range = seq(1, 100, by = 1),
+  normalize = TRUE,
+  theme = "westeros")
 
 # Display the plot
 plot
