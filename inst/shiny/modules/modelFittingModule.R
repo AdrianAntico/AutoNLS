@@ -63,7 +63,10 @@ modelFittingUI <- function(id) {
               ),
               column(
                 width = 6,
-                p("Force use of stats::optim() when fitting instead of stats::nls()"),
+                tags$label(
+                  "Force use of stats::optim() when fitting instead of stats::nls()",
+                  style = "font-weight: bold; font-size: 1rem; display: block; margin-bottom: 5px;"
+                ),
                 checkboxInput(
                   inputId = ns("force_optim"),
                   label = "Fit with optim",
