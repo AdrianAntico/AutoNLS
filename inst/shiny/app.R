@@ -5,7 +5,7 @@ library(data.table)
 library(AutoNLS)
 library(DT)
 
-# Load Modules
+# List Modules
 mods <- c(
   "helpers.R",
   "headerModule.R",
@@ -14,13 +14,14 @@ mods <- c(
   "dataPreprocessingModule.R",
   "edaModule.R",
   "modelFittingModule.R",
-  "scoringModule.R"
-)
+  "scoringModule.R")
+
+# Load Modules
 for (i in mods) {
   source(system.file("shiny", "modules", i, package = "AutoNLS"))
 }
 
-# App Main UI
+# Define Main UI
 ui <- bs4DashPage(
   dark = TRUE,
   title = "AutoNLS",
@@ -29,10 +30,7 @@ ui <- bs4DashPage(
   body = bs4DashBody(
 
     # DT styling for light / dark mode transitions
-    applyAppStyling(
-      generateDTStyling,
-      removeHelpSwitchStyling
-    ),
+    applyAppStyling(generateDTStyling, removeHelpSwitchStyling),
 
     # UI Modules
     bs4TabItems(
@@ -45,7 +43,7 @@ ui <- bs4DashPage(
   )
 )
 
-# App Main Server
+# Define Main Server
 server <- function(input, output, session) {
 
   # Reactives
