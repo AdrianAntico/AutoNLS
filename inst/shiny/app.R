@@ -6,14 +6,19 @@ library(AutoNLS)
 library(DT)
 
 # Load Modules
-source(system.file("shiny", "modules", "helpers.R", package = "AutoNLS"))
-source(system.file("shiny", "modules", "headerModule.R", package = "AutoNLS"))
-source(system.file("shiny", "modules", "sidebarModule.R", package = "AutoNLS"))
-source(system.file("shiny", "modules", "homeModule.R", package = "AutoNLS"))
-source(system.file("shiny", "modules", "dataPreprocessingModule.R", package = "AutoNLS"))
-source(system.file("shiny", "modules", "edaModule.R", package = "AutoNLS"))
-source(system.file("shiny", "modules", "modelFittingModule.R", package = "AutoNLS"))
-source(system.file("shiny", "modules", "scoringModule.R", package = "AutoNLS"))
+mods <- c(
+  "helpers.R",
+  "headerModule.R",
+  "sidebarModule.R",
+  "homeModule.R",
+  "dataPreprocessingModule.R",
+  "edaModule.R",
+  "modelFittingModule.R",
+  "scoringModule.R"
+)
+for (i in mods) {
+  source(system.file("shiny", "modules", i, package = "AutoNLS"))
+}
 
 # App Main UI
 ui <- bs4DashPage(
