@@ -57,6 +57,13 @@ server <- function(input, output, session) {
   edaServer("eda", dataset)
   modelFittingServer("model_fitting", dataset, fit_results)
   scoringServer("scoring", scoring_data, fit_results)
+
+  # Clean up on app stop
+  session$onSessionEnded(function() {
+    cat("App is shutting down. Cleaning up global environment...\n")
+    rm(list = ls(envir = .GlobalEnv), envir = .GlobalEnv)
+    gc()
+  })
 }
 
 # Run app
