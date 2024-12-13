@@ -24,16 +24,27 @@ NonLinearFitter <- R6::R6Class(
 
     #' @field model_library A pre-defined library of common non-linear models.
     model_library = list(
+      Hill2Model = list(
+        description = "Hill equation: models dose-response relationships.",
+        formula = y ~ x^b / (a^b + x^b),
+        start_params = list(a = 1, b = 1),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          x^b / (a^b + x^b)
+        }
+      ),
       Hill = list(
         description = "Hill equation: models dose-response relationships.",
-        formula = y ~ a * x^b / (c + x^b),
+        formula = y ~ a * x^b / (c^b + x^b),
         start_params = list(a = 1, b = 1, c = 1),
         model_function = function(x, params) {
           a <- params[["a"]]
           b <- params[["b"]]
           c <- params[["c"]]
           if (!is.numeric(x)) stop("x must be numeric in model_function.")
-          a * x^b / (c + x^b)
+          a * x^b / (c^b + x^b)
         }
       ),
       Hill5Model = list(
