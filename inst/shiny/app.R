@@ -59,11 +59,7 @@ server <- function(input, output, session) {
   scoringServer("scoring", scoring_data, fit_results)
 
   # Clean up on app stop
-  session$onSessionEnded(function() {
-    cat("App is shutting down. Cleaning up global environment...\n")
-    rm(list = ls(envir = .GlobalEnv), envir = .GlobalEnv)
-    gc()
-  })
+  session$onSessionEnded(ShutDownHelper)
 }
 
 # Run app

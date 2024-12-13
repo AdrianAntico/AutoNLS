@@ -1,4 +1,12 @@
 # Collection of styling functions
+
+# Clear global environment after shutdown
+ShutDownHelper <- function() {
+  cat("App is shutting down. Cleaning up global environment...\n")
+  rm(list = ls(envir = .GlobalEnv), envir = .GlobalEnv)
+  gc()
+}
+
 # Generalized function to apply multiple styling functions
 applyAppStyling <- function(...) {
   # Capture all passed functions
