@@ -74,7 +74,12 @@ A new instance of the NonLinearModelScorer class.
 Generates predictions for new data using the fitted non-linear models.
 This method applies each model to the new dataset and returns the predicted values.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{NonLinearModelScorer$score_new_data(new_data, x_col)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{NonLinearModelScorer$score_new_data(
+  new_data,
+  x_col,
+  lower_bound = 0.025,
+  upper_bound = 0.975
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -83,6 +88,10 @@ This method applies each model to the new dataset and returns the predicted valu
 \item{\code{new_data}}{A data.table containing the new data to score.}
 
 \item{\code{x_col}}{The predictor column in \code{new_data}.}
+
+\item{\code{lower_bound}}{Lower bound of prediction interval. Defaults to 0.025}
+
+\item{\code{upper_bound}}{Upper bound of prediction interval. Defaults to 0.975}
 }
 \if{html}{\out{</div>}}
 }

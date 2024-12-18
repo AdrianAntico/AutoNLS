@@ -486,6 +486,46 @@ NonLinearFitter <- R6::R6Class(
               ...
             )
 
+            # Store coefficients
+            model_fit$coefficients <- coef(model_fit)
+
+            # Compute standard errors
+            vcov_matrix <- tryCatch({
+              summary(model_fit)$cov.unscaled
+            }, error = function(e) {
+              message("Unable to compute covariance matrix: ", e$message)
+              return(NULL)
+            })
+
+            # Compute confidence intervals (95% default)
+            params <- coef(model_fit)
+            z_alpha <- qnorm(0.975)
+
+            # Residual variance (sigma^2)
+            residuals <- model_fit$m$resid()
+            n <- length(residuals)  # Number of observations
+            p <- length(coef(model_fit))  # Number of parameters
+            rss <- sum(residuals^2)  # Residual sum of squares
+            sigma_squared <- rss / (n - p)
+
+            if (!is.null(vcov_matrix)) {
+              standard_errors <- sqrt(diag(vcov_matrix) * sigma_squared)  # Standard errors
+            } else {
+              standard_errors <- rep(NA, length(coef(model_fit)))
+            }
+
+            lower_bound <- params - z_alpha * standard_errors
+            upper_bound <- params + z_alpha * standard_errors
+
+            # Store confidence interval as a data.table
+            model_fit$confidence_intervals <- data.table::data.table(
+              Parameter = names(params),
+              Estimate = params,
+              `Lower Bound` = lower_bound,
+              `Upper Bound` = upper_bound,
+              SE = standard_errors
+            )
+
           } else {
 
             # Weighted fitting using custom optimization
@@ -499,13 +539,17 @@ NonLinearFitter <- R6::R6Class(
             )
 
             model_fit <- list(
-              coefficients = result_params,
+              coefficients = result_params$params,
+              hessian = result_params$hessian,
               formula = formula,
-              residuals = temp_data_scaled$y - model$model_function(temp_data_scaled$x, result_params),
-              fitted.values = model$model_function(temp_data_scaled$x, result_params),
+              residuals = temp_data_scaled$y - model$model_function(temp_data_scaled$x, result_params$params),
+              fitted.values = model$model_function(temp_data_scaled$x, result_params$params),
               model_function = model$model_function,
               weights = standardized_weights_vector
             )
+
+            # Add confidence intervals
+            model_fit$confidence_intervals <- private$compute_confidence_intervals(model_fit)
 
             # Set the class properly
             class(model_fit) <- "custom_nls"
@@ -567,7 +611,10 @@ NonLinearFitter <- R6::R6Class(
     #' @param theme A string specifying the plot theme (e.g., "macarons").
     #' @return An `echarts4r` object representing the comparison plot.
     #' @export
-    model_comparison_plot = function(x_range = seq(1, 100, by = 1), normalize = TRUE, theme = "westeros") {
+    model_comparison_plot = function(
+    x_range = seq(1, 100, by = 1),
+    normalize = TRUE,
+    theme = "westeros") {
       if (is.null(self$models) || length(self$models) == 0) {
         stop("No models available for visualization. Use add_model() to add models.")
       }
@@ -660,6 +707,7 @@ NonLinearFitter <- R6::R6Class(
       result <- optim(
         par = params,
         fn = wrss,
+        hessian = TRUE,
         method = "BFGS",
         control = list(maxit = 5000, reltol = 1e-9),
         ...
@@ -668,7 +716,51 @@ NonLinearFitter <- R6::R6Class(
       if (result$convergence != 0) {
         stop("Optimization did not converge for the weighted model.")
       }
-      return(result$par)  # Return optimized parameters
+      return(list(
+        params = result$par,
+        hessian = result$hessian
+      ))
+    },
+    compute_confidence_intervals = function(fit) {
+      if (is.null(fit$hessian)) {
+        return(NULL)  # No confidence intervals if Hessian is not available
+      }
+
+      # Compute the variance-covariance matrix
+      inv_hessian <- tryCatch({
+        solve(fit$hessian)
+      }, error = function(e) {
+        message("Failed to compute confidence intervals: ", e$message)
+        return(NULL)
+      })
+
+      if (is.null(inv_hessian)) return(NULL)
+
+      # Residual variance (sigma^2)
+      n <- length(fit$residuals)  # Number of observations
+      p <- length(fit$coefficients)  # Number of parameters
+      rss <- sum(fit$residuals^2)  # Residual sum of squares
+      sigma_squared <- rss / (n - p)
+
+      # Standard errors
+      standard_errors <- sqrt(diag(sigma_squared * inv_hessian))
+
+      # Confidence level
+      z_alpha <- qnorm(0.975)  # 95% confidence interval
+
+      # Compute bounds
+      params <- fit$coefficients
+      lower_bound <- params - z_alpha * standard_errors
+      upper_bound <- params + z_alpha * standard_errors
+
+      # Return a clean data frame
+      return(data.table::data.table(
+        Parameter = names(params),
+        Estimate = params,
+        `Lower Bound` = lower_bound,
+        `Upper Bound` = upper_bound,
+        SE = standard_errors
+      ))
     }
   )
 )

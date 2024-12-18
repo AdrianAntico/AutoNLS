@@ -139,9 +139,19 @@ NonLinearModelEvaluator <- R6::R6Class(
     #' @param x_col A string specifying the name of the x variable in the dataset.
     #' @param y_col A string specifying the name of the y variable in the dataset.
     #' @param theme Echarts theme
+    #' @param lower_bound Lower bound probability. Defaults to 0.025
+    #' @param upper_bound Upper bound probability. Defaults to 0.975
+    #' @param n_sim Number of simulations to run for prediction interval
     #' @return An `echarts4r` plot showing observed vs. predicted data, with weighted comparisons if available.
     #' @export
-    generate_comparison_plot = function(data, x_col, y_col, theme = "westeros") {
+    generate_comparison_plot = function(
+    data,
+    x_col,
+    y_col,
+    theme = "westeros",
+    lower_bound = 0.025,
+    upper_bound = 0.975,
+    n_sim = 1000) {
       if (is.null(self$fit_results) || length(self$fit_results) == 0) {
         stop("No fitted models to evaluate.")
       }
@@ -174,12 +184,18 @@ NonLinearModelEvaluator <- R6::R6Class(
             )
           }
 
+          # Simulate lower and upper prediction bounds
+          x_values <- (predictions$x - fit$scale_params$min_x) / (fit$scale_params$max_x - fit$scale_params$min_x)
+          bounds <- private$simulate_prediction_bounds(fit, x_values, lower_bound, upper_bound)
+
           # Merge predictions with observed data
           combined_data <- data.table::data.table(
             x = data[[x_col]],
-            y = data[[y_col]]
+            y = data[[y_col]],
+            y_pred = predictions$y_pred,
+            y_lower = fit$back_transform(bounds$lower, fit$scale_params),
+            y_upper = fit$back_transform(bounds$upper, fit$scale_params)
           )
-          combined_data <- merge(combined_data, predictions, by = "x", all = TRUE)
 
           # Get R-squared from metrics
           r_squared <- metrics[`Model Name` == eval(model_name)][["R_Sq"]]
@@ -189,6 +205,8 @@ NonLinearModelEvaluator <- R6::R6Class(
             echarts4r::e_charts(x) |>
             echarts4r::e_scatter(y, name = "Observed") |>
             echarts4r::e_line(y_pred, name = "Predicted") |>
+            echarts4r::e_line(y_lower, name = "Lower Bound", lineStyle = list(type = "dotted")) |>
+            echarts4r::e_line(y_upper, name = "Upper Bound", lineStyle = list(type = "dotted")) |>
             echarts4r::e_theme(name = theme) |>
             echarts4r::e_title(
               text = paste("Model Fit:", model_name),
@@ -203,6 +221,28 @@ NonLinearModelEvaluator <- R6::R6Class(
       }), names(self$fit_results))
 
       return(self$plots)
+    }
+  ),
+
+  private = list(
+    simulate_prediction_bounds = function(fit, x_values, lower_bound, upper_bound, n_sim = 1000) {
+      params <- fit$coefficients
+      se_params <- fit$confidence_intervals$SE
+      if (is.null(se_params)) stop("Standard errors are missing for confidence interval simulation.")
+
+      # Simulate parameter sets
+      sim_matrix <- replicate(n_sim, {
+        sim_params <- rnorm(length(params), mean = unlist(params), sd = unlist(se_params))
+        param_list <- as.list(sim_params)
+        names(param_list) <- names(params)
+        fit$model_function(x = x_values, params = param_list)
+      })
+
+      # Calculate lower and upper bounds
+      lower <- apply(sim_matrix, 1, quantile, probs = lower_bound)
+      upper <- apply(sim_matrix, 1, quantile, probs = upper_bound)
+
+      return(list(lower = lower, upper = upper))
     }
   )
 )

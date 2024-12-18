@@ -106,7 +106,10 @@ overlaid on the original data points for easy comparison.
   data,
   x_col,
   y_col,
-  theme = "westeros"
+  theme = "westeros",
+  lower_bound = 0.025,
+  upper_bound = 0.975,
+  n_sim = 1000
 )}\if{html}{\out{</div>}}
 }
 
@@ -120,6 +123,12 @@ overlaid on the original data points for easy comparison.
 \item{\code{y_col}}{A string specifying the name of the y variable in the dataset.}
 
 \item{\code{theme}}{Echarts theme}
+
+\item{\code{lower_bound}}{Lower bound probability. Defaults to 0.025}
+
+\item{\code{upper_bound}}{Upper bound probability. Defaults to 0.975}
+
+\item{\code{n_sim}}{Number of simulations to run for prediction interval}
 }
 \if{html}{\out{</div>}}
 }

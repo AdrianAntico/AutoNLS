@@ -214,7 +214,7 @@ score_results <- scorer$score_new_data(new_data = dummy_data, x_col = "X-Value")
 print(score_results)
 
 # Generate scoring plots
-scoring_plots <- scorer$generate_score_plot("Hill", new_data, x_col = "X-Value")
+scoring_plots <- scorer$generate_score_plot("Hill", x_col = "X-Value")
 scoring_plots  # View the scoring plot for the "Hill" model
 ```
 

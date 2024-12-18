@@ -35,9 +35,11 @@ NonLinearModelScorer <- R6::R6Class(
     #'
     #' @param new_data A data.table containing the new data to score.
     #' @param x_col The predictor column in `new_data`.
+    #' @param lower_bound Lower bound of prediction interval. Defaults to 0.025
+    #' @param upper_bound Upper bound of prediction interval. Defaults to 0.975
     #' @return A list of data.tables with predicted values for each model.
     #' @export
-    score_new_data = function(new_data, x_col) {
+    score_new_data = function(new_data, x_col, lower_bound = 0.025, upper_bound = 0.975) {
       if (!data.table::is.data.table(new_data)) stop("new_data must be a data.table.")
       if (!x_col %in% names(new_data)) stop("x_col must exist in the dataset.")
 
@@ -46,32 +48,41 @@ NonLinearModelScorer <- R6::R6Class(
 
         tryCatch({
           if (inherits(fit, "custom_nls")) {
-            # Use custom model function for scoring
-            params <- fit$coefficients  # Extract fitted parameters
-            model_function <- fit$model_function  # Retrieve model-specific function
-            scale_params <- fit$scale_params
 
             # Scale x_col
-            scaled_x <- (new_data[[x_col]] - scale_params$min_x) / (scale_params$max_x - scale_params$min_x)
+            scaled_x <- (new_data[[x_col]] - fit$scale_params$min_x) / (fit$scale_params$max_x - fit$scale_params$min_x)
+
+            # Simulate lower and upper prediction bounds
+            bounds <- private$simulate_prediction_bounds(fit, scaled_x, lower_bound, upper_bound)
 
             # Generate predictions
             predictions <- data.table::data.table(
               x = new_data[[x_col]],
               y_pred = fit$back_transform(
-                predictions = model_function(
-                  x = scaled_x,
-                  params = params
-                ),
+                predictions = fit$model_function(x = scaled_x, params = fit$coefficients),
                 scale_params = fit$scale_params
-              )
+              ),
+              y_lower = fit$back_transform(bounds$lower, fit$scale_params),
+              y_upper = fit$back_transform(bounds$upper, fit$scale_params)
             )
 
           } else {
 
+            # Scale x_col
+            scaled_x <- (new_data[[x_col]] - fit$scale_params$min_x) / (fit$scale_params$max_x - fit$scale_params$min_x)
+
+            # Simulate lower and upper prediction bounds
+            bounds <- private$simulate_prediction_bounds(fit, scaled_x, lower_bound, upper_bound)
+
             # Use standard predict() for nls models
             predictions <- data.table::data.table(
               x = new_data[[x_col]],
-              y_pred = fit$back_transform(predict(fit, newdata = new_data), scale_params = fit$scale_params)
+              y_pred = fit$back_transform(
+                predict(fit, newdata = new_data),
+                scale_params = fit$scale_params
+              ),
+              y_lower = fit$back_transform(bounds$lower, fit$scale_params),
+              y_upper = fit$back_transform(bounds$upper, fit$scale_params)
             )
           }
           predictions
@@ -97,14 +108,11 @@ NonLinearModelScorer <- R6::R6Class(
     #' The plot leverages the `echarts4r` package for interactive and customizable visualizations.
     #'
     #' @param model_name The name of the model to plot.
-    #' @param new_data The original new data used for scoring.
-    #' @param x_col The predictor column in `new_data`.
-    #' @param theme Echarts theme
+    #' @param x_col The predictor column in scored data.
+    #' @param theme Echarts theme.
     #' @return A plot visualizing the scored data.
     #' @export
-    generate_score_plot = function(model_name, new_data, x_col, theme = "westeros") {
-      # Validate x_col exists in new_data
-      if (!x_col %in% names(new_data)) stop("x_col must exist in the dataset.")
+    generate_score_plot = function(model_name, x_col, theme = "westeros") {
 
       # Validate that the model exists in fit_results
       if (!model_name %in% names(self$fit_results)) {
@@ -121,15 +129,11 @@ NonLinearModelScorer <- R6::R6Class(
       predictions <- self$scored_data[[model_name]]
 
       # Create plot
-      plot <- data.table::data.table(
-        x = new_data[[x_col]],
-        y_pred = predictions$y_pred
-      ) |>
-        echarts4r::e_charts(x) |>
+      plot <- echarts4r::e_charts(data = predictions, x) |>
         echarts4r::e_line(y_pred, name = "Predicted") |>
-        echarts4r::e_title(
-          text = paste("Scored Data: Model -", model_name)
-        ) |>
+        echarts4r::e_line(y_lower, name = "Lower Bound", lineStyle = list(type = "dotted")) |>
+        echarts4r::e_line(y_upper, name = "Upper Bound", lineStyle = list(type = "dotted")) |>
+        echarts4r::e_title(text = paste("Scored Data: Model -", model_name)) |>
         echarts4r::e_tooltip(trigger = "axis", backgroundColor = "aliceblue") |>
         echarts4r::e_x_axis(name = x_col) |>
         echarts4r::e_y_axis(name = "Predicted Values") |>
@@ -140,6 +144,28 @@ NonLinearModelScorer <- R6::R6Class(
 
       self$score_plots[[model_name]] <- plot
       return(plot)
+    }
+  ),
+
+  private = list(
+    simulate_prediction_bounds = function(fit, x_values, lower_bound, upper_bound, n_sim = 1000) {
+      params <- fit$coefficients
+      se_params <- fit$confidence_intervals$SE
+      if (is.null(se_params)) stop("Standard errors are missing for confidence interval simulation.")
+
+      # Simulate parameter sets
+      sim_matrix <- replicate(n_sim, {
+        sim_params <- rnorm(length(params), mean = unlist(params), sd = unlist(se_params))
+        param_list <- as.list(sim_params)
+        names(param_list) <- names(params)
+        fit$model_function(x = x_values, params = param_list)
+      })
+
+      # Calculate lower and upper bounds
+      lower <- apply(sim_matrix, 1, quantile, probs = lower_bound)
+      upper <- apply(sim_matrix, 1, quantile, probs = upper_bound)
+
+      return(list(lower = lower, upper = upper))
     }
   )
 )
