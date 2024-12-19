@@ -239,7 +239,7 @@ NonLinearModelEvaluator <- R6::R6Class(
   private = list(
     simulate_prediction_bounds = function(fit, x_values, lower_bound, upper_bound, n_sim = 1000) {
       params <- fit$coefficients
-      if ("SE" %in% names(fit$confidence_intervals$SE)) {
+      if ("SE" %in% names(fit$confidence_intervals)) {
         se_params <- fit$confidence_intervals$SE
       } else {
         se_params <- NULL
