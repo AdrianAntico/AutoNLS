@@ -130,9 +130,9 @@ NonLinearModelScorer <- R6::R6Class(
 
       # Create plot
       plot <- echarts4r::e_charts(data = predictions, x) |>
-        echarts4r::e_line(y_pred, name = "Predicted") |>
-        echarts4r::e_line(y_lower, name = "Lower Bound", lineStyle = list(type = "dotted")) |>
-        echarts4r::e_line(y_upper, name = "Upper Bound", lineStyle = list(type = "dotted")) |>
+        echarts4r::e_line(y_pred, name = "Predicted", smooth = TRUE, showSymbol = FALSE) |>
+        echarts4r::e_line(y_lower, name = "Lower Bound", smooth = TRUE, showSymbol = FALSE, lineStyle = list(type = "dotted")) |>
+        echarts4r::e_line(y_upper, name = "Upper Bound", smooth = TRUE, showSymbol = FALSE, lineStyle = list(type = "dotted")) |>
         echarts4r::e_title(text = paste("Scored Data: Model -", model_name)) |>
         echarts4r::e_tooltip(trigger = "axis", backgroundColor = "aliceblue") |>
         echarts4r::e_x_axis(name = x_col) |>

@@ -204,9 +204,9 @@ NonLinearModelEvaluator <- R6::R6Class(
           combined_data |>
             echarts4r::e_charts(x) |>
             echarts4r::e_scatter(y, name = "Observed") |>
-            echarts4r::e_line(y_pred, name = "Predicted") |>
-            echarts4r::e_line(y_lower, name = "Lower Bound", lineStyle = list(type = "dotted")) |>
-            echarts4r::e_line(y_upper, name = "Upper Bound", lineStyle = list(type = "dotted")) |>
+            echarts4r::e_line(y_pred, name = "Predicted", smooth = TRUE, showSymbol = FALSE) |>
+            echarts4r::e_line(y_lower, name = "Lower Bound", smooth = TRUE, showSymbol = FALSE, lineStyle = list(type = "dotted")) |>
+            echarts4r::e_line(y_upper, name = "Upper Bound", smooth = TRUE, showSymbol = FALSE, lineStyle = list(type = "dotted")) |>
             echarts4r::e_theme(name = theme) |>
             echarts4r::e_title(
               text = paste("Model Fit:", model_name),

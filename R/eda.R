@@ -289,7 +289,7 @@ EDA <- R6::R6Class(
         if(length(k_values) > 0 && is.numeric(k_values)) {
           for (k in k_values) {
             YVar <- paste0("gam_k = ", k)
-            plot <- echarts4r::e_line_(e = plot, serie = YVar, smooth = TRUE)
+            plot <- echarts4r::e_line_(e = plot, serie = YVar, smooth = TRUE, showSymbol = FALSE)
           }
         }
 

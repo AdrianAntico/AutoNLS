@@ -59,7 +59,7 @@ homeServer <- function(id) {
     output$home_plot <- echarts4r::renderEcharts4r({
       data <- generate_non_linear_data()
       echarts4r::e_charts(data |> dplyr::group_by(Model), x) |>
-        echarts4r::e_line(serie = y, smooth = TRUE) |>
+        echarts4r::e_line(serie = y, smooth = TRUE, showSymbol = FALSE) |>
         echarts4r::e_title("Non-Linear Regressions") |>
         echarts4r::e_x_axis(name = "X-Value", splitLine = list(show = FALSE)) |>
         echarts4r::e_y_axis(name = "Y-Value", splitLine = list(show = FALSE)) |>
