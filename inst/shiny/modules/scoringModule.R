@@ -132,7 +132,6 @@ scoringServer <- function(id, scoring_data, fit_results) {
         scored_plots <- lapply(names(valid_fit_results), function(model_name) {
           scorer$generate_score_plot(
             model_name = model_name,
-            new_data = scoring_data(),
             x_col = input$x_variable_scoring,
             theme = input$scoring_theme  # Use selected theme
           )

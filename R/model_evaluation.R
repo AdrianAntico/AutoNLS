@@ -186,27 +186,33 @@ NonLinearModelEvaluator <- R6::R6Class(
 
           # Simulate lower and upper prediction bounds
           x_values <- (predictions$x - fit$scale_params$min_x) / (fit$scale_params$max_x - fit$scale_params$min_x)
-          bounds <- private$simulate_prediction_bounds(fit, x_values, lower_bound, upper_bound)
+          bounds <- tryCatch({
+            private$simulate_prediction_bounds(fit, x_values, lower_bound, upper_bound)
+          }, error = function(e) {
+            message("Error processing model plot: ", e$message)
+            NULL
+          })
 
           # Merge predictions with observed data
           combined_data <- data.table::data.table(
             x = data[[x_col]],
             y = data[[y_col]],
-            y_pred = predictions$y_pred,
-            y_lower = fit$back_transform(bounds$lower, fit$scale_params),
-            y_upper = fit$back_transform(bounds$upper, fit$scale_params)
+            y_pred = predictions$y_pred
           )
+
+          if (!is.null(bounds)) {
+            combined_data[, y_lower := fit$back_transform(bounds$lower, fit$scale_params)]
+            combined_data[, y_upper := fit$back_transform(bounds$upper, fit$scale_params)]
+          }
 
           # Get R-squared from metrics
           r_squared <- metrics[`Model Name` == eval(model_name)][["R_Sq"]]
 
           # Create plot
-          combined_data |>
+          plot <- combined_data |>
             echarts4r::e_charts(x) |>
             echarts4r::e_scatter(y, name = "Observed") |>
             echarts4r::e_line(y_pred, name = "Predicted", smooth = TRUE, showSymbol = FALSE) |>
-            echarts4r::e_line(y_lower, name = "Lower Bound", smooth = TRUE, showSymbol = FALSE, lineStyle = list(type = "dotted")) |>
-            echarts4r::e_line(y_upper, name = "Upper Bound", smooth = TRUE, showSymbol = FALSE, lineStyle = list(type = "dotted")) |>
             echarts4r::e_theme(name = theme) |>
             echarts4r::e_title(
               text = paste("Model Fit:", model_name),
@@ -214,6 +220,12 @@ NonLinearModelEvaluator <- R6::R6Class(
             ) |>
             echarts4r::e_datazoom(x_index = c(0, 1)) |>
             echarts4r::e_toolbox_feature(feature = c("saveAsImage", "dataZoom"))
+
+          if ("y_lower" %in% names(combined_data)) {
+            plot <- echarts4r::e_line(e = plot, y_lower, name = "Lower Bound", smooth = TRUE, showSymbol = FALSE, lineStyle = list(type = "dotted")) |>
+              echarts4r::e_line(y_upper, name = "Upper Bound", smooth = TRUE, showSymbol = FALSE, lineStyle = list(type = "dotted"))
+          }
+          plot
         }, error = function(e) {
           message("Error processing model plot: ", e$message)
           NULL
@@ -227,8 +239,13 @@ NonLinearModelEvaluator <- R6::R6Class(
   private = list(
     simulate_prediction_bounds = function(fit, x_values, lower_bound, upper_bound, n_sim = 1000) {
       params <- fit$coefficients
-      se_params <- fit$confidence_intervals$SE
-      if (is.null(se_params)) stop("Standard errors are missing for confidence interval simulation.")
+      if ("SE" %in% names(fit$confidence_intervals$SE)) {
+        se_params <- fit$confidence_intervals$SE
+      } else {
+        se_params <- NULL
+      }
+
+      if (is.null(se_params)) return(NULL)
 
       # Simulate parameter sets
       sim_matrix <- replicate(n_sim, {

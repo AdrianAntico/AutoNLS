@@ -511,20 +511,28 @@ NonLinearFitter <- R6::R6Class(
             if (!is.null(vcov_matrix)) {
               standard_errors <- sqrt(diag(vcov_matrix) * sigma_squared)  # Standard errors
             } else {
-              standard_errors <- rep(NA, length(coef(model_fit)))
+              standard_errors <- NULL
             }
 
-            lower_bound <- params - z_alpha * standard_errors
-            upper_bound <- params + z_alpha * standard_errors
+            if (!is.null(standard_errors)) {
+              lower_bound <- params - z_alpha * standard_errors
+              upper_bound <- params + z_alpha * standard_errors
+            } else {
+              lower_bound <- NULL
+              upper_bound <- NULL
+            }
 
             # Store confidence interval as a data.table
             model_fit$confidence_intervals <- data.table::data.table(
               Parameter = names(params),
-              Estimate = params,
-              `Lower Bound` = lower_bound,
-              `Upper Bound` = upper_bound,
-              SE = standard_errors
+              Estimate = params
             )
+
+            if (!is.null(standard_errors)) {
+              model_fit$confidence_intervals[, `Lower Bound` := lower_bound]
+              model_fit$confidence_intervals[, `Upper Bound` := upper_bound]
+              model_fit$confidence_intervals[, SE := standard_errors]
+            }
 
           } else {
 
@@ -549,7 +557,11 @@ NonLinearFitter <- R6::R6Class(
             )
 
             # Add confidence intervals
-            model_fit$confidence_intervals <- private$compute_confidence_intervals(model_fit)
+            model_fit$confidence_intervals <- tryCatch({
+              private$compute_confidence_intervals(model_fit)
+            }, error = function(e) {
+              message("confidence intervals failed to build: ", e$message)
+            })
 
             # Set the class properly
             class(model_fit) <- "custom_nls"
@@ -726,41 +738,47 @@ NonLinearFitter <- R6::R6Class(
         return(NULL)  # No confidence intervals if Hessian is not available
       }
 
-      # Compute the variance-covariance matrix
-      inv_hessian <- tryCatch({
-        solve(fit$hessian)
-      }, error = function(e) {
-        message("Failed to compute confidence intervals: ", e$message)
-        return(NULL)
-      })
-
-      if (is.null(inv_hessian)) return(NULL)
-
-      # Residual variance (sigma^2)
-      n <- length(fit$residuals)  # Number of observations
-      p <- length(fit$coefficients)  # Number of parameters
-      rss <- sum(fit$residuals^2)  # Residual sum of squares
-      sigma_squared <- rss / (n - p)
-
-      # Standard errors
-      standard_errors <- sqrt(diag(sigma_squared * inv_hessian))
-
-      # Confidence level
-      z_alpha <- qnorm(0.975)  # 95% confidence interval
-
-      # Compute bounds
+      # Get parameter coefficients
       params <- fit$coefficients
-      lower_bound <- params - z_alpha * standard_errors
-      upper_bound <- params + z_alpha * standard_errors
 
-      # Return a clean data frame
-      return(data.table::data.table(
-        Parameter = names(params),
-        Estimate = params,
-        `Lower Bound` = lower_bound,
-        `Upper Bound` = upper_bound,
-        SE = standard_errors
-      ))
+      # Compute the variance-covariance matrix
+      if (!is.null(params)) {
+        inv_hessian <- tryCatch({
+          solve(fit$hessian)
+        }, error = function(e) {
+          message("Failed to compute confidence intervals: ", e$message)
+          NULL
+        })
+      }
+
+      if (!is.null(inv_hessian)) {
+        # Residual variance (sigma^2)
+        n <- length(fit$residuals)  # Number of observations
+        p <- length(fit$coefficients)  # Number of parameters
+        rss <- sum(fit$residuals^2)  # Residual sum of squares
+        sigma_squared <- rss / (n - p)
+
+        # Standard errors
+        standard_errors <- sqrt(diag(sigma_squared * inv_hessian))
+
+        # Confidence level
+        z_alpha <- qnorm(0.975)  # 95% confidence interval
+
+        # Compute bounds
+        lower_bound <- params - z_alpha * standard_errors
+        upper_bound <- params + z_alpha * standard_errors
+
+        # Return a clean data frame
+        return(data.table::data.table(
+          Parameter = names(params),
+          Estimate = params,
+          `Lower Bound` = lower_bound,
+          `Upper Bound` = upper_bound,
+          SE = standard_errors
+        ))
+      } else {
+        return(data.table::data.table(Parameter = names(params), Estimate = params))
+      }
     }
   )
 )
