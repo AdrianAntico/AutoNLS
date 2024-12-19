@@ -558,8 +558,7 @@ NonLinearFitter <- R6::R6Class(
 
             # Add confidence intervals
             model_fit$confidence_intervals <- tryCatch({
-              #private$compute_confidence_intervals(model_fit)
-              compute_confidence_intervals(model_fit)
+              private$compute_confidence_intervals(model_fit)
             }, error = function(e) {
               message("confidence intervals failed to build: ", e$message)
             })
