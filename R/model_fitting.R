@@ -499,7 +499,7 @@ NonLinearFitter <- R6::R6Class(
 
             # Compute confidence intervals (95% default)
             params <- coef(model_fit)
-            z_alpha <- qnorm(0.95)
+            z_alpha <- qnorm(0.975)
 
             # Residual variance (sigma^2)
             residuals <- model_fit$m$resid()
