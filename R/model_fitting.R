@@ -1,11 +1,11 @@
-#' NonLinearFitter
+#' ModelFitter
 #'
 #' An R6 class for automatically fitting non-linear regression models.
 #' Includes a library of pre-defined models to simplify selection.
 #'
 #' @export
-NonLinearFitter <- R6::R6Class(
-  "NonLinearFitter",
+ModelFitter <- R6::R6Class(
+  "ModelFitter",
   public = list(
     #' @field data A data.table containing the dataset for modeling.
     data = NULL,

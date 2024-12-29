@@ -161,11 +161,11 @@ scatter_plots[[1]]  # View the first scatterplot
 ```
 
 ### Step 3: Fit Non-Linear Models
-Next, we use the NonLinearFitter class to fit selected non-linear models to the data.
+Next, we use the ModelFitter class to fit selected non-linear models to the data.
 
 ```r
 # Initialize the fitter
-fitter <- NonLinearFitter$new(dummy_data)
+fitter <- ModelFitter$new(dummy_data)
 
 # Add models to test
 fitter$add_model("Hill")
@@ -180,11 +180,11 @@ print(fit_results)
 ```
 
 ### Step 4: Evaluate Fitted Models
-Use the NonLinearModelEvaluator class to evaluate fitted models and generate plots.
+Use the ModelEvaluator class to evaluate fitted models and generate plots.
 
 ```r
 # Initialize evaluator
-evaluator <- NonLinearModelEvaluator$new(fit_results, data = dummy_data)
+evaluator <- ModelEvaluator$new(fit_results, data = dummy_data)
 
 # Generate metrics
 metrics <- evaluator$generate_metrics(y_col = "Target", x_col = "X-Value")
@@ -200,12 +200,12 @@ comparison_plots[[1]]  # View the first comparison plot
 ```
 
 ### Step 5: Score New Data
-We use the NonLinearModelScorer class to score new data based on the fitted models. For this example, we'll assume new_data.csv is another dataset in the same format as dummy_data.csv.
+We use the ModelScorer class to score new data based on the fitted models. For this example, we'll assume new_data.csv is another dataset in the same format as dummy_data.csv.
 
 ```r
 # Load new data for scoring
 # Initialize the scorer
-scorer <- NonLinearModelScorer$new(fit_results)
+scorer <- ModelScorer$new(fit_results)
 
 # Score new data for all models
 score_results <- scorer$score_new_data(new_data = dummy_data, x_col = "X-Value")
@@ -219,11 +219,11 @@ scoring_plots  # View the scoring plot for the "Hill" model
 ```
 
 ### Pre-Investigation of Model Shapes
-If you want to perform a pre-investigation into what the models' shapes look like for a given range of x values, you can use the model_visualizer functionality from the NonLinearFitter class. This is especially helpful for understanding the behavior of different non-linear models before fitting them to your data.
+If you want to perform a pre-investigation into what the models' shapes look like for a given range of x values, you can use the model_visualizer functionality from the ModelFitter class. This is especially helpful for understanding the behavior of different non-linear models before fitting them to your data.
 
 ```r
 # Initialize the fitter
-fitter <- NonLinearFitter$new(dummy_data)
+fitter <- ModelFitter$new(dummy_data)
 
 # Add models to explore
 fitter$add_model("Hill")
@@ -251,8 +251,8 @@ Here’s how to add a custom model:
 library(AutoNLS)
 data("dummy_data")
 
-# Initialize the NonLinearFitter
-fitter <- NonLinearFitter$new(dummy_data)
+# Initialize the ModelFitter
+fitter <- ModelFitter$new(dummy_data)
 
 # Add a custom model
 custom_formula <- y ~ a * exp(-b * x)
@@ -273,7 +273,7 @@ fitter$add_model(
 fit_results <- fitter$fit_models(x_col = "X-Value", y_col = "Target")
 
 # Evaluate the fitted model
-evaluator <- NonLinearModelEvaluator$new(fit_results, data = dummy_data)
+evaluator <- ModelEvaluator$new(fit_results, data = dummy_data)
 metrics <- evaluator$generate_metrics(y_col = "Target")
 print(metrics)
 

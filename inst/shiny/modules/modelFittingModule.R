@@ -167,7 +167,7 @@ modelFittingServer <- function(id, dataset, fit_results) {
     output$model_selector_ui <- renderUI({
       req(dataset())
 
-      fitter <- NonLinearFitter$new(dataset())
+      fitter <- ModelFitter$new(dataset())
       models_info <- fitter$list_models()
 
       selectInput(
@@ -219,7 +219,7 @@ modelFittingServer <- function(id, dataset, fit_results) {
       req(dataset(), input$selected_models)
 
       # Initialize the fitter and add selected models
-      fitter <- NonLinearFitter$new(dataset())
+      fitter <- ModelFitter$new(dataset())
       lapply(input$selected_models, function(model_name) fitter$add_model(model_name))
 
       # Handle weights column selection
@@ -291,7 +291,7 @@ modelFittingServer <- function(id, dataset, fit_results) {
 
         # Initialize evaluator
         evaluator <- tryCatch({
-          NonLinearModelEvaluator$new(fit_results(), data = dataset())
+          ModelEvaluator$new(fit_results(), data = dataset())
         }, error = function(e) {
           showNotification(paste("Error initializing evaluator:", e$message), type = "error")
           NULL

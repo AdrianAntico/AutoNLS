@@ -1,12 +1,12 @@
-#' NonLinearModelEvaluator
+#' ModelEvaluator
 #'
 #' An R6 class to evaluate non-linear regression models.
 #' Includes tools to generate tables of statistics and visualizations
 #' to compare models against data.
 #'
 #' @export
-NonLinearModelEvaluator <- R6::R6Class(
-  "NonLinearModelEvaluator",
+ModelEvaluator <- R6::R6Class(
+  "ModelEvaluator",
   public = list(
     #' @field fit_results A list of fitted model objects.
     fit_results = NULL,
@@ -20,11 +20,11 @@ NonLinearModelEvaluator <- R6::R6Class(
     #' @field data The original dataset used for fitting models.
     data = NULL,
 
-    #' Initialize the NonLinearModelEvaluator class
+    #' Initialize the ModelEvaluator class
     #'
     #' @param fit_results A list of fitted model objects (e.g., output from NonLinearFitter).
     #' @param data The original dataset used for fitting models.
-    #' @return A new instance of the NonLinearModelEvaluator class.
+    #' @return A new instance of the ModelEvaluator class.
     initialize = function(fit_results, data) {
       if (!is.list(fit_results)) stop("fit_results must be a list of model objects.")
       if (!data.table::is.data.table(data)) stop("data must be a data.table.")
@@ -256,8 +256,8 @@ NonLinearModelEvaluator <- R6::R6Class(
       })
 
       # Calculate lower and upper bounds
-      lower <- apply(sim_matrix, 1, quantile, probs = lower_bound)
-      upper <- apply(sim_matrix, 1, quantile, probs = upper_bound)
+      lower <- apply(sim_matrix, 1, quantile, probs = lower_bound, na.rm = TRUE)
+      upper <- apply(sim_matrix, 1, quantile, probs = upper_bound, na.rm = TRUE)
 
       return(list(lower = lower, upper = upper))
     }

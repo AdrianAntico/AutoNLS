@@ -11,15 +11,15 @@ test_that("score_new_data generates valid predictions", {
   # Sample new data
   new_data <- data.table::data.table(`x-variable` = seq(101, 200, by = 1))
 
-  # Initialize NonLinearFitter
-  fitter <- NonLinearFitter$new(train_data)
+  # Initialize ModelFitter
+  fitter <- ModelFitter$new(train_data)
   fitter$add_model("Hill")
 
   # Fit models
   fit_results <- fitter$fit_models(x_col = "x-variable", y_col = "y")
 
-  # Initialize NonLinearModelScorer
-  scorer <- NonLinearModelScorer$new(fit_results)
+  # Initialize ModelScorer
+  scorer <- ModelScorer$new(fit_results)
 
   # Test 1: Scoring generates a list of predictions
   scored_data <- scorer$score_new_data(new_data, x_col = "x-variable")
@@ -42,15 +42,15 @@ test_that("generate_score_plot generates valid plot", {
   # Sample new data
   new_data <- data.table::data.table(x = seq(101, 200, by = 1))
 
-  # Initialize NonLinearFitter
-  fitter <- NonLinearFitter$new(train_data)
+  # Initialize ModelFitter
+  fitter <- ModelFitter$new(train_data)
   fitter$add_model("Hill")
 
   # Fit models
   fit_results <- fitter$fit_models(x_col = "x", y_col = "y")
 
-  # Initialize NonLinearModelScorer
-  scorer <- NonLinearModelScorer$new(fit_results)
+  # Initialize ModelScorer
+  scorer <- ModelScorer$new(fit_results)
 
   # Score new data
   scored_data <- scorer$score_new_data(new_data, x_col = "x")
@@ -70,15 +70,15 @@ test_that("score_new_data handles invalid inputs", {
   # Sample new data
   new_data <- data.table::data.table(x = seq(101, 200, by = 1))
 
-  # Initialize NonLinearFitter
-  fitter <- NonLinearFitter$new(train_data)
+  # Initialize ModelFitter
+  fitter <- ModelFitter$new(train_data)
   fitter$add_model("Hill")
 
   # Fit models
   fit_results <- fitter$fit_models(x_col = "x", y_col = "y")
 
-  # Initialize NonLinearModelScorer
-  scorer <- NonLinearModelScorer$new(fit_results)
+  # Initialize ModelScorer
+  scorer <- ModelScorer$new(fit_results)
 
   # Test 4: Invalid new_data
   expect_error(scorer$score_new_data(NULL, x_col = "x"), "new_data must be a data.table.")
@@ -98,15 +98,15 @@ test_that("generate_score_plot handles invalid inputs", {
   # Sample new data
   new_data <- data.table::data.table(x = seq(101, 200, by = 1))
 
-  # Initialize NonLinearFitter
-  fitter <- NonLinearFitter$new(train_data)
+  # Initialize ModelFitter
+  fitter <- ModelFitter$new(train_data)
   fitter$add_model("Hill")
 
   # Fit models
   fit_results <- fitter$fit_models(x_col = "x", y_col = "y")
 
-  # Initialize NonLinearModelScorer
-  scorer <- NonLinearModelScorer$new(fit_results)
+  # Initialize ModelScorer
+  scorer <- ModelScorer$new(fit_results)
 
   # Test 6: Plot for non-scored model
   expect_error(scorer$generate_score_plot("NonExistentModel", new_data, x_col = "x"),

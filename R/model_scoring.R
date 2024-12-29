@@ -1,10 +1,10 @@
-#' NonLinearModelScorer
+#' ModelScorer
 #'
 #' An R6 class to score non-linear regression models on new data
 #' and visualize the results.
 #' @export
-NonLinearModelScorer <- R6::R6Class(
-  "NonLinearModelScorer",
+ModelScorer <- R6::R6Class(
+  "ModelScorer",
   public = list(
     #' @field fit_results A list of fitted model objects.
     fit_results = NULL,
@@ -16,7 +16,7 @@ NonLinearModelScorer <- R6::R6Class(
     score_plots = list(),
 
     #' @param fit_results A list of fitted model objects (e.g., output from NonLinearFitter).
-    #' @return A new instance of the NonLinearModelScorer class.
+    #' @return A new instance of the ModelScorer class.
     initialize = function(fit_results) {
       if (!is.list(fit_results)) stop("fit_results must be a list of model objects.")
       self$fit_results <- fit_results
@@ -185,8 +185,8 @@ NonLinearModelScorer <- R6::R6Class(
       })
 
       # Calculate lower and upper bounds
-      lower <- apply(sim_matrix, 1, quantile, probs = lower_bound)
-      upper <- apply(sim_matrix, 1, quantile, probs = upper_bound)
+      lower <- apply(sim_matrix, 1, quantile, probs = lower_bound, na.rm = TRUE)
+      upper <- apply(sim_matrix, 1, quantile, probs = upper_bound, na.rm = TRUE)
 
       return(list(lower = lower, upper = upper))
     }

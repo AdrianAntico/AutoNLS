@@ -18,8 +18,8 @@ test_that("generate_comparison_plot generates valid plots", {
   # Fit models
   fit_results <- fitter$fit_models(x_col = "x-value", y_col = "y")
 
-  # Initialize NonLinearModelEvaluator
-  evaluator <- NonLinearModelEvaluator$new(fit_results, data = sample_data)
+  # Initialize ModelEvaluator
+  evaluator <- ModelEvaluator$new(fit_results, data = sample_data)
 
   # Test 1: Function generates a list of plots
   plots <- evaluator$generate_comparison_plot(sample_data, x_col = "x-value", y_col = "y")
@@ -45,8 +45,8 @@ test_that("generate_comparison_plot fails with missing columns", {
   # Fit models
   fit_results <- fitter$fit_models(x_col = "x", y_col = "y")
 
-  # Initialize NonLinearModelEvaluator
-  evaluator <- NonLinearModelEvaluator$new(fit_results, data = sample_data)
+  # Initialize ModelEvaluator
+  evaluator <- ModelEvaluator$new(fit_results, data = sample_data)
 
   # Test 2: Missing predictor column
   expect_error(
@@ -71,8 +71,8 @@ test_that("generate_comparison_plot handles empty or NULL fit_results", {
   # Ensure response variable remains positive
   sample_data[, y := pmax(y, 1e-3)]
 
-  # Initialize NonLinearModelEvaluator with empty fit_results
-  evaluator <- NonLinearModelEvaluator$new(list(), data = sample_data)
+  # Initialize ModelEvaluator with empty fit_results
+  evaluator <- ModelEvaluator$new(list(), data = sample_data)
 
   # Test 4: No fitted models to evaluate
   expect_error(

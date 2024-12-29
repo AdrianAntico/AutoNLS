@@ -9,6 +9,7 @@
 #' - `correlate()`: Computes a correlation matrix for numeric columns.
 #' - `visualize_distributions()`: Creates histogram and density visualizations for numeric columns.
 #' - `visualize_scatterplots()`: Creates pairwise scatterplots for numeric columns.
+#' - `generate_3d_scatter_plot()`: Creates a 3D scatterplot for numeric columns.
 #'
 #'@export
 EDA <- R6::R6Class(
@@ -255,8 +256,8 @@ EDA <- R6::R6Class(
       # Reset the plots list
       self$plots <- list()
 
-      # Loop through column pairs
-      for (col in numeric_cols) { # pair = col_pairs[[1]]
+      # Loop through numeric_cols
+      for (col in numeric_cols) {
         x_col <- col
         y_col <- target_col
 
@@ -301,6 +302,57 @@ EDA <- R6::R6Class(
       }
 
       return(self$plots)
+    },
+
+    #' @description Generates a 3D scatter plot for three numeric variables.
+    #'
+    #' @param input_col1 The name of the first numeric column.
+    #' @param input_col2 The name of the second numeric column.
+    #' @param target_col The name of the third numeric column, the target variable.
+    #' @param rank_values Logical. Whether to transform variables to their percentile ranks. Defaults to TRUE.
+    #' @param theme Name of theme for `echarts4r` plots
+    #' @return An `echarts4r` 3D scatter plot.
+    #' @export
+    generate_3d_scatter_plot = function(
+    input_col1,
+    input_col2,
+    target_col,
+    rank_values = TRUE,
+    theme = "westeros") {
+      if (!(input_col1 %in% names(self$data) && input_col2 %in% names(self$data) && target_col %in% names(self$data))) {
+        stop("Columns not found in the dataset.")
+      }
+      if (!is.numeric(self$data[[input_col1]]) || !is.numeric(self$data[[input_col2]]) || !is.numeric(self$data[[target_col]])) {
+        stop("All specified columns must be numeric.")
+      }
+
+      # Optionally rank variables
+      if (rank_values) {
+        plot_data <- self$data[, .(
+          X = frank(get(input_col1), na.last = "keep") / sum(!is.na(get(input_col1))),
+          Y = frank(get(input_col2), na.last = "keep") / sum(!is.na(get(input_col2))),
+          Z = frank(get(target_col), na.last = "keep") / sum(!is.na(get(target_col)))
+        )]
+      } else {
+        plot_data <- self$data[, .(
+          X = get(input_col1),
+          Y = get(input_col2),
+          Z = get(target_col)
+        )]
+      }
+
+      # Generate 3D scatter plot
+      plot <- plot_data |>
+        echarts4r::e_charts(X) |>
+        echarts4r::e_scatter_3d(Y, Z, symbol_size = 5) |>
+        echarts4r::e_title(text = paste("3D Scatter Plot of", input_col1, input_col2, "and", target_col)) |>
+        echarts4r::e_x_axis_3d(name = input_col1) |>
+        echarts4r::e_y_axis_3d(name = input_col2) |>
+        echarts4r::e_z_axis_3d(name = target_col) |>
+        echarts4r::e_theme(theme)
+
+      self$plots[[paste(input_col1, input_col2, target_col, sep = "_vs_")]] <- plot
+      return(plot)
     }
   )
 )

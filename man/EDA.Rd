@@ -15,6 +15,7 @@ statistics, correlation matrices, and customizable visualizations using \code{ec
 \item \code{correlate()}: Computes a correlation matrix for numeric columns.
 \item \code{visualize_distributions()}: Creates histogram and density visualizations for numeric columns.
 \item \code{visualize_scatterplots()}: Creates pairwise scatterplots for numeric columns.
+\item \code{generate_3d_scatter_plot()}: Creates a 3D scatterplot for numeric columns.
 }
 }
 
@@ -40,6 +41,7 @@ Initialize the EDA class}
 \item \href{#method-EDA-correlate}{\code{EDA$correlate()}}
 \item \href{#method-EDA-visualize_distributions}{\code{EDA$visualize_distributions()}}
 \item \href{#method-EDA-visualize_scatterplots}{\code{EDA$visualize_scatterplots()}}
+\item \href{#method-EDA-generate_3d_scatter_plot}{\code{EDA$generate_3d_scatter_plot()}}
 \item \href{#method-EDA-clone}{\code{EDA$clone()}}
 }
 }
@@ -167,6 +169,40 @@ fitted lines from Generalized Additive Models (GAM) for different \code{k} value
 }
 \subsection{Returns}{
 A list of \code{echarts4r} scatter plots with GAM fitted lines.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-EDA-generate_3d_scatter_plot"></a>}}
+\if{latex}{\out{\hypertarget{method-EDA-generate_3d_scatter_plot}{}}}
+\subsection{Method \code{generate_3d_scatter_plot()}}{
+Generates a 3D scatter plot for three numeric variables.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{EDA$generate_3d_scatter_plot(
+  input_col1,
+  input_col2,
+  target_col,
+  rank_values = TRUE,
+  theme = "westeros"
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{input_col1}}{The name of the first numeric column.}
+
+\item{\code{input_col2}}{The name of the second numeric column.}
+
+\item{\code{target_col}}{The name of the third numeric column, the target variable.}
+
+\item{\code{rank_values}}{Logical. Whether to transform variables to their percentile ranks. Defaults to TRUE.}
+
+\item{\code{theme}}{Name of theme for \code{echarts4r} plots}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+An \code{echarts4r} 3D scatter plot.
 }
 }
 \if{html}{\out{<hr>}}

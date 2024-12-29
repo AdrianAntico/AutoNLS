@@ -121,7 +121,7 @@ scoringServer <- function(id, scoring_data, fit_results) {
       # Score
       tryCatch({
         # Initialize the scorer with valid models
-        scorer <- NonLinearModelScorer$new(fit_results = valid_fit_results)
+        scorer <- ModelScorer$new(fit_results = valid_fit_results)
 
         # Perform scoring for the valid models
         score_results <- lapply(names(valid_fit_results), function(model_name) {
