@@ -213,6 +213,7 @@ generateDTStyling <- function() {
   )
 }
 
+# Remove Help switch that does nothing
 removeHelpSwitchStyling <- function() {
   tags$head(
     tags$style(HTML(
