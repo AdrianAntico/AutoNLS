@@ -50,7 +50,7 @@ ModelScorer <- R6::R6Class(
         tryCatch({
 
           # Scale x_col
-          scaled_x <- (new_data[[x_col]] - fit$scale_params$min_x) / (fit$scale_params$max_x - fit$scale_params$min_x)
+          scaled_x <- (new_data[[x_col]] - fit$scale_params$min_x) / fit$scale_params$scale_factor_x
 
           # Simulate lower and upper prediction bounds
           if (get_prediction_bounds) {
