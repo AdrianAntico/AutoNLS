@@ -454,7 +454,7 @@ ModelFitter <- R6::R6Class(
       scale_params <- list(
         min_x = 0,
         max_x = max(temp_data$x, na.rm = TRUE),
-        min_y = 0,
+        min_y = min(temp_data$y, na.rm = TRUE),
         max_y = max(temp_data$y, na.rm = TRUE),
         scale_factor_x = max(temp_data$x, na.rm = TRUE) - min(temp_data$x, na.rm = TRUE),
         scale_factor_y = max(temp_data$y, na.rm = TRUE) - min(temp_data$y, na.rm = TRUE)
