@@ -456,14 +456,14 @@ ModelFitter <- R6::R6Class(
         max_x = max(temp_data$x, na.rm = TRUE),
         min_y = 0,
         max_y = max(temp_data$y, na.rm = TRUE),
-        scale_factor_x = max(temp_data$x, na.rm = TRUE) - min(temp_data$x, na.rm = TRUE),
-        scale_factor_y = max(temp_data$y, na.rm = TRUE) - min(temp_data$y, na.rm = TRUE)
+        scale_factor_x = max(temp_data$x, na.rm = TRUE),
+        scale_factor_y = max(temp_data$y, na.rm = TRUE)
       )
 
       # Create updated data.table with scaled values
       temp_data_scaled <- data.table::copy(temp_data)
-      temp_data_scaled[, x := (x - scale_params$min_x) / (scale_params$max_x - scale_params$min_x)]
-      temp_data_scaled[, y := (y - scale_params$min_y) / (scale_params$max_y - scale_params$min_y)]
+      temp_data_scaled[, x := (x - scale_params$min_x) / scale_params$scale_factor_x]
+      temp_data_scaled[, y := (y - scale_params$min_y) / scale_params$scale_factor_y]
 
       # Fit model
       self$fit_results <- lapply(names(self$models), function(model_name) {
