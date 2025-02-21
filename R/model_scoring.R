@@ -35,11 +35,12 @@ ModelScorer <- R6::R6Class(
     #'
     #' @param new_data A data.table containing the new data to score.
     #' @param x_col The predictor column in `new_data`.
+    #' @param get_prediction_bounds TRUE to return prediction bounds
     #' @param lower_bound Lower bound of prediction interval. Defaults to 0.025
     #' @param upper_bound Upper bound of prediction interval. Defaults to 0.975
     #' @return A list of data.tables with predicted values for each model.
     #' @export
-    score_new_data = function(new_data, x_col, lower_bound = 0.025, upper_bound = 0.975) {
+    score_new_data = function(new_data, x_col, get_prediction_bounds = FALSE, lower_bound = 0.025, upper_bound = 0.975) {
       if (!data.table::is.data.table(new_data)) stop("new_data must be a data.table.")
       if (!x_col %in% names(new_data)) stop("x_col must exist in the dataset.")
 
@@ -47,60 +48,34 @@ ModelScorer <- R6::R6Class(
         if (is.null(fit)) return(NULL)
 
         tryCatch({
-          if (inherits(fit, "custom_nls")) {
 
-            # Scale x_col
-            scaled_x <- (new_data[[x_col]] - fit$scale_params$min_x) / (fit$scale_params$max_x - fit$scale_params$min_x)
+          # Scale x_col
+          scaled_x <- (new_data[[x_col]] - fit$scale_params$min_x) / (fit$scale_params$max_x - fit$scale_params$min_x)
 
-            # Simulate lower and upper prediction bounds
+          # Simulate lower and upper prediction bounds
+          if (get_prediction_bounds) {
             bounds <- tryCatch({
               private$simulate_prediction_bounds(fit, scaled_x, lower_bound, upper_bound)
             }, error = function(e) {
               message("Error generating prediction bounds: ", e$message)
               NULL
             })
-
-            # Generate predictions
-            predictions <- data.table::data.table(
-              x = new_data[[x_col]],
-              y_pred = fit$back_transform(
-                predictions = fit$model_function(x = scaled_x, params = fit$coefficients),
-                scale_params = fit$scale_params
-              )
-            )
-
-            if (!is.null(bounds)) {
-              predictions[, y_lower := fit$back_transform(bounds$lower, fit$scale_params)]
-              predictions[, y_upper := fit$back_transform(bounds$upper, fit$scale_params)]
-            }
-
           } else {
+            bounds <- NULL
+          }
 
-            # Scale x_col
-            scaled_x <- (new_data[[x_col]] - fit$scale_params$min_x) / (fit$scale_params$max_x - fit$scale_params$min_x)
-
-            # Simulate lower and upper prediction bounds
-            bounds <- tryCatch({
-              private$simulate_prediction_bounds(fit, scaled_x, lower_bound, upper_bound)
-            }, error = function(e) {
-              message("Error generating prediction bounds: ", e$message)
-              NULL
-            })
-
-            # Use standard predict() for nls models
-            predictions <- data.table::data.table(
-              x = new_data[[x_col]],
-              y_pred = fit$back_transform(
-                predict(fit, newdata = new_data),
-                scale_params = fit$scale_params
-              )
+          # Generate predictions
+          predictions <- data.table::data.table(
+            x = new_data[[x_col]],
+            y_pred = fit$back_transform(
+              predictions = fit$model_function(x = scaled_x, params = fit$coefficients),
+              scale_params = fit$scale_params
             )
+          )
 
-            if (!is.null(bounds)) {
-              predictions[, y_lower := fit$back_transform(bounds$lower, fit$scale_params)]
-              predictions[, y_upper := fit$back_transform(bounds$upper, fit$scale_params)]
-            }
-
+          if (!is.null(bounds)) {
+            predictions[, y_lower := fit$back_transform(bounds$lower, fit$scale_params)]
+            predictions[, y_upper := fit$back_transform(bounds$upper, fit$scale_params)]
           }
           predictions
         }, error = function(e) {
@@ -185,10 +160,19 @@ ModelScorer <- R6::R6Class(
       })
 
       # Calculate lower and upper bounds
-      lower <- apply(sim_matrix, 1, quantile, probs = lower_bound, na.rm = TRUE)
-      upper <- apply(sim_matrix, 1, quantile, probs = upper_bound, na.rm = TRUE)
+      tryCatch({
+        lower <- apply(sim_matrix, 1, quantile, probs = lower_bound, na.rm = TRUE)
+        upper <- apply(sim_matrix, 1, quantile, probs = upper_bound, na.rm = TRUE)
+      }, error = function(e) {
+        message("lower and upper not found: ", e$message)
+        NULL
+      })
 
-      return(list(lower = lower, upper = upper))
+      if (!exists("lower") | !exists("upper")) {
+        return(NULL)
+      } else {
+        return(list(lower = lower, upper = upper))
+      }
     }
   )
 )

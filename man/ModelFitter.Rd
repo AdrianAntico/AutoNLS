@@ -165,7 +165,6 @@ results are back-transformed to align with the original data scale.
   y_col,
   weights_col = NULL,
   control = list(maxiter = 1024),
-  force_optim = FALSE,
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -181,8 +180,6 @@ results are back-transformed to align with the original data scale.
 
 \item{\code{control}}{A list of control parameters for the optimizer, such as \code{maxiter}.
 Default is \code{list(maxiter = 200)}.}
-
-\item{\code{force_optim}}{Logical; if \code{TRUE}, forces the use of \code{optim()} regardless of whether weights are supplied. Defaults to \code{FALSE}.}
 
 \item{\code{...}}{Additional arguments to be passed to the underlying fitting functions
 (\code{nlsLM} for unweighted models or \code{optim} for weighted models). Examples include

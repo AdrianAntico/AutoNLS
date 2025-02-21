@@ -77,6 +77,7 @@ This method applies each model to the new dataset and returns the predicted valu
 \if{html}{\out{<div class="r">}}\preformatted{ModelScorer$score_new_data(
   new_data,
   x_col,
+  get_prediction_bounds = FALSE,
   lower_bound = 0.025,
   upper_bound = 0.975
 )}\if{html}{\out{</div>}}
@@ -88,6 +89,8 @@ This method applies each model to the new dataset and returns the predicted valu
 \item{\code{new_data}}{A data.table containing the new data to score.}
 
 \item{\code{x_col}}{The predictor column in \code{new_data}.}
+
+\item{\code{get_prediction_bounds}}{TRUE to return prediction bounds}
 
 \item{\code{lower_bound}}{Lower bound of prediction interval. Defaults to 0.025}
 

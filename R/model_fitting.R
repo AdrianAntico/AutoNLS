@@ -412,14 +412,13 @@ ModelFitter <- R6::R6Class(
     #' @param weights_col The name of the weights variable.
     #' @param control A list of control parameters for the optimizer, such as `maxiter`.
     #' Default is `list(maxiter = 200)`.
-    #' @param force_optim Logical; if `TRUE`, forces the use of `optim()` regardless of whether weights are supplied. Defaults to `FALSE`.
     #' @param ... Additional arguments to be passed to the underlying fitting functions
     #' (`nlsLM` for unweighted models or `optim` for weighted models). Examples include
     #' `trace`, `lower`, and `upper` for `nlsLM`, or `reltol`, `parscale`, and others for `optim`.
     #'
     #' @return A list of fitted model objects.
     #' @export
-    fit_models = function(x_col, y_col, weights_col = NULL, control = list(maxiter = 1024), force_optim = FALSE, ...) {
+    fit_models = function(x_col, y_col, weights_col = NULL, control = list(maxiter = 1024), ...) {
 
       if (is.null(self$models) || length(self$models) == 0) {
         stop("No models to fit. Use add_model() to add models.")
@@ -475,97 +474,37 @@ ModelFitter <- R6::R6Class(
 
         # Fit model with or without weights
         fit <- tryCatch({
-          if (is.null(standardized_weights_vector) && !force_optim) {
 
-            # Unweighted fitting
-            model_fit <- minpack.lm::nlsLM(
-              formula = formula,
-              data = temp_data_scaled,
-              start = model$start_params,
-              control = control,
-              ...
-            )
+          # Weighted fitting using custom optimization
+          result_params <- private$optimize_with_weights(
+            x = temp_data_scaled$x,
+            y = temp_data_scaled$y,
+            weights = standardized_weights_vector,
+            model = model$model_function,
+            start_params = model$start_params,
+            ...
+          )
 
-            # Store coefficients
-            model_fit$coefficients <- coef(model_fit)
+          model_fit <- list(
+            coefficients = result_params$params,
+            hessian = result_params$hessian,
+            formula = formula,
+            residuals = temp_data_scaled$y - model$model_function(temp_data_scaled$x, result_params$params),
+            fitted.values = model$model_function(temp_data_scaled$x, result_params$params),
+            model_function = model$model_function,
+            weights = standardized_weights_vector
+          )
 
-            # Compute standard errors
-            vcov_matrix <- tryCatch({
-              summary(model_fit)$cov.unscaled
-            }, error = function(e) {
-              message("Unable to compute covariance matrix: ", e$message)
-              return(NULL)
-            })
+          # Add confidence intervals
+          model_fit$confidence_intervals <- tryCatch({
+            private$compute_confidence_intervals(model_fit)
+          }, error = function(e) {
+            message("confidence intervals failed to build: ", e$message)
+          })
 
-            # Compute confidence intervals (95% default)
-            params <- coef(model_fit)
-            z_alpha <- qnorm(0.975)
+          # Set the class properly
+          class(model_fit) <- "custom_nls"
 
-            # Residual variance (sigma^2)
-            residuals <- model_fit$m$resid()
-            n <- length(residuals)  # Number of observations
-            p <- length(coef(model_fit))  # Number of parameters
-            rss <- sum(residuals^2)  # Residual sum of squares
-            sigma_squared <- rss / (n - p)
-
-            if (!is.null(vcov_matrix)) {
-              standard_errors <- sqrt(diag(vcov_matrix) * sigma_squared)  # Standard errors
-            } else {
-              standard_errors <- NULL
-            }
-
-            if (!is.null(standard_errors)) {
-              lower_bound <- params - z_alpha * standard_errors
-              upper_bound <- params + z_alpha * standard_errors
-            } else {
-              lower_bound <- NULL
-              upper_bound <- NULL
-            }
-
-            # Store confidence interval as a data.table
-            model_fit$confidence_intervals <- data.table::data.table(
-              Parameter = names(params),
-              Estimate = params
-            )
-
-            if (!is.null(standard_errors)) {
-              model_fit$confidence_intervals[, `Lower Bound` := lower_bound]
-              model_fit$confidence_intervals[, `Upper Bound` := upper_bound]
-              model_fit$confidence_intervals[, SE := standard_errors]
-            }
-
-          } else {
-
-            # Weighted fitting using custom optimization
-            result_params <- private$optimize_with_weights(
-              x = temp_data_scaled$x,
-              y = temp_data_scaled$y,
-              weights = standardized_weights_vector,
-              model = model$model_function,
-              start_params = model$start_params,
-              ...
-            )
-
-            model_fit <- list(
-              coefficients = result_params$params,
-              hessian = result_params$hessian,
-              formula = formula,
-              residuals = temp_data_scaled$y - model$model_function(temp_data_scaled$x, result_params$params),
-              fitted.values = model$model_function(temp_data_scaled$x, result_params$params),
-              model_function = model$model_function,
-              weights = standardized_weights_vector
-            )
-
-            # Add confidence intervals
-            model_fit$confidence_intervals <- tryCatch({
-              private$compute_confidence_intervals(model_fit)
-            }, error = function(e) {
-              message("confidence intervals failed to build: ", e$message)
-            })
-
-            # Set the class properly
-            class(model_fit) <- "custom_nls"
-          }
 
           # Attach formula to fit object
           model_fit$formula <- formula

@@ -60,18 +60,6 @@ modelFittingUI <- function(id) {
                   choices = c("None"),  # Default option; dynamically updated by server
                   selected = "None"     # Default selection
                 )
-              ),
-              column(
-                width = 6,
-                tags$label(
-                  "Force use of stats::optim() when fitting instead of stats::nls()",
-                  style = "font-weight: bold; font-size: 1rem; display: block; margin-bottom: 5px;"
-                ),
-                checkboxInput(
-                  inputId = ns("force_optim"),
-                  label = "Fit with optim",
-                  value = FALSE
-                )
               )
             )
           ),
@@ -263,8 +251,7 @@ modelFittingServer <- function(id, dataset, fit_results) {
           fitter$fit_models(
             x_col = input$x_variable,
             y_col = input$y_variable,
-            weights_col = weights_column,
-            force_optim = input$force_optim
+            weights_col = weights_column
           )
         }, error = function(e) {
           showNotification(paste("Error during model fitting:", e$message), type = "error")
