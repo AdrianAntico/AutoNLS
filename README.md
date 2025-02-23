@@ -61,7 +61,6 @@ install.packages("R6")
 install.packages("data.table")
 install.packages("dplyr")
 install.packages("echarts4r")
-install.packages("minpack.lm")
 install.packages("mgcv")
 
 # Install AutoNLS
@@ -208,7 +207,12 @@ We use the ModelScorer class to score new data based on the fitted models. For t
 scorer <- ModelScorer$new(fit_results)
 
 # Score new data for all models
-score_results <- scorer$score_new_data(new_data = dummy_data, x_col = "X-Value")
+score_results <- scorer$score_new_data(
+  new_data = dummy_data,
+  x_col = "X-Value",
+  get_prediction_bounds = FALSE,
+  lower_bound = 0.025,
+  upper_bound = 0.975)
 
 # Print scored results
 print(score_results)

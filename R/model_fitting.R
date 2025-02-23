@@ -31,7 +31,10 @@ ModelFitter <- R6::R6Class(
         model_function = function(x, params) {
           a <- params[["a"]]
           b <- params[["b"]]
-          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
           x^b / (a^b + x^b)
         }
       ),
@@ -43,7 +46,10 @@ ModelFitter <- R6::R6Class(
           a <- params[["a"]]
           b <- params[["b"]]
           c <- params[["c"]]
-          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
           a * x^b / (c^b + x^b)
         }
       ),
@@ -57,7 +63,10 @@ ModelFitter <- R6::R6Class(
           c <- params[["c"]]
           d <- params[["d"]]
           e <- params[["e"]]
-          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
           a * (x^b) / (c^b + x^b) + d + e * x
         }
       ),
@@ -74,7 +83,10 @@ ModelFitter <- R6::R6Class(
           f <- params[["f"]]
           s <- params[["s"]]
           k <- params[["k"]]  # Slope of the transition
-          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
           1 / (1 + exp(-k * (x - s))) * (a * (x^b) / (c^b + x^b)) + (1 - 1 / (1 + exp(-k * (x - s)))) * (d * (x^e) / (f^e + x^e))
         }
       ),
@@ -87,7 +99,10 @@ ModelFitter <- R6::R6Class(
           b <- params[["b"]]
           c <- params[["c"]]
           d <- params[["d"]]
-          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
           a * (x^b) / (c + x^b) + d * (x^2)
         }
       ),
@@ -99,7 +114,10 @@ ModelFitter <- R6::R6Class(
           a <- params[["a"]]
           b <- params[["b"]]
           c <- params[["c"]]
-          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
           a / (1 + exp(-b * (x - c)))
         }
       ),
@@ -113,7 +131,10 @@ ModelFitter <- R6::R6Class(
           c <- params[["c"]]
           d <- params[["d"]]
           g <- params[["g"]]
-          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
           d + (a - d) / (1 + (x / c)^b)^g
         }
       ),
@@ -124,7 +145,10 @@ ModelFitter <- R6::R6Class(
         model_function = function(x, params) {
           a <- params[["a"]]
           b <- params[["b"]]
-          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
           a * exp(-b * x)
         }
       ),
@@ -136,7 +160,10 @@ ModelFitter <- R6::R6Class(
           a <- params[["a"]]
           b <- params[["b"]]
           c <- params[["c"]]
-          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
           a * exp(-b * x) + c
         }
       ),
@@ -149,7 +176,10 @@ ModelFitter <- R6::R6Class(
           b <- params[["b"]]
           c <- params[["c"]]
           d <- params[["d"]]
-          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
           a * exp(-b * x) + c * exp(-d * x)
         }
       ),
@@ -161,7 +191,10 @@ ModelFitter <- R6::R6Class(
           a <- params[["a"]]
           b <- params[["b"]]
           c <- params[["c"]]
-          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
           a * exp(-b * exp(-c * x))
         }
       ),
@@ -174,7 +207,10 @@ ModelFitter <- R6::R6Class(
           b <- params[["b"]]
           c <- params[["c"]]
           d <- params[["d"]]
-          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
           a * exp(-exp(b - c * x)) + d
         }
       ),
@@ -185,7 +221,10 @@ ModelFitter <- R6::R6Class(
         model_function = function(x, params) {
           Vmax <- params[["Vmax"]]
           Km <- params[["Km"]]
-          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
           (Vmax * x) / (Km + x)
         }
       ),
@@ -197,7 +236,10 @@ ModelFitter <- R6::R6Class(
           a <- params[["a"]]
           b <- params[["b"]]
           c <- params[["c"]]
-          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
           a * exp(-exp(b - c * x))
         }
       ),
@@ -209,7 +251,10 @@ ModelFitter <- R6::R6Class(
           a <- params[["a"]]
           b <- params[["b"]]
           c <- params[["c"]]
-          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
           a * (1 - exp(-b * x^c))
         }
       ),
@@ -221,7 +266,10 @@ ModelFitter <- R6::R6Class(
           a <- params[["a"]]
           b <- params[["b"]]
           c <- params[["c"]]
-          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
           a - (a - b) * exp(-c * x)
         }
       ),
@@ -232,7 +280,10 @@ ModelFitter <- R6::R6Class(
         model_function = function(x, params) {
           a <- params[["a"]]
           b <- params[["b"]]
-          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
           a * x^b
         }
       ),
@@ -243,7 +294,10 @@ ModelFitter <- R6::R6Class(
         model_function = function(x, params) {
           a <- params[["a"]]
           b <- params[["b"]]
-          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
           a + b * log(x)
         }
       ),
@@ -254,7 +308,10 @@ ModelFitter <- R6::R6Class(
         model_function = function(x, params) {
           a <- params[["a"]]
           b <- params[["b"]]
-          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
           (a * x) / (b + x)
         }
       ),
@@ -267,7 +324,10 @@ ModelFitter <- R6::R6Class(
           b <- params[["b"]]
           c <- params[["c"]]
           d <- params[["d"]]
-          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
           a / (1 + exp(-b * (x - c)))^d
         }
       ),
@@ -279,7 +339,10 @@ ModelFitter <- R6::R6Class(
           a <- params[["a"]]
           b <- params[["b"]]
           c <- params[["c"]]
-          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
           a * (1 - exp(-b * x))^c
         }
       ),
@@ -291,7 +354,10 @@ ModelFitter <- R6::R6Class(
           a <- params[["a"]]
           b <- params[["b"]]
           c <- params[["c"]]
-          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
           a * tanh(b * x + c)
         }
       ),
@@ -305,7 +371,10 @@ ModelFitter <- R6::R6Class(
           c <- params[["c"]]
           d <- params[["d"]]
           e <- params[["e"]]
-          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
           a + (b - a) * (1 + (x / c)^d)^-e
         }
       ),
@@ -316,7 +385,10 @@ ModelFitter <- R6::R6Class(
         model_function = function(x, params) {
           a <- params[["a"]]
           b <- params[["b"]]
-          if (!is.numeric(x)) stop("x must be numeric in model_function.")
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
           a + b * x
         }
       )
@@ -328,7 +400,10 @@ ModelFitter <- R6::R6Class(
     #' Must include the predictor and response variable columns.
     #' @return A new instance of the NonLinearFitter class.
     initialize = function(data) {
-      if (!data.table::is.data.table(data)) stop("Input data must be a data.table")
+      if (!data.table::is.data.table(data)) {
+        message("Input data must be a data.table")
+        return(NULL)
+      }
       self$data <- data
       self$models <- list()
     },
@@ -376,7 +451,8 @@ ModelFitter <- R6::R6Class(
     add_model = function(name, formula = NULL, start_params = NULL, model_function = NULL) {
       if (is.null(formula) || is.null(start_params) || is.null(model_function)) {
         if (!name %in% names(self$model_library)) {
-          stop("Model not found in library. Use list_models() to see available models.")
+          message("Model not found in library. Use list_models() to see available models.")
+          return(NULL)
         }
         model_info <- self$model_library[[name]]
         formula <- model_info$formula
@@ -421,11 +497,13 @@ ModelFitter <- R6::R6Class(
     fit_models = function(x_col, y_col, weights_col = NULL, control = list(maxiter = 1024), ...) {
 
       if (is.null(self$models) || length(self$models) == 0) {
-        stop("No models to fit. Use add_model() to add models.")
+        message("No models to fit. Use add_model() to add models.")
+        return(NULL)
       }
 
       if (!all(c(x_col, y_col) %in% names(self$data))) {
-        stop("x_col and y_col must exist in the dataset.")
+        message("x_col and y_col must exist in the dataset.")
+        return(NULL)
       }
 
       # Extract weights if weights_col is specified
@@ -436,14 +514,18 @@ ModelFitter <- R6::R6Class(
         } else {
           standardized_weights_vector <- weights_vector / sum(weights_vector, na.rm = TRUE)
         }
-        if (any(is.na(standardized_weights_vector))) stop("Weights contain NA values.")
+        if (any(is.na(standardized_weights_vector))) {
+          message("Weights contain NA values.")
+          return(NULL)
+        }
       } else {
         standardized_weights_vector <- NULL
       }
 
       # Ensure no missing values in weights (only if weights are provided)
       if (!is.null(standardized_weights_vector) && any(is.na(standardized_weights_vector))) {
-        stop("Weights column contains missing values.")
+        message("Weights column contains missing values.")
+        return(NULL)
       }
 
       # Create a copy of the data with renamed columns for fitting
@@ -527,7 +609,8 @@ ModelFitter <- R6::R6Class(
           fit$scaled_data <- temp_data_scaled
           fit$back_transform <- function(predictions, scale_params) {
             if (is.null(scale_params$scale_factor_y) || is.null(scale_params$min_y)) {
-              stop("Error: Scale factor or minimum value is missing.")
+              message("Error: Scale factor or minimum value is missing.")
+              return(NULL)
             }
 
             # Back-transform the predictions from scaled to original space
@@ -567,7 +650,8 @@ ModelFitter <- R6::R6Class(
     normalize = TRUE,
     theme = "westeros") {
       if (is.null(self$models) || length(self$models) == 0) {
-        stop("No models available for visualization. Use add_model() to add models.")
+        message("No models available for visualization. Use add_model() to add models.")
+        return(NULL)
       }
 
       plot_data <- data.table::data.table(x = x_range)
@@ -641,7 +725,8 @@ ModelFitter <- R6::R6Class(
 
         # Ensure valid predictions
         if (length(predicted) != length(y)) {
-          stop("Predicted values do not match observed values in length.")
+          message("Predicted values do not match observed values in length.")
+          return(NULL)
         }
 
         # Calculate weighted residuals
@@ -665,7 +750,8 @@ ModelFitter <- R6::R6Class(
       )
 
       if (result$convergence != 0) {
-        stop("Optimization did not converge for the weighted model.")
+        message("Optimization did not converge for the weighted model.")
+        return(NULL)
       }
       return(list(
         params = result$par,

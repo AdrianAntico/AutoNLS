@@ -26,8 +26,8 @@ ModelEvaluator <- R6::R6Class(
     #' @param data The original dataset used for fitting models.
     #' @return A new instance of the ModelEvaluator class.
     initialize = function(fit_results, data) {
-      if (!is.list(fit_results)) stop("fit_results must be a list of model objects.")
-      if (!data.table::is.data.table(data)) stop("data must be a data.table.")
+      if (!is.list(fit_results)) message("fit_results must be a list of model objects.")
+      if (!data.table::is.data.table(data)) message("data must be a data.table.")
       self$fit_results <- fit_results
       self$data <- data
     },
@@ -48,7 +48,7 @@ ModelEvaluator <- R6::R6Class(
     #' @return A data.table of evaluation metrics with fitted equations.
     #' @export
     generate_metrics = function(y_col = NULL, x_col = NULL) {
-      if (is.null(self$fit_results)) stop("No fitted models to evaluate.")
+      if (is.null(self$fit_results)) message("No fitted models to evaluate.")
 
       metrics <- lapply(names(self$fit_results), function(model_name) {
         fit <- self$fit_results[[model_name]]
@@ -153,16 +153,18 @@ ModelEvaluator <- R6::R6Class(
     upper_bound = 0.975,
     n_sim = 1000) {
       if (is.null(self$fit_results) || length(self$fit_results) == 0) {
-        stop("No fitted models to evaluate.")
+        message("No fitted models to evaluate.")
+        return(NULL)
       }
-      if (!all(c(x_col, y_col) %in% names(data))) stop("x_col and y_col must exist in the dataset.")
+      if (!all(c(x_col, y_col) %in% names(data))) message("x_col and y_col must exist in the dataset.")
 
       # Retrieve metrics (including R-squared)
       metrics <- self$generate_metrics(y_col = y_col, x_col = x_col)
 
       # Check if metrics were generated successfully
       if (nrow(metrics) == 0 || is.null(metrics)) {
-        stop("No metrics available for the models.")
+        message("No metrics available for the models.")
+        return(NULL)
       }
 
       # Generate plots for all models

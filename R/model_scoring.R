@@ -18,7 +18,10 @@ ModelScorer <- R6::R6Class(
     #' @param fit_results A list of fitted model objects (e.g., output from NonLinearFitter).
     #' @return A new instance of the ModelScorer class.
     initialize = function(fit_results) {
-      if (!is.list(fit_results)) stop("fit_results must be a list of model objects.")
+      if (!is.list(fit_results)) {
+        message("fit_results must be a list of model objects.")
+        return(NULL)
+      }
       self$fit_results <- fit_results
     },
 
@@ -41,8 +44,11 @@ ModelScorer <- R6::R6Class(
     #' @return A list of data.tables with predicted values for each model.
     #' @export
     score_new_data = function(new_data, x_col, get_prediction_bounds = FALSE, lower_bound = 0.025, upper_bound = 0.975) {
-      if (!data.table::is.data.table(new_data)) stop("new_data must be a data.table.")
-      if (!x_col %in% names(new_data)) stop("x_col must exist in the dataset.")
+      if (!data.table::is.data.table(new_data)) message("new_data must be a data.table.")
+      if (!x_col %in% names(new_data)) {
+        message("x_col must exist in the dataset.")
+        return(NULL)
+      }
 
       self$scored_data <- lapply(self$fit_results, function(fit) {
         if (is.null(fit)) return(NULL)
@@ -108,13 +114,15 @@ ModelScorer <- R6::R6Class(
 
       # Validate that the model exists in fit_results
       if (!model_name %in% names(self$fit_results)) {
-        stop("Model '", model_name, "' not found in fit_results. Available models: ",
+        message("Model '", model_name, "' not found in fit_results. Available models: ",
              paste(names(self$fit_results), collapse = ", "))
+        return(NULL)
       }
 
       # Validate that the model was scored
       if (is.null(self$scored_data[[model_name]])) {
-        stop("Model '", model_name, "' has not been scored. Please run score_new_data() first.")
+        message("Model '", model_name, "' has not been scored. Please run score_new_data() first.")
+        return(NULL)
       }
 
       # Extract scored predictions
@@ -161,8 +169,13 @@ ModelScorer <- R6::R6Class(
 
       # Calculate lower and upper bounds
       tryCatch({
-        lower <- apply(sim_matrix, 1, quantile, probs = lower_bound, na.rm = TRUE)
-        upper <- apply(sim_matrix, 1, quantile, probs = upper_bound, na.rm = TRUE)
+        if (length(x_values) > 1) {
+          lower <- apply(sim_matrix, 1, quantile, probs = lower_bound, na.rm = TRUE)
+          upper <- apply(sim_matrix, 1, quantile, probs = upper_bound, na.rm = TRUE)
+        } else {
+          lower <- quantile(x = sim_matrix, probs = lower_bound, na.rm = TRUE)[[1]]
+          upper <- quantile(sim_matrix, probs = upper_bound, na.rm = TRUE)[[1]]
+        }
       }, error = function(e) {
         message("lower and upper not found: ", e$message)
         NULL

@@ -29,7 +29,8 @@ EDA <- R6::R6Class(
     #' @param data A `data.table` containing the dataset for analysis.
     initialize = function(data) {
       if (!"data.table" %in% class(data)) {
-        stop("Input data must be a data.table object.")
+        message("Input data must be a data.table object.")
+        return(NULL)
       }
       self$data <- data
     },
@@ -91,13 +92,15 @@ EDA <- R6::R6Class(
       if(is.null(input_cols)) {
         numeric_cols <- setdiff(names(self$data)[sapply(self$data, is.numeric)], target_col)
         if (length(numeric_cols) == 0) {
-          stop("No columns are numeric")
+          message("No columns are numeric")
+          return(NULL)
         }
       } else {
         numeric_cols <- setdiff(names(self$data)[sapply(self$data, is.numeric)], target_col)
         numeric_cols <- numeric_cols[numeric_cols %in% input_cols]
         if (length(numeric_cols) == 0) {
-          stop("No columns are numeric")
+          message("No columns are numeric")
+          return(NULL)
         }
       }
 
@@ -152,13 +155,15 @@ EDA <- R6::R6Class(
       if(is.null(input_cols)) {
         numeric_cols <- names(self$data)[sapply(self$data, is.numeric)]
         if (length(numeric_cols) == 0) {
-          stop("No columns are numeric")
+          message("No columns are numeric")
+          return(NULL)
         }
       } else {
         numeric_cols <- names(self$data)[sapply(self$data, is.numeric)]
         numeric_cols <- numeric_cols[numeric_cols %in% input_cols]
         if (length(numeric_cols) == 0) {
-          stop("No input_cols are numeric")
+          message("No input_cols are numeric")
+          return(NULL)
         }
       }
 
@@ -173,7 +178,8 @@ EDA <- R6::R6Class(
 
         # Validate the column data
         if (nrow(plot_data) == 0 || !is.numeric(plot_data$Value)) {
-          stop(paste("Column", col, "is not numeric or contains no data."))
+          message(paste("Column", col, "is not numeric or contains no data."))
+          return(NULL)
         }
 
         # Create histogram with optional density overlay
@@ -224,24 +230,28 @@ EDA <- R6::R6Class(
     k_values = c(3, 5, 7)) {
       # Check if mgcv is available
       if (!requireNamespace("mgcv", quietly = TRUE)) {
-        stop("The 'mgcv' package is required for GAM fitting. Please install it.")
+        message("The 'mgcv' package is required for GAM fitting. Please install it.")
+        return(NULL)
       }
 
       if (length(target_col) == 0) {
-        stop("You need to supply a target_col.")
+        message("You need to supply a target_col.")
+        return(NULL)
       }
 
       # Identify numeric columns excluding the target column
       if(is.null(input_cols)) {
         numeric_cols <- setdiff(names(self$data)[sapply(self$data, is.numeric)], target_col)
         if (length(numeric_cols) == 0) {
-          stop("No columns are numeric")
+          message("No columns are numeric")
+          return(NULL)
         }
       } else {
         numeric_cols <- setdiff(names(self$data)[sapply(self$data, is.numeric)], target_col)
         numeric_cols <- numeric_cols[numeric_cols %in% input_cols]
         if (length(numeric_cols) == 0) {
-          stop("No columns are numeric")
+          message("No columns are numeric")
+          return(NULL)
         }
       }
 
@@ -250,7 +260,8 @@ EDA <- R6::R6Class(
 
       # Ensure there are at least two numeric columns for scatterplots
       if (length(numeric_cols) < 1) {
-        stop("Not enough numeric columns to create scatterplots.")
+        message("Not enough numeric columns to create scatterplots.")
+        return(NULL)
       }
 
       # Reset the plots list
@@ -320,10 +331,12 @@ EDA <- R6::R6Class(
     rank_values = TRUE,
     theme = "westeros") {
       if (!(input_col1 %in% names(self$data) && input_col2 %in% names(self$data) && target_col %in% names(self$data))) {
-        stop("Columns not found in the dataset.")
+        message("Columns not found in the dataset.")
+        return(NULL)
       }
       if (!is.numeric(self$data[[input_col1]]) || !is.numeric(self$data[[input_col2]]) || !is.numeric(self$data[[target_col]])) {
-        stop("All specified columns must be numeric.")
+        message("All specified columns must be numeric.")
+        return(NULL)
       }
 
       # Optionally rank variables
