@@ -30,7 +30,6 @@ RUN install2.r --error --skipinstalled \
   data.table \
   dplyr \
   echarts4r \
-  minpack.lm \
   mgcv \
   shiny \
   DT \
