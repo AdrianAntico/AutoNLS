@@ -189,7 +189,7 @@ ModelEvaluator <- R6::R6Class(
           # Simulate lower and upper prediction bounds
           x_values <- (predictions$x - fit$scale_params$min_x) / (fit$scale_params$max_x - fit$scale_params$min_x)
           bounds <- tryCatch({
-            private$simulate_prediction_bounds(fit, x_values, lower_bound, upper_bound)
+            private$confidence_intevals(fit, x_values, lower_bound, upper_bound)
           }, error = function(e) {
             message("Error processing model plot: ", e$message)
             NULL
@@ -239,15 +239,13 @@ ModelEvaluator <- R6::R6Class(
   ),
 
   private = list(
-    simulate_prediction_bounds = function(fit, x_values, lower_bound, upper_bound, n_sim = 1000) {
+    confidence_intevals = function(fit, x_values, lower_bound, upper_bound, n_sim = 1000) {
       params <- fit$coefficients
-      if ("SE" %in% names(fit$confidence_intervals)) {
-        se_params <- fit$confidence_intervals$SE
-      } else {
-        se_params <- NULL
+      se_params <- fit$confidence_intervals$SE
+      if (is.null(se_params)) {
+        message("se_params is NULL")
+        return(NULL)
       }
-
-      if (is.null(se_params)) return(NULL)
 
       # Simulate parameter sets
       sim_matrix <- replicate(n_sim, {
@@ -258,10 +256,24 @@ ModelEvaluator <- R6::R6Class(
       })
 
       # Calculate lower and upper bounds
-      lower <- apply(sim_matrix, 1, quantile, probs = lower_bound, na.rm = TRUE)
-      upper <- apply(sim_matrix, 1, quantile, probs = upper_bound, na.rm = TRUE)
+      tryCatch({
+        if (length(x_values) > 1) {
+          lower <- apply(sim_matrix, 1, quantile, probs = lower_bound, na.rm = TRUE)
+          upper <- apply(sim_matrix, 1, quantile, probs = upper_bound, na.rm = TRUE)
+        } else {
+          lower <- quantile(x = sim_matrix, probs = lower_bound, na.rm = TRUE)[[1]]
+          upper <- quantile(sim_matrix, probs = upper_bound, na.rm = TRUE)[[1]]
+        }
+      }, error = function(e) {
+        message("lower and upper not found: ", e$message)
+        NULL
+      })
 
-      return(list(lower = lower, upper = upper))
+      if (!exists("lower") | !exists("upper")) {
+        return(NULL)
+      } else {
+        return(list(lower = lower, upper = upper))
+      }
     }
   )
 )

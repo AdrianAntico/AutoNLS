@@ -61,7 +61,7 @@ ModelScorer <- R6::R6Class(
           # Simulate lower and upper prediction bounds
           if (get_prediction_bounds) {
             bounds <- tryCatch({
-              private$simulate_prediction_bounds(fit, scaled_x, lower_bound, upper_bound)
+              private$confidence_intevals(fit, scaled_x, lower_bound, upper_bound)
             }, error = function(e) {
               message("Error generating prediction bounds: ", e$message)
               NULL
@@ -151,7 +151,7 @@ ModelScorer <- R6::R6Class(
   ),
 
   private = list(
-    simulate_prediction_bounds = function(fit, x_values, lower_bound, upper_bound, n_sim = 1000) {
+    confidence_intevals = function(fit, x_values, lower_bound, upper_bound, n_sim = 1000) {
       params <- fit$coefficients
       se_params <- fit$confidence_intervals$SE
       if (is.null(se_params)) {
