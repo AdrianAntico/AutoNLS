@@ -26,8 +26,14 @@ ModelEvaluator <- R6::R6Class(
     #' @param data The original dataset used for fitting models.
     #' @return A new instance of the ModelEvaluator class.
     initialize = function(fit_results, data) {
-      if (!is.list(fit_results)) message("fit_results must be a list of model objects.")
-      if (!data.table::is.data.table(data)) message("data must be a data.table.")
+      if (!is.list(fit_results)) {
+        message("fit_results must be a list of model objects.")
+        return(NULL)
+      }
+      if (!data.table::is.data.table(data)) {
+        message("data must be a data.table.")
+        return(NULL)
+      }
       self$fit_results <- fit_results
       self$data <- data
     },
@@ -48,7 +54,10 @@ ModelEvaluator <- R6::R6Class(
     #' @return A data.table of evaluation metrics with fitted equations.
     #' @export
     generate_metrics = function(y_col = NULL, x_col = NULL) {
-      if (is.null(self$fit_results)) message("No fitted models to evaluate.")
+      if (is.null(self$fit_results)) {
+        message("No fitted models to evaluate.")
+        return(NULL)
+      }
 
       metrics <- lapply(names(self$fit_results), function(model_name) {
         fit <- self$fit_results[[model_name]]
