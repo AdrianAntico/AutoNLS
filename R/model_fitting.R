@@ -509,7 +509,7 @@ ModelFitter <- R6::R6Class(
       # Extract weights if weights_col is specified
       if (!is.null(weights_col)) {
         weights_vector <- self$data[[weights_col]]
-        if(all(weights_vector) == 1) {
+        if(all(weights_vector == 1)) {
           standardized_weights_vector <- weights_vector
         } else {
           standardized_weights_vector <- weights_vector / sum(weights_vector, na.rm = TRUE)

@@ -168,7 +168,7 @@ ModelEvaluator <- R6::R6Class(
       if (!all(c(x_col, y_col) %in% names(data))) message("x_col and y_col must exist in the dataset.")
 
       # Retrieve metrics (including R-squared)
-      metrics <- self$generate_metrics(y_col = y_col, x_col = x_col)
+      metrics <- tryCatch({self$generate_metrics(y_col = y_col, x_col = x_col)}, error = function(x) NULL)
 
       # Check if metrics were generated successfully
       if (nrow(metrics) == 0 || is.null(metrics)) {
