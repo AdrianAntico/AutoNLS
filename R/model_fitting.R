@@ -412,7 +412,7 @@ ModelFitter <- R6::R6Class(
       ),
       GompertzDecay = list(
         description = "Decay function",
-        formula = y ~ d + (a-d)*exp(-b * exp(-cx)),
+        formula = y ~ d + (a-d)*exp(-b * exp(-c*x)),
         start_params = list(a = 1, b = 1, c = 1, d = 1),
         model_function = function(x, params) {
           a <- params[["a"]]
@@ -423,7 +423,7 @@ ModelFitter <- R6::R6Class(
             message("x must be numeric in model_function.")
             return(NULL)
           }
-          d + (a-d)*exp(-b * exp(-cx))
+          d + (a-d)*exp(-b * exp(-c*x))
         }
       ),
       LinearModel = list(
