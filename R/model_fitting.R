@@ -378,6 +378,54 @@ ModelFitter <- R6::R6Class(
           a + (b - a) * (1 + (x / c)^d)^-e
         }
       ),
+      StretchedExponential = list(
+        description = "Decay function",
+        formula = y ~ d + (a - d)*exp(-(x/b)^c),
+        start_params = list(a = 1, b = 1, c = 1, d = 1),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          c <- params[["c"]]
+          d <- params[["d"]]
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
+          d + (a - d)*exp(-(x/b)^c)
+        }
+      ),
+      HyperbolicDecay = list(
+        description = "Decay function",
+        formula = y ~ d + (a-d)/(1 + x/b^c),
+        start_params = list(a = 1, b = 1, c = 1, d = 1),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          c <- params[["c"]]
+          d <- params[["d"]]
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
+          d + (a-d)/(1 + x/b^c)
+        }
+      ),
+      GompertzDecay = list(
+        description = "Decay function",
+        formula = y ~ d + (a-d)*exp(-b * exp(-cx)),
+        start_params = list(a = 1, b = 1, c = 1, d = 1),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          c <- params[["c"]]
+          d <- params[["d"]]
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
+          d + (a-d)*exp(-b * exp(-cx))
+        }
+      ),
       LinearModel = list(
         description = "Simple linear regression model.",
         formula = y ~ a + b * x,
