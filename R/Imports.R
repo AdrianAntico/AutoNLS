@@ -15,9 +15,5 @@ R6::R6Class             # Explicitly indicate use of R6
 echarts4r::e_chart      # Explicitly indicate use of echarts4r
 
 # Import functions from minpack.lm
-#' @import minpack.lm
-minpack.lm::nlsLM       # Explicitly indicate use of minpack.lm
-
-# Import functions from minpack.lm
 #' @import mgcv
 mgcv::gam
