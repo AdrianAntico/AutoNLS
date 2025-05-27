@@ -5,7 +5,6 @@
 \alias{reexports}
 \alias{R6Class}
 \alias{e_chart}
-\alias{nlsLM}
 \alias{gam}
 \title{Objects exported from other packages}
 \keyword{internal}
@@ -17,8 +16,6 @@ below to see their documentation.
   \item{echarts4r}{\code{\link[echarts4r:init]{e_chart}}}
 
   \item{mgcv}{\code{\link[mgcv]{gam}}}
-
-  \item{minpack.lm}{\code{\link[minpack.lm]{nlsLM}}}
 
   \item{R6}{\code{\link[R6]{R6Class}}}
 }}
