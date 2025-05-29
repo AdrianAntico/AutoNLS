@@ -107,6 +107,7 @@ overlaid on the original data points for easy comparison.
   x_col,
   y_col,
   theme = "westeros",
+  ci = FALSE,
   lower_bound = 0.025,
   upper_bound = 0.975,
   n_sim = 1000
@@ -123,6 +124,8 @@ overlaid on the original data points for easy comparison.
 \item{\code{y_col}}{A string specifying the name of the y variable in the dataset.}
 
 \item{\code{theme}}{Echarts theme}
+
+\item{\code{ci}}{Set to TRUE to display confidence intervals}
 
 \item{\code{lower_bound}}{Lower bound probability. Defaults to 0.025}
 

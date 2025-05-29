@@ -148,6 +148,7 @@ ModelEvaluator <- R6::R6Class(
     #' @param x_col A string specifying the name of the x variable in the dataset.
     #' @param y_col A string specifying the name of the y variable in the dataset.
     #' @param theme Echarts theme
+    #' @param ci Set to TRUE to display confidence intervals
     #' @param lower_bound Lower bound probability. Defaults to 0.025
     #' @param upper_bound Upper bound probability. Defaults to 0.975
     #' @param n_sim Number of simulations to run for prediction interval
@@ -158,6 +159,7 @@ ModelEvaluator <- R6::R6Class(
     x_col,
     y_col,
     theme = "westeros",
+    ci = FALSE,
     lower_bound = 0.025,
     upper_bound = 0.975,
     n_sim = 1000) {
@@ -232,7 +234,7 @@ ModelEvaluator <- R6::R6Class(
             echarts4r::e_datazoom(x_index = c(0, 1)) |>
             echarts4r::e_toolbox_feature(feature = c("saveAsImage", "dataZoom"))
 
-          if ("y_lower" %in% names(combined_data)) {
+          if (ci && "y_lower" %in% names(combined_data)) {
             plot <- echarts4r::e_line(e = plot, y_lower, name = "Lower Bound", smooth = TRUE, showSymbol = FALSE, lineStyle = list(type = "dotted")) |>
               echarts4r::e_line(y_upper, name = "Upper Bound", smooth = TRUE, showSymbol = FALSE, lineStyle = list(type = "dotted"))
           }
