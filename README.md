@@ -298,7 +298,6 @@ AutoNLS relies on the following R packages:
 - dplyr
 - echarts4r
 - mgcv
-- minpack.lm
 - R6
 
 The Shiny App relies on the following R packages:
