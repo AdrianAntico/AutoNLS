@@ -108,9 +108,10 @@ ModelScorer <- R6::R6Class(
     #' @param model_name The name of the model to plot.
     #' @param x_col The predictor column in scored data.
     #' @param theme Echarts theme.
+    #' @param title Suply a character string
     #' @return A plot visualizing the scored data.
     #' @export
-    generate_score_plot = function(model_name, x_col, theme = "westeros") {
+    generate_score_plot = function(model_name, x_col, theme = "westeros", title = NULL) {
 
       # Validate that the model exists in fit_results
       if (!model_name %in% names(self$fit_results)) {
@@ -131,7 +132,7 @@ ModelScorer <- R6::R6Class(
       # Create plot
       plot <- echarts4r::e_charts(data = predictions, x) |>
         echarts4r::e_line(y_pred, name = "Predicted", smooth = TRUE, showSymbol = FALSE) |>
-        echarts4r::e_title(text = paste("Scored Data: Model -", model_name)) |>
+        echarts4r::e_title(text = if(title) title else paste("Scored Data: Model -", model_name)) |>
         echarts4r::e_tooltip(trigger = "axis", backgroundColor = "aliceblue") |>
         echarts4r::e_x_axis(name = x_col) |>
         echarts4r::e_y_axis(name = "Predicted Values") |>

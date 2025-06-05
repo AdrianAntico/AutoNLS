@@ -109,7 +109,12 @@ A list of data.tables with predicted values for each model.
 Creates a visual representation of predictions versus actual values for a given fitted model
 and a new dataset. This plot helps evaluate the model's performance on unseen data.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ModelScorer$generate_score_plot(model_name, x_col, theme = "westeros")}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ModelScorer$generate_score_plot(
+  model_name,
+  x_col,
+  theme = "westeros",
+  title = NULL
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -120,6 +125,8 @@ and a new dataset. This plot helps evaluate the model's performance on unseen da
 \item{\code{x_col}}{The predictor column in scored data.}
 
 \item{\code{theme}}{Echarts theme.}
+
+\item{\code{title}}{Suply a character string}
 }
 \if{html}{\out{</div>}}
 }
