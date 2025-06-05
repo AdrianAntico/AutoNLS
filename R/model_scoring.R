@@ -132,7 +132,7 @@ ModelScorer <- R6::R6Class(
       # Create plot
       plot <- echarts4r::e_charts(data = predictions, x) |>
         echarts4r::e_line(y_pred, name = "Predicted", smooth = TRUE, showSymbol = FALSE) |>
-        echarts4r::e_title(text = if(title) title else paste("Scored Data: Model -", model_name)) |>
+        echarts4r::e_title(text = if(!is.null(title)) title else paste("Scored Data: Model -", model_name)) |>
         echarts4r::e_tooltip(trigger = "axis", backgroundColor = "aliceblue") |>
         echarts4r::e_x_axis(name = x_col) |>
         echarts4r::e_y_axis(name = "Predicted Values") |>
