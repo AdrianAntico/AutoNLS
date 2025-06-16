@@ -235,7 +235,7 @@ ModelEvaluator <- R6::R6Class(
             echarts4r::e_datazoom(y_index = c(0, 1)) |>
             echarts4r::e_toolbox_feature(feature = c("saveAsImage", "dataZoom")) |>
             echarts4r::e_brush() |>
-            echarts4r::e_tooltip(trigger = "cross")
+            echarts4r::e_tooltip(trigger = "axis", axisPointer = list(type = "cross"))
 
           if (ci && "y_lower" %in% names(combined_data)) {
             plot <- echarts4r::e_line(e = plot, y_lower, name = "Lower Bound", smooth = TRUE, showSymbol = FALSE, lineStyle = list(type = "dotted")) |>
