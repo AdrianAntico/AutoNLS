@@ -133,13 +133,15 @@ ModelScorer <- R6::R6Class(
       plot <- echarts4r::e_charts(data = predictions, x) |>
         echarts4r::e_line(y_pred, name = "Predicted", smooth = TRUE, showSymbol = FALSE) |>
         echarts4r::e_title(text = if(!is.null(title)) title else paste("Scored Data: Model -", model_name)) |>
-        echarts4r::e_tooltip(trigger = "axis", backgroundColor = "aliceblue") |>
         echarts4r::e_x_axis(name = x_col) |>
         echarts4r::e_y_axis(name = "Predicted Values") |>
         echarts4r::e_legend(right = 120) |>
         echarts4r::e_datazoom(x_index = c(0,1)) |>
+        echarts4r::e_datazoom(y_index = c(0, 1)) |>
         echarts4r::e_toolbox_feature(feature = c("saveAsImage","dataZoom")) |>
-        echarts4r::e_theme(name = theme)
+        echarts4r::e_theme(name = theme) |>
+        echarts4r::e_brush() |>
+        echarts4r::e_tooltip(trigger = "axis", axisPointer = list(type = "cross"))
 
       if ("y_lower" %in% names(predictions)) {
         plot <- echarts4r::e_line(e = plot, y_lower, name = "Lower Bound", smooth = TRUE, showSymbol = FALSE, lineStyle = list(type = "dotted")) |>
