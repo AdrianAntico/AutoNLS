@@ -20,6 +20,7 @@ Imports:
     mgcv
 Suggests:
     testthat,
+    tools,
     shiny,
     DT,
     bs4Dash,

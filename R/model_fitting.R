@@ -550,6 +550,8 @@ ModelFitter <- R6::R6Class(
     #' @param x_col The name of the predictor variable.
     #' @param y_col The name of the response variable.
     #' @param weights_col The name of the weights variable.
+    #' @param loss choose from 'mse' or 'quantile'
+    #' @param quantile_level decimal between 0 and 1 representing the percentile of choice
     #' @param control A list of control parameters for the optimizer, such as `maxiter`.
     #' Default is `list(maxiter = 200)`.
     #' @param ... Additional arguments to be passed to the underlying fitting functions
@@ -558,7 +560,7 @@ ModelFitter <- R6::R6Class(
     #'
     #' @return A list of fitted model objects.
     #' @export
-    fit_models = function(x_col, y_col, weights_col = NULL, control = list(maxiter = 1024), ...) {
+    fit_models = function(x_col, y_col, weights_col = NULL, loss = "mse", quantile_level = NULL, control = list(maxiter = 1024), ...) {
 
       if (is.null(self$models) || length(self$models) == 0) {
         message("No models to fit. Use add_model() to add models.")
@@ -626,6 +628,8 @@ ModelFitter <- R6::R6Class(
             x = temp_data_scaled$x,
             y = temp_data_scaled$y,
             weights = standardized_weights_vector,
+            loss = loss,
+            quantile_level = quantile_level,
             model = model$model_function,
             start_params = model$start_params,
             ...
@@ -773,33 +777,59 @@ ModelFitter <- R6::R6Class(
   ),
 
   private = list(
-    optimize_with_weights = function(x, y, weights, model, start_params, ...) {
+    optimize_with_weights = function(x, y, weights, model, start_params, loss, quantile_level, ...) {
 
       # Convert start_params into a named vector
       params <- unlist(start_params)
 
       # Define the weighted residual sum of squares function
-      wrss <- function(params_vec) {
-        # Reconstruct parameters as a named list
-        params_list <- as.list(params_vec)
-        names(params_list) <- names(start_params)
+      if (loss == "mse") {
+        wrss <- function(params_vec) {
+          # Reconstruct parameters as a named list
+          params_list <- as.list(params_vec)
+          names(params_list) <- names(start_params)
 
-        # Compute predictions using the model
-        predicted <- model(x = x, params = params_list)
+          # Compute predictions using the model
+          predicted <- model(x = x, params = params_list)
 
-        # Ensure valid predictions
-        if (length(predicted) != length(y)) {
-          message("Predicted values do not match observed values in length.")
-          return(NULL)
+          # Ensure valid predictions
+          if (length(predicted) != length(y)) {
+            message("Predicted values do not match observed values in length.")
+            return(NULL)
+          }
+
+          # Calculate weighted residuals
+          residuals <- y - predicted
+
+          if (!is.null(weights)) {
+            sum(weights * residuals^2)  # Return WRSS
+          } else {
+            sum(residuals^2)  # Return WRSS
+          }
         }
 
-        # Calculate weighted residuals
-        residuals <- y - predicted
+      } else if (loss == "quantile") {
 
-        if (!is.null(weights)) {
-          sum(weights * residuals^2)  # Return WRSS
-        } else {
-          sum(residuals^2)  # Return WRSS
+        pinball_loss <- function(residuals, q) {
+          ifelse(residuals >= 0, q * residuals, (q - 1) * residuals)
+        }
+
+        wrss <- function(params_vec) {
+          params_list <- as.list(params_vec)
+          names(params_list) <- names(start_params)
+          predicted <- model(x = x, params = params_list)
+
+          if (length(predicted) != length(y)) {
+            message("Predicted values do not match observed values in length.")
+            return(Inf)
+          }
+
+          residuals <- y - predicted
+          if (!is.null(weights)) {
+            sum(weights * pinball_loss(residuals, quantile_level))
+          } else {
+            sum(pinball_loss(residuals, quantile_level))
+          }
         }
       }
 

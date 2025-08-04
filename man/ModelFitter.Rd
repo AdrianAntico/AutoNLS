@@ -164,6 +164,8 @@ results are back-transformed to align with the original data scale.
   x_col,
   y_col,
   weights_col = NULL,
+  loss = "mse",
+  quantile_level = NULL,
   control = list(maxiter = 1024),
   ...
 )}\if{html}{\out{</div>}}
@@ -177,6 +179,10 @@ results are back-transformed to align with the original data scale.
 \item{\code{y_col}}{The name of the response variable.}
 
 \item{\code{weights_col}}{The name of the weights variable.}
+
+\item{\code{loss}}{choose from 'mse' or 'quantile'}
+
+\item{\code{quantile_level}}{decimal between 0 and 1 representing the percentile of choice}
 
 \item{\code{control}}{A list of control parameters for the optimizer, such as \code{maxiter}.
 Default is \code{list(maxiter = 200)}.}
