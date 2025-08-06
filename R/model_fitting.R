@@ -442,6 +442,114 @@ ModelFitter <- R6::R6Class(
           d + (a-d) * (b^c / (b^c + x^c))
         }
       ),
+      ShiftedExponentialDecay = list(
+        description = "Decay function",
+        formula = y ~ a * exp(-b*x) + c,
+        start_params = list(a = 1, b = 1, c = 1),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          c <- params[["c"]]
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
+          a * exp(-b*x) + c
+        }
+      ),
+      NegativePowerFunction = list(
+        description = "Decay function",
+        formula = y ~ a / ((x + d)^b) + c,
+        start_params = list(a = 1, b = 1, c = 1, d = 1),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          c <- params[["c"]]
+          d <- params[["d"]]
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
+          a / ((x + d)^b) + c
+        }
+      ),
+      NegativeLogisticDecay = list(
+        description = "Decay function",
+        formula = y ~ a / (1 + exp(b(x - c))) + d,
+        start_params = list(a = 1, b = 1, c = 1, d = 1),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          c <- params[["c"]]
+          d <- params[["d"]]
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
+          a / (1 + exp(b(x - c))) + d
+        }
+      ),
+      LogLinearDecay = list(
+        description = "Decay function",
+        formula = y ~ a - b * log(x + c),
+        start_params = list(a = 1, b = 1, c = 1),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          c <- params[["c"]]
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
+          a - b * log(x + c)
+        }
+      ),
+      PolynomialDecay = list(
+        description = "Decay function",
+        formula = y ~ a - b * x ^ c,
+        start_params = list(a = 1, b = 1, c = 1),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          c <- params[["c"]]
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
+          a - b * x ^ c
+        }
+      ),
+      InvertedSigma = list(
+        description = "Decay function",
+        formula = y ~ -a / (1 + -b * (x - c)) + d,
+        start_params = list(a = 1, b = 1, c = 1, d = 1),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          c <- params[["c"]]
+          d <- params[["d"]]
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
+          -a / (1 + -b * (x - c)) + d
+        }
+      ),
+      ArctangentDecay = list(
+        description = "Decay function",
+        formula = y ~ -a * arctan(b*x) + c,
+        start_params = list(a = 1, b = 1, c = 1),
+        model_function = function(x, params) {
+          a <- params[["a"]]
+          b <- params[["b"]]
+          c <- params[["c"]]
+          if (!is.numeric(x)) {
+            message("x must be numeric in model_function.")
+            return(NULL)
+          }
+          -a * arctan(b*x) + c
+        }
+      ),
       LinearModel = list(
         description = "Simple linear regression model.",
         formula = y ~ a + b * x,
