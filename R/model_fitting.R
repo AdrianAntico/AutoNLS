@@ -475,7 +475,7 @@ ModelFitter <- R6::R6Class(
       ),
       NegativeLogisticDecay = list(
         description = "Decay function",
-        formula = y ~ a / (1 + exp(b(x - c))) + d,
+        formula = y ~ a / (1 + exp(b*(x - c))) + d,
         start_params = list(a = 1, b = 1, c = 1, d = 1),
         model_function = function(x, params) {
           a <- params[["a"]]
@@ -486,7 +486,7 @@ ModelFitter <- R6::R6Class(
             message("x must be numeric in model_function.")
             return(NULL)
           }
-          a / (1 + exp(b(x - c))) + d
+          a / (1 + exp(b*(x - c))) + d
         }
       ),
       LogLinearDecay = list(
@@ -537,7 +537,7 @@ ModelFitter <- R6::R6Class(
       ),
       ArctangentDecay = list(
         description = "Decay function",
-        formula = y ~ -a * arctan(b*x) + c,
+        formula = y ~ -a * atan(b*x) + c,
         start_params = list(a = 1, b = 1, c = 1),
         model_function = function(x, params) {
           a <- params[["a"]]
@@ -547,7 +547,7 @@ ModelFitter <- R6::R6Class(
             message("x must be numeric in model_function.")
             return(NULL)
           }
-          -a * arctan(b*x) + c
+          -a * atan(b*x) + c
         }
       ),
       LinearModel = list(
