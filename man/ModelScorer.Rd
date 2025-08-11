@@ -4,40 +4,8 @@
 \alias{ModelScorer}
 \title{ModelScorer}
 \description{
-ModelScorer
-
-ModelScorer
-}
-\details{
 An R6 class to score non-linear regression models on new data
 and visualize the results.
-
-The \code{score_new_data} method enables users to evaluate how well the fitted models generalize
-to unseen data. It uses the stored parameters of the fitted models and applies them to the specified
-independent variable (\code{x_col}) in the new dataset. If the fitted models include transformations,
-the predictions are back-transformed to match the scale of the original data.
-
-The output is a data frame containing the original data and the predicted values for each model,
-making it easy to compare model predictions side-by-side.
-
-The \code{generate_score_plot} method produces an interactive plot comparing the predicted values
-of a fitted model against the actual observed values from the new dataset. The independent variable
-(\code{x_col}) is used on the x-axis, while the predicted and actual dependent variable values are
-displayed on the y-axis. This visualization can be used to assess how well the model generalizes
-to new data and to identify areas where predictions deviate from observations.
-
-The plot leverages the \code{echarts4r} package for interactive and customizable visualizations.
-}
-\section{Public fields}{
-\if{html}{\out{<div class="r6-fields">}}
-\describe{
-\item{\code{fit_results}}{A list of fitted model objects.}
-
-\item{\code{scored_data}}{A list of data.tables containing scored data.}
-
-\item{\code{score_plots}}{A list of plots visualizing scored data.}
-}
-\if{html}{\out{</div>}}
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -56,58 +24,30 @@ The plot leverages the \code{echarts4r} package for interactive and customizable
 \if{html}{\out{<div class="r">}}\preformatted{ModelScorer$new(fit_results)}\if{html}{\out{</div>}}
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{fit_results}}{A list of fitted model objects (e.g., output from NonLinearFitter).}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A new instance of the ModelScorer class.
-}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ModelScorer-score_new_data"></a>}}
 \if{latex}{\out{\hypertarget{method-ModelScorer-score_new_data}{}}}
 \subsection{Method \code{score_new_data()}}{
-Generates predictions for new data using the fitted non-linear models.
-This method applies each model to the new dataset and returns the predicted values.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ModelScorer$score_new_data(
   new_data,
   x_col,
   get_prediction_bounds = FALSE,
   lower_bound = 0.025,
-  upper_bound = 0.975
+  upper_bound = 0.975,
+  n_sim = 1000,
+  allow_missing_features = FALSE,
+  return_cols = NULL,
+  id_col = NULL
 )}\if{html}{\out{</div>}}
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{new_data}}{A data.table containing the new data to score.}
-
-\item{\code{x_col}}{The predictor column in \code{new_data}.}
-
-\item{\code{get_prediction_bounds}}{TRUE to return prediction bounds}
-
-\item{\code{lower_bound}}{Lower bound of prediction interval. Defaults to 0.025}
-
-\item{\code{upper_bound}}{Upper bound of prediction interval. Defaults to 0.975}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A list of data.tables with predicted values for each model.
-}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ModelScorer-generate_score_plot"></a>}}
 \if{latex}{\out{\hypertarget{method-ModelScorer-generate_score_plot}{}}}
 \subsection{Method \code{generate_score_plot()}}{
-Creates a visual representation of predictions versus actual values for a given fitted model
-and a new dataset. This plot helps evaluate the model's performance on unseen data.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ModelScorer$generate_score_plot(
   model_name,
@@ -117,22 +57,6 @@ and a new dataset. This plot helps evaluate the model's performance on unseen da
 )}\if{html}{\out{</div>}}
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{model_name}}{The name of the model to plot.}
-
-\item{\code{x_col}}{The predictor column in scored data.}
-
-\item{\code{theme}}{Echarts theme.}
-
-\item{\code{title}}{Suply a character string}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A plot visualizing the scored data.
-}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-ModelScorer-clone"></a>}}

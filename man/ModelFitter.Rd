@@ -167,6 +167,10 @@ results are back-transformed to align with the original data scale.
   loss = "mse",
   quantile_level = NULL,
   control = list(maxiter = 1024),
+  cat_encoding = c("target_encoding", "credibility"),
+  shift_cat = NULL,
+  param_cat = NULL,
+  param_links = NULL,
   ...
 )}\if{html}{\out{</div>}}
 }
