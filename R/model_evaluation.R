@@ -344,8 +344,8 @@ ModelEvaluator <- R6::R6Class(
 
           if (length(group_vars) == 1) {
             plt <- echarts4r::e_charts_(data = combined |> dplyr::group_by(get(group_vars)), x = x_col) |>
-              echarts4r::e_scatter_(y_col, name = "Observed") |>
-              echarts4r::e_line(y_pred, name = model_name, smooth = TRUE, showSymbol = FALSE) |>
+              echarts4r::e_scatter_(y_col) |>
+              echarts4r::e_line(y_pred, smooth = TRUE, showSymbol = FALSE) |>
               echarts4r::e_theme(name = theme) |>
               echarts4r::e_title(
                 text = paste("Model Fit:", model_name),
