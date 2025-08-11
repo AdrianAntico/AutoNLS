@@ -1240,7 +1240,7 @@ ModelFitter <- R6::R6Class(
 
       # ---- build level -> value map (tiny table) ----
       if (method == "target_encoding") {
-        map <- dt[, .(val = mean(get(ycol), na.rm = TRUE)), keyby = get(var)]
+        map <- dt[, .(val = mean(get(ycol), na.rm = TRUE)), keyby = eval(var)]
         data.table::setnames(map, "val", enc_name)
       } else { # credibility (Bühlmann)
         map <- dt[, .(
