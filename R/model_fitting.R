@@ -620,14 +620,31 @@ ModelFitter <- R6::R6Class(
     #' @param model_function A function used in fitting and prediction. See model_library for examples
     #' @return NULL
     #' @export
+    # add_model = function(name, formula = NULL, start_params = NULL, model_function = NULL) {
+    #   if (is.null(formula) || is.null(start_params) || is.null(model_function)) {
+    #     if (!name %in% names(self$model_library)) {
+    #       message("Model not found in library. Use list_models() to see available models.")
+    #       return(NULL)
+    #     }
+    #     model_info <- self$model_library[[name]]
+    #     formula <- model_info$formula
+    #     start_params <- model_info$start_params
+    #     model_function <- model_info$model_function
+    #   }
+    #   self$models[[name]] <- list(
+    #     formula = formula,
+    #     start_params = start_params,
+    #     model_function = model_function
+    #   )
+    # },
     add_model = function(name, formula = NULL, start_params = NULL, model_function = NULL) {
       if (is.null(formula) || is.null(start_params) || is.null(model_function)) {
         if (!name %in% names(self$model_library)) {
           message("Model not found in library. Use list_models() to see available models.")
           return(NULL)
         }
-        model_info <- self$model_library[[name]]
-        formula <- model_info$formula
+        model_info   <- self$model_library[[name]]
+        formula      <- model_info$formula
         start_params <- model_info$start_params
         model_function <- model_info$model_function
       }
@@ -668,7 +685,18 @@ ModelFitter <- R6::R6Class(
     #'
     #' @return A list of fitted model objects.
     #' @export
-    fit_models = function(x_col, y_col, weights_col = NULL, loss = "mse", quantile_level = NULL, control = list(maxiter = 1024), ...) {
+    fit_models = function(x_col, y_col,
+                          weights_col = NULL,
+                          loss = "mse",
+                          quantile_level = NULL,
+                          control = list(maxiter = 1024),
+                          cat_encoding = c("target_encoding","credibility"),
+                          shift_cat = NULL,
+                          param_cat = NULL,
+                          param_links = NULL,
+                          ...) {
+
+      cat_encoding <- match.arg(cat_encoding)
 
       if (is.null(self$models) || length(self$models) == 0) {
         message("No models to fit. Use add_model() to add models.")
@@ -680,10 +708,10 @@ ModelFitter <- R6::R6Class(
         return(NULL)
       }
 
-      # Extract weights if weights_col is specified
+      # Weights
       if (!is.null(weights_col)) {
         weights_vector <- self$data[[weights_col]]
-        if(all(weights_vector == 1)) {
+        if (all(weights_vector == 1)) {
           standardized_weights_vector <- weights_vector
         } else {
           standardized_weights_vector <- weights_vector / sum(weights_vector, na.rm = TRUE)
@@ -696,17 +724,16 @@ ModelFitter <- R6::R6Class(
         standardized_weights_vector <- NULL
       }
 
-      # Ensure no missing values in weights (only if weights are provided)
       if (!is.null(standardized_weights_vector) && any(is.na(standardized_weights_vector))) {
         message("Weights column contains missing values.")
         return(NULL)
       }
 
-      # Create a copy of the data with renamed columns for fitting
+      # Copy + rename for fitting
       temp_data <- data.table::copy(self$data)
       data.table::setnames(temp_data, old = c(x_col, y_col), new = c("x", "y"))
 
-      # Create a list of scale parameters
+      # Scale params (kept as in your code)
       scale_params <- list(
         min_x = 0,
         max_x = max(temp_data$x, na.rm = TRUE),
@@ -716,89 +743,280 @@ ModelFitter <- R6::R6Class(
         scale_factor_y = max(temp_data$y, na.rm = TRUE) - min(temp_data$y, na.rm = TRUE)
       )
 
-      # Create updated data.table with scaled values
+      # Scaled frame
       temp_data_scaled <- data.table::copy(temp_data)
       temp_data_scaled[, x := (x - scale_params$min_x) / scale_params$scale_factor_x]
       temp_data_scaled[, y := (y - scale_params$min_y) / scale_params$scale_factor_y]
 
-      # Fit model
       self$fit_results <- lapply(names(self$models), function(model_name) {
         model <- self$models[[model_name]]
 
-        # Use the unaltered formula from the model library
-        formula <- model$formula
+        # ---- base param/link setup ----
+        start_params <- model$start_params
+        param_names  <- names(start_params)
 
-        # Fit model with or without weights
+        # param_links may be global or per-model
+        links_in <- param_links
+        if (is.list(links_in) && !is.null(names(links_in)) && model_name %in% names(links_in)) {
+          links_in <- links_in[[model_name]]
+        }
+        links <- links_in
+        if (is.null(links)) links <- setNames(rep("identity", length(param_names)), param_names)
+        for (p in param_names) if (is.null(links[[p]])) links[[p]] <- "identity"
+
+        # ---- resolve categoricals for THIS model ----
+        shift_vars <- if (is.list(shift_cat)) shift_cat[[model_name]] else shift_cat
+        if (!is.null(shift_vars) && !is.character(shift_vars)) {
+          stop("shift_cat must be a character vector or a named list of character vectors keyed by model name.")
+        }
+
+        raw_param_cat <- if (is.list(param_cat) && !is.null(names(param_cat)) && model_name %in% names(param_cat)) {
+          param_cat[[model_name]]
+        } else {
+          param_cat
+        }
+        if (!is.null(raw_param_cat) && (!is.list(raw_param_cat) || is.null(names(raw_param_cat)))) {
+          stop("param_cat must be a named list mapping parameter names to a single column, ",
+               "or a named list keyed by model name whose values are those named lists.")
+        }
+        param_raw <- if (is.null(raw_param_cat)) NULL else raw_param_cat[intersect(names(raw_param_cat), param_names)]
+
+        enc_method <- cat_encoding
+
+        # ---- PRECOMPUTE ENCODINGS ONCE PER RAW VARIABLE ----
+        enc_cache <- list()
+
+        vars_needed <- unique(c(
+          if (!is.null(shift_vars)) shift_vars else character(0),
+          if (!is.null(param_raw))  unlist(param_raw, use.names = FALSE) else character(0)
+        ))
+
+        if (length(vars_needed) > 0) {
+          for (v in vars_needed) {
+            # compute once
+            enc <- private$categorical_encoding(
+            # enc <- categorical_encoding(
+              dt     = temp_data_scaled,
+              var    = v,
+              ycol   = "y",
+              method = enc_method
+            )
+            enc_cache[[v]] <- enc
+          }
+        }
+
+        # ---- SHIFT (additive) using cache ----
+        X_shift <- NULL
+        shift_maps  <- list()
+        shift_names <- character(0)
+
+        if (!is.null(shift_vars) && length(shift_vars) > 0) {
+          mats <- lapply(shift_vars, function(v) {
+            enc <- enc_cache[[v]]
+            shift_maps[[v]]  <<- enc$map
+            shift_names      <<- c(shift_names, enc$enc_name)
+            matrix(enc$X, ncol = 1L, dimnames = list(NULL, enc$enc_name))
+          })
+          X_shift <- do.call(cbind, mats)
+        }
+
+        # ---- PARAM MODIFIERS using cache ----
+        W_param          <- setNames(vector("list", length(param_names)), param_names)
+        param_maps       <- setNames(vector("list", length(param_names)), param_names)
+        param_enc_names  <- setNames(vector("list", length(param_names)), param_names)
+
+        for (p in param_names) {
+          v <- if (!is.null(param_raw)) param_raw[[p]] else NULL
+          if (is.null(v)) {
+            W_param[[p]] <- NULL
+            next
+          }
+          enc <- enc_cache[[v]]
+          W_param[[p]]         <- matrix(enc$X, ncol = 1L, dimnames = list(NULL, enc$enc_name))
+          param_maps[[p]]      <- enc$map
+          param_enc_names[[p]] <- enc$enc_name
+        }
+
+        # ---- starting vector: baselines + (param coefs) + (shift betas) ----
+        par0 <- numeric(0); par_names <- character(0)
+        for (p in param_names) {
+          link_fun <- switch(links[[p]], log = log, logit = qlogis, identity = identity, identity)
+          par0      <- c(par0, link_fun(1))
+          par_names <- c(par_names, paste0(p, ":baseline"))
+          if (!is.null(W_param[[p]])) {
+            par0      <- c(par0, 0)
+            par_names <- c(par_names, paste0(p, ":", colnames(W_param[[p]])[1L]))
+          }
+        }
+        if (!is.null(X_shift)) {
+          k <- ncol(X_shift)
+          par0      <- c(par0, rep(0, k))
+          par_names <- c(par_names, paste0("shift:", colnames(X_shift)))
+        }
+        names(par0) <- par_names
+
+        # ---- augmented model ----
+        inv_link <- function(nm) switch(nm, log = exp, logit = plogis, identity = identity, identity)
+
+        augmented_model <- function(x, params) {
+          par <- params
+          params_list <- vector("list", length(param_names)); names(params_list) <- param_names
+          i <- 1L
+          for (p in param_names) {
+            eta <- rep(par[i], length(x)); i <- i + 1L
+            if (!is.null(W_param[[p]])) {
+              eta <- eta + drop(W_param[[p]] %*% par[i]); i <- i + 1L
+            }
+            params_list[[p]] <- inv_link(links[[p]])(eta)
+          }
+          nl <- model$model_function(x, params_list)
+          if (!is.null(X_shift)) {
+            k <- ncol(X_shift)
+            beta <- par[i:(i + k - 1L)]
+            nl <- nl + drop(X_shift %*% beta)
+          }
+          nl
+        }
+
+        # ---- optimize ----
         fit <- tryCatch({
-
-          # Weighted fitting using custom optimization
           result_params <- private$optimize_with_weights(
             x = temp_data_scaled$x,
             y = temp_data_scaled$y,
             weights = standardized_weights_vector,
             loss = loss,
             quantile_level = quantile_level,
-            model = model$model_function,
-            start_params = model$start_params,
+            model = augmented_model,
+            start_params = par0,
             ...
           )
 
+          # 🔧 ensure optimized params keep names like "a:baseline", "b:channel_Credibility", "shift:month_grp_Credibility"
+          if (is.null(names(result_params$params)) || any(names(result_params$params) == "")) {
+            names(result_params$params) <- names(par0)
+          }
+
+          preds <- augmented_model(temp_data_scaled$x, result_params$params)
+
           model_fit <- list(
-            coefficients = result_params$params,
-            hessian = result_params$hessian,
-            formula = formula,
-            residuals = temp_data_scaled$y - model$model_function(temp_data_scaled$x, result_params$params),
-            fitted.values = model$model_function(temp_data_scaled$x, result_params$params),
+            coefficients   = result_params$params,
+            hessian        = result_params$hessian,
+            formula        = model$formula,
+            residuals      = temp_data_scaled$y - preds,
+            fitted.values  = preds,
             model_function = model$model_function,
-            weights = standardized_weights_vector
+            weights        = standardized_weights_vector,
+            # stash encoding artifacts for predict()
+            cat = list(
+              method          = enc_method,
+              shift_vars      = shift_vars,
+              shift_names     = shift_names,
+              shift_maps      = shift_maps,
+              param_maps      = param_maps,
+              param_enc_names = param_enc_names,
+              param_raw_vars  = param_raw
+            ),
+            param_links    = links,
+            param_names    = param_names
           )
 
-          # Add confidence intervals
+          # ---- attach a generic encoder for scoring (shift + param mods) ----
+          artifacts_by_raw <- list()
+
+          # SHIFT
+          if (!is.null(shift_vars) && length(shift_names) > 0) {
+            for (i in seq_along(shift_vars)) {
+              raw    <- shift_vars[[i]]
+              outcol <- shift_names[[i]]
+              mp     <- shift_maps[[raw]]
+              if (!is.null(mp)) {
+                if (is.null(artifacts_by_raw[[raw]])) artifacts_by_raw[[raw]] <- list()
+                artifacts_by_raw[[raw]][[length(artifacts_by_raw[[raw]]) + 1]] <- list(
+                  out_col   = outcol,                 # engineered column name (enc$enc_name)
+                  map       = shift_maps[[raw]],      # enc$map (has columns: raw, outcol)
+                  default   = 0,
+                  key_col   = raw,                    # <-- raw categorical column name
+                  value_col = outcol                  # <-- engineered column name inside map
+                )
+              }
+            }
+          }
+
+          # PARAM MODS
+          if (!is.null(param_enc_names) && !is.null(param_raw)) {
+            for (p in names(param_enc_names)) {
+              outcol <- param_enc_names[[p]]
+              raw    <- param_raw[[p]]
+              mp     <- param_maps[[p]]
+              if (!is.null(outcol) && !is.null(raw) && !is.null(mp)) {
+                if (is.null(artifacts_by_raw[[raw]])) artifacts_by_raw[[raw]] <- list()
+                artifacts_by_raw[[raw]][[length(artifacts_by_raw[[raw]]) + 1]] <- list(
+                  out_col   = outcol,                 # engineered column name (enc$enc_name)
+                  map       = param_maps[[p]],        # enc$map (has columns: raw, outcol)
+                  default   = 0,
+                  key_col   = raw,                    # <-- raw categorical column name
+                  value_col = outcol                  # <-- engineered column name inside map
+                )
+              }
+            }
+          }
+
+          if (length(artifacts_by_raw) > 0) {
+            enc <- private$build_encoder_from_maps(
+              artifacts_by_raw = artifacts_by_raw,
+              encoder_name = paste0("cat_", enc_method)
+            )
+
+            # encoders
+            if (is.null(model_fit$encoders)) {
+              model_fit$encoders <- list(enc)
+            } else {
+              model_fit$encoders <- c(model_fit$encoders, list(enc))
+            }
+
+            # produced_features
+            if (is.null(model_fit$produced_features)) {
+              model_fit$produced_features <- enc$produced_features
+            } else {
+              model_fit$produced_features <- unique(c(model_fit$produced_features, enc$produced_features))
+            }
+
+            # requires_features
+            if (is.null(model_fit$requires_features)) {
+              model_fit$requires_features <- enc$requires
+            } else {
+              model_fit$requires_features <- unique(c(model_fit$requires_features, enc$requires))
+            }
+          }
+
+          # CIs
           model_fit$confidence_intervals <- tryCatch({
             private$compute_confidence_intervals(model_fit)
           }, error = function(e) {
             message("confidence intervals failed to build: ", e$message)
           })
 
-          # Set the class properly
           class(model_fit) <- "custom_nls"
 
+          # scaling/back-transform
+          model_fit$scale_params   <- scale_params
+          model_fit$original_x_col <- x_col
+          model_fit$original_y_col <- y_col
+          model_fit$scaled_data    <- temp_data_scaled
+          model_fit$back_transform <- function(predictions, scale_params) {
+            predictions * scale_params$scale_factor_y + scale_params$min_y
+          }
 
-          # Attach formula to fit object
-          model_fit$formula <- formula
           model_fit
         }, error = function(e) {
           message("Error fitting model '", model_name, "': ", e$message)
           NULL
         })
 
-        if (!is.null(fit)) {
-          message("Successfully fitted model: ", model_name)
-        }
-
-        if(!is.null(fit)) {
-          # Attach scale parameters to the fit object
-          fit$scale_params <- scale_params
-          fit$original_x_col <- x_col
-          fit$original_y_col <- y_col
-          fit$model_function <- model$model_function
-          fit$scaled_data <- temp_data_scaled
-          fit$back_transform <- function(predictions, scale_params) {
-            if (is.null(scale_params$scale_factor_y) || is.null(scale_params$min_y)) {
-              message("Error: Scale factor or minimum value is missing.")
-              return(NULL)
-            }
-
-            # Back-transform the predictions from scaled to original space
-            predictions * scale_params$scale_factor_y + scale_params$min_y
-          }
-          fit
-        } else {
-          fit
-        }
+        if (!is.null(fit)) message("Successfully fitted model: ", model_name)
+        fit
       })
 
-      # Name the list using the model names
       names(self$fit_results) <- names(self$models)
       return(self$fit_results)
     },
@@ -894,11 +1112,11 @@ ModelFitter <- R6::R6Class(
       if (loss == "mse") {
         wrss <- function(params_vec) {
           # Reconstruct parameters as a named list
-          params_list <- as.list(params_vec)
-          names(params_list) <- names(start_params)
+          # params_list <- as.list(params_vec)
+          # names(params_list) <- names(start_params)
 
           # Compute predictions using the model
-          predicted <- model(x = x, params = params_list)
+          predicted <- model(x = x, params = params_vec)
 
           # Ensure valid predictions
           if (length(predicted) != length(y)) {
@@ -923,9 +1141,9 @@ ModelFitter <- R6::R6Class(
         }
 
         wrss <- function(params_vec) {
-          params_list <- as.list(params_vec)
-          names(params_list) <- names(start_params)
-          predicted <- model(x = x, params = params_list)
+          # params_list <- as.list(params_vec)
+          # names(params_list) <- names(start_params)
+          predicted <- model(x = x, params = params_vec)
 
           if (length(predicted) != length(y)) {
             message("Predicted values do not match observed values in length.")
@@ -1006,6 +1224,104 @@ ModelFitter <- R6::R6Class(
       } else {
         return(data.table::data.table(Parameter = names(params), Estimate = params))
       }
+    },
+    categorical_encoding = function(dt,
+                                     var,
+                                     ycol = "y",
+                                     method = c("credibility","target_encoding")) {
+      method <- match.arg(method)
+      if (!data.table::is.data.table(dt)) data.table::setDT(dt)
+      stopifnot(is.character(var), length(var) == 1L, var %chin% names(dt))
+      stopifnot(ycol %chin% names(dt), is.numeric(dt[[ycol]]))
+
+      suffix    <- if (method == "credibility") "Credibility" else "TargetEncode"
+      enc_name  <- paste0(var, "_", suffix)
+      grand_mean <- mean(dt[[ycol]], na.rm = TRUE)
+
+      # ---- build level -> value map (tiny table) ----
+      if (method == "target_encoding") {
+        map <- dt[, .(val = mean(get(ycol), na.rm = TRUE)), keyby = get(var)]
+        data.table::setnames(map, "val", enc_name)
+      } else { # credibility (Bühlmann)
+        map <- dt[, .(
+          Mean = mean(get(ycol), na.rm = TRUE),
+          VarY = stats::var(get(ycol), na.rm = TRUE),
+          N    = .N
+        ), keyby = eval(var)]
+
+        EPV  <- mean(map$VarY, na.rm = TRUE)                               # within-group variance
+        Nbar <- max(1, mean(map$N))                                         # avg group size (guard)
+        VHM  <- stats::var(map$Mean - grand_mean, na.rm = TRUE) - (EPV / Nbar)
+        if (!is.finite(VHM) || VHM <= 0) VHM <- 1e-8
+        if (!is.finite(EPV) || EPV < 0)  EPV <- 0
+
+        K <- EPV / VHM
+        Z <- map$N / (map$N + K)
+        map[, (enc_name) := Z * Mean + (1 - Z) * grand_mean]
+        map[, c("Mean","VarY","N") := NULL]
+      }
+
+      # ---- align to dt rows via keyed join (no copies of dt) ----
+      data.table::setkeyv(map, var)
+      # join just the key column to preserve dt row order
+      X <- map[ dt[, get(var)], on = var, nomatch = NA ][[enc_name]]
+
+      # defensive fill (shouldn’t happen at fit)
+      if (anyNA(X)) X[is.na(X)] <- grand_mean
+
+      list(
+        X = as.numeric(X),
+        map = map,                # keep for predict()
+        enc_name = enc_name,
+        meta = list(
+          method     = method,
+          var        = var,
+          ycol       = ycol,
+          grand_mean = grand_mean
+        )
+      )
+    },
+    build_encoder_from_maps = function(artifacts_by_raw, encoder_name = "categorical_map") {
+      stopifnot(is.list(artifacts_by_raw), length(artifacts_by_raw) > 0)
+
+      requires <- names(artifacts_by_raw)
+      produced <- unlist(lapply(artifacts_by_raw, function(outputs)
+        vapply(outputs, function(o) o$out_col, character(1L))
+      ), use.names = FALSE)
+
+      transform_fn <- function(new_dt) {
+        nd <- data.table::as.data.table(new_dt)
+
+        for (raw in names(artifacts_by_raw)) {
+          if (!raw %in% names(nd)) next
+
+          for (o in artifacts_by_raw[[raw]]) {
+            mp <- data.table::as.data.table(o$map)  # map already has raw + engineered cols
+
+            # figure out which columns to use
+            key_col   <- if (!is.null(o$key_col)   && o$key_col   %in% names(mp)) o$key_col   else if (raw %in% names(mp)) raw else names(mp)[1L]
+            value_col <- if (!is.null(o$value_col) && o$value_col %in% names(mp)) o$value_col else if (!is.null(o$out_col) && o$out_col %in% names(mp)) o$out_col else setdiff(names(mp), key_col)[1L]
+
+            # fast vectorized lookup with match()
+            idx  <- match(nd[[raw]], mp[[key_col]])
+            vals <- mp[[value_col]][idx]
+
+            def <- if (!is.null(o$default)) o$default else 0
+            vals[is.na(vals)] <- def
+
+            nd[, (o$out_col) := vals]
+          }
+        }
+        nd
+      }
+
+      list(
+        name = encoder_name,
+        requires = requires,
+        produced_features = produced,
+        artifacts = artifacts_by_raw,
+        transform = transform_fn
+      )
     }
   )
 )
