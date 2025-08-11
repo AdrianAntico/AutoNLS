@@ -1225,10 +1225,7 @@ ModelFitter <- R6::R6Class(
         return(data.table::data.table(Parameter = names(params), Estimate = params))
       }
     },
-    categorical_encoding = function(dt,
-                                     var,
-                                     ycol = "y",
-                                     method = c("credibility","target_encoding")) {
+    categorical_encoding = function(dt,var,ycol = "y",method = c("credibility","target_encoding")) {
       method <- match.arg(method)
       if (!data.table::is.data.table(dt)) data.table::setDT(dt)
       stopifnot(is.character(var), length(var) == 1L, var %chin% names(dt))
