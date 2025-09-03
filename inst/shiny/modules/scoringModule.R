@@ -1,14 +1,3 @@
-# Plotting themes
-EchartsThemes <- c(
-  "auritus", "azul", "bee-inspired", "blue", "caravan", "carp", "chalk",
-  "cool", "dark-bold", "dark", "eduardo", "essos", "forest", "fresh-cut",
-  "fruit", "gray", "green", "halloween", "helianthus", "infographic",
-  "inspired", "jazz", "london", "macarons", "macarons2", "mint",
-  "purple-passion", "red-velvet", "red", "roma", "royal", "sakura",
-  "shine", "tech-blue", "vintage", "walden", "wef", "weforum",
-  "westeros", "wonderland"
-)
-
 # Scoring UI
 scoringUI <- function(id) {
   ns <- NS(id)
@@ -45,7 +34,14 @@ scoringUI <- function(id) {
               selectInput(
                 inputId = ns("scoring_theme"),
                 label = "Select Plot Theme:",
-                choices = EchartsThemes,
+                choices = c(
+                  "auritus", "azul", "bee-inspired", "blue", "caravan", "carp", "chalk", "cool",
+                  "dark-blue", "dark-bold", "dark-digerati", "dark-fresh-cut", "dark-mushroom", "dark",
+                  "eduardo", "essos", "forest", "fresh-cut", "fruit", "gray", "green", "halloween",
+                  "helianthus", "infographic", "inspired", "jazz", "london", "macarons", "macarons2",
+                  "mint", "purple-passion", "red-velvet", "red", "roma", "royal", "sakura", "shine",
+                  "tech-blue", "vintage", "walden", "wef", "weforum", "westeros", "wonderland"
+                ),
                 selected = "westeros"  # Default selection
               )
             ),
@@ -70,7 +66,7 @@ scoringUI <- function(id) {
 }
 
 # Scoring Server
-scoringServer <- function(id, scoring_data, fit_results) {
+scoringServer <- function(id, scoring_data, fit_results, dark_mode) {
   moduleServer(id, function(input, output, session) {
 
     # Load and validate scoring data
@@ -133,7 +129,7 @@ scoringServer <- function(id, scoring_data, fit_results) {
           scorer$generate_score_plot(
             model_name = model_name,
             x_col = input$x_variable_scoring,
-            theme = input$scoring_theme  # Use selected theme
+            theme = if (!dark_mode()) input$scoring_theme else "dark"  # Use selected theme
           )
         })
 

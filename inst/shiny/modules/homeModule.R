@@ -3,6 +3,7 @@ homeUI <- function(id) {
   ns <- NS(id)
   bs4TabItem(
     tabName = "home",
+    # darkModeJS(id),
     fluidRow(
       bs4Dash::box(
         title = "Welcome to AutoNLS",
@@ -37,7 +38,7 @@ homeUI <- function(id) {
 }
 
 # Home Server Module
-homeServer <- function(id) {
+homeServer <- function(id, dark_mode) {
   moduleServer(id, function(input, output, session) {
 
     # Fake data generator for the Home Page Plot
@@ -64,7 +65,7 @@ homeServer <- function(id) {
         echarts4r::e_x_axis(name = "X-Value", splitLine = list(show = FALSE)) |>
         echarts4r::e_y_axis(name = "Y-Value", splitLine = list(show = FALSE)) |>
         echarts4r::e_legend(left = "right") |>
-        echarts4r::e_theme("westeros")
+        echarts4r::e_theme(if (dark_mode()) "dark" else "macarons")
     })
   })
 }

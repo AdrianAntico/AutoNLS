@@ -1,14 +1,3 @@
-# Plot themes
-EchartsThemes <- c(
-  "auritus", "azul", "bee-inspired", "blue", "caravan", "carp", "chalk",
-  "cool", "dark-bold", "dark", "eduardo", "essos", "forest", "fresh-cut",
-  "fruit", "gray", "green", "halloween", "helianthus", "infographic",
-  "inspired", "jazz", "london", "macarons", "macarons2", "mint",
-  "purple-passion", "red-velvet", "red", "roma", "royal", "sakura",
-  "shine", "tech-blue", "vintage", "walden", "wef", "weforum",
-  "westeros", "wonderland"
-)
-
 # Model Fitting UI
 modelFittingUI <- function(id) {
   ns <- NS(id)
@@ -39,7 +28,14 @@ modelFittingUI <- function(id) {
                 selectInput(
                   inputId = ns("model_theme"),
                   label = "Select Plot Theme:",
-                  choices = EchartsThemes,
+                  choices = c(
+                    "auritus", "azul", "bee-inspired", "blue", "caravan", "carp", "chalk", "cool",
+                    "dark-blue", "dark-bold", "dark-digerati", "dark-fresh-cut", "dark-mushroom", "dark",
+                    "eduardo", "essos", "forest", "fresh-cut", "fruit", "gray", "green", "halloween",
+                    "helianthus", "infographic", "inspired", "jazz", "london", "macarons", "macarons2",
+                    "mint", "purple-passion", "red-velvet", "red", "roma", "royal", "sakura", "shine",
+                    "tech-blue", "vintage", "walden", "wef", "weforum", "westeros", "wonderland"
+                  ),
                   selected = "westeros"  # Default selection
                 )
               )
@@ -125,7 +121,7 @@ modelFittingUI <- function(id) {
 }
 
 # Model Fitting Server
-modelFittingServer <- function(id, dataset, fit_results) {
+modelFittingServer <- function(id, dataset, fit_results, dark_mode) {
   moduleServer(id, function(input, output, session) {
 
     # Update weights column selector based on dataset
@@ -220,7 +216,7 @@ modelFittingServer <- function(id, dataset, fit_results) {
         comparison_plot <- fitter$model_comparison_plot(
           x_range = seq(1, 100, by = 1),
           normalize = TRUE,
-          theme = input$model_theme
+          theme = if (!dark_mode()) input$model_theme else "dark"
         )
 
         # Render the model exploration plot below the Model Fitting Settings box
@@ -381,7 +377,7 @@ modelFittingServer <- function(id, dataset, fit_results) {
             data = dataset(),
             x_col = input$x_variable,
             y_col = input$y_variable,
-            theme = input$model_theme
+            theme = if (!dark_mode()) input$model_theme else "dark"
           )
 
           # Only process models with valid plots

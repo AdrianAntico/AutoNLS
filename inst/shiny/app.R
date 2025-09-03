@@ -23,6 +23,8 @@ for (i in mods) {
 
 # Define Main UI
 ui <- bs4DashPage(
+
+  # UI
   dark = TRUE,
   title = "AutoNLS",
   header = headerUI("header"),
@@ -30,7 +32,9 @@ ui <- bs4DashPage(
   body = bs4DashBody(
 
     # DT styling for light / dark mode transitions
-    applyAppStyling(generateDTStyling, removeHelpSwitchStyling),
+    applyAppStyling(
+      generateDTStyling,
+      removeHelpSwitchStyling),
 
     # UI Modules
     bs4TabItems(
@@ -52,11 +56,11 @@ server <- function(input, output, session) {
   scoring_data <- reactiveVal(NULL)
 
   # Server Modules
-  homeServer("home")
+  homeServer("home", dark_mode = reactive(input$dark_mode))
   dataPreprocessingServer("data_preprocessing", dataset)
-  edaServer("eda", dataset)
-  modelFittingServer("model_fitting", dataset, fit_results)
-  scoringServer("scoring", scoring_data, fit_results)
+  edaServer("eda", dataset, dark_mode = reactive(input$dark_mode))
+  modelFittingServer("model_fitting", dataset, fit_results, dark_mode = reactive(input$dark_mode))
+  scoringServer("scoring", scoring_data, fit_results, dark_mode = reactive(input$dark_mode))
 
   # Clean up on app stop
   session$onSessionEnded(ShutDownHelper)

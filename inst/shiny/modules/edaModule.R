@@ -1,14 +1,3 @@
-# Plotting themes
-EchartsThemes <- c(
-  "auritus", "azul", "bee-inspired", "blue", "caravan", "carp", "chalk",
-  "cool", "dark-bold", "dark", "eduardo", "essos", "forest", "fresh-cut",
-  "fruit", "gray", "green", "halloween", "helianthus", "infographic",
-  "inspired", "jazz", "london", "macarons", "macarons2", "mint",
-  "purple-passion", "red-velvet", "red", "roma", "royal", "sakura",
-  "shine", "tech-blue", "vintage", "walden", "wef", "weforum",
-  "westeros", "wonderland"
-)
-
 # EDA UI Module
 edaUI <- function(id) {
   ns <- NS(id)
@@ -29,7 +18,14 @@ edaUI <- function(id) {
             selectInput(
               inputId = ns("theme"),
               label = "Plot Theme:",
-              choices = EchartsThemes,
+              choices = c(
+                "auritus", "azul", "bee-inspired", "blue", "caravan", "carp", "chalk", "cool",
+                "dark-blue", "dark-bold", "dark-digerati", "dark-fresh-cut", "dark-mushroom", "dark",
+                "eduardo", "essos", "forest", "fresh-cut", "fruit", "gray", "green", "halloween",
+                "helianthus", "infographic", "inspired", "jazz", "london", "macarons", "macarons2",
+                "mint", "purple-passion", "red-velvet", "red", "roma", "royal", "sakura", "shine",
+                "tech-blue", "vintage", "walden", "wef", "weforum", "westeros", "wonderland"
+              ),
               selected = "westeros"  # Default selection
             )
           ),
@@ -125,7 +121,7 @@ edaUI <- function(id) {
 }
 
 # EDA Server Module
-edaServer <- function(id, dataset) {
+edaServer <- function(id, dataset, dark_mode) {
   moduleServer(id, function(input, output, session) {
 
     # Create EDA instance
@@ -174,11 +170,11 @@ edaServer <- function(id, dataset) {
     })
 
     # Distributions
-    observeEvent(c(input$run_analysis, input$theme), {
+    observeEvent(c(input$run_analysis, input$theme, dark_mode()), {
       req(eda(), input$bins)
 
       plots_list_dist <- eda()$visualize_distributions(
-        theme = input$theme,
+        theme = if (!dark_mode()) input$theme else "dark",
         bins = input$bins
       )
 
@@ -281,14 +277,14 @@ edaServer <- function(id, dataset) {
     })
 
     # Scatterplots
-    observeEvent(c(input$run_scatterplots, input$theme), {
+    observeEvent(c(input$run_scatterplots, input$theme, dark_mode()), {
       req(eda())
 
       input_cols <- if (length(input$input_cols) == 0) NULL else input$input_cols
       scatterplots <- eda()$visualize_scatterplots(
         target_col = input$target_col,
         input_cols = input_cols,
-        theme = input$theme
+        theme = if (!dark_mode()) input$theme else "dark"
       )
 
       output$eda_scatterplots_ui <- renderUI({
