@@ -78,7 +78,12 @@ including goodness-of-fit statistics, residual standard errors, and information 
 The metrics provide a comprehensive evaluation of each model's performance on the
 given dataset.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ModelEvaluator$generate_metrics(y_col = NULL, x_col = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ModelEvaluator$generate_metrics(
+  y_col,
+  x_col,
+  group_vars = NULL,
+  combine_groups = TRUE
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -106,11 +111,8 @@ overlaid on the original data points for easy comparison.
   data,
   x_col,
   y_col,
-  theme = "westeros",
-  ci = FALSE,
-  lower_bound = 0.025,
-  upper_bound = 0.975,
-  n_sim = 1000
+  group_vars = NULL,
+  theme = "westeros"
 )}\if{html}{\out{</div>}}
 }
 
@@ -123,15 +125,9 @@ overlaid on the original data points for easy comparison.
 
 \item{\code{y_col}}{A string specifying the name of the y variable in the dataset.}
 
+\item{\code{group_vars}}{Character vector of column names}
+
 \item{\code{theme}}{Echarts theme}
-
-\item{\code{ci}}{Set to TRUE to display confidence intervals}
-
-\item{\code{lower_bound}}{Lower bound probability. Defaults to 0.025}
-
-\item{\code{upper_bound}}{Upper bound probability. Defaults to 0.975}
-
-\item{\code{n_sim}}{Number of simulations to run for prediction interval}
 }
 \if{html}{\out{</div>}}
 }

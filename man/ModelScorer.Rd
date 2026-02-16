@@ -37,7 +37,6 @@ and visualize the results.
   lower_bound = 0.025,
   upper_bound = 0.975,
   n_sim = 1000,
-  allow_missing_features = FALSE,
   return_cols = NULL,
   id_col = NULL
 )}\if{html}{\out{</div>}}
