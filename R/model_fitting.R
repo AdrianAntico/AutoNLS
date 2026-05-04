@@ -869,6 +869,10 @@ ModelFitter <- R6::R6Class(
     #' @param weights_col The name of the weights variable.
     #' @param loss choose from 'mse' or 'quantile'
     #' @param quantile_level decimal between 0 and 1 representing the percentile of choice
+    #' @param cat_encoding "target_encoding" or "credibility"
+    #' @param shift_cat character value
+    #' @param param_cat character value
+    #' @param param_links link
     #' @param control A list of control parameters for the optimizer, such as `maxiter`.
     #' Default is `list(maxiter = 200)`.
     #' @param ... Additional arguments to be passed to the underlying fitting functions

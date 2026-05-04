@@ -92,6 +92,10 @@ given dataset.
 \item{\code{y_col}}{target variable}
 
 \item{\code{x_col}}{x variable}
+
+\item{\code{group_vars}}{NULL => global only; "auto" => infer from model; character() => explicit}
+
+\item{\code{combine_groups}}{when multiple group vars: TRUE => group by their full combination}
 }
 \if{html}{\out{</div>}}
 }

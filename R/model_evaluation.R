@@ -51,13 +51,15 @@ ModelEvaluator <- R6::R6Class(
     #'
     #' @param y_col target variable
     #' @param x_col x variable
+    #' @param group_vars NULL => global only; "auto" => infer from model; character() => explicit
+    #' @param combine_groups when multiple group vars: TRUE => group by their full combination
     #' @return A data.table of evaluation metrics with fitted equations.
     #' @export
     generate_metrics = function(
     y_col,
     x_col,
-    group_vars = NULL,      # NULL => global only; "auto" => infer from model; character() => explicit
-    combine_groups = TRUE   # when multiple group vars: TRUE => group by their full combination
+    group_vars = NULL,
+    combine_groups = TRUE
     ) {
       if (is.null(self$fit_results) || length(self$fit_results) == 0) {
         message("No fitted models to evaluate."); return(NULL)
