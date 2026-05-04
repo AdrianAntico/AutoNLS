@@ -18,11 +18,98 @@ ModelScorer <- R6::R6Class(
       self$fit_results <- fit_results
     },
 
-    # Score new data with all fitted models
-    # - new_data must include any feature columns used by param mods (e.g., channel_Credibility) and shift terms
+    #' @description
+    #'  Score New Data with All Fitted AutoNLS Models
+    #'
+    #' Generates scores for new data using all fitted nonlinear models stored in the
+    #' scoring object. By default, the method returns standard model predictions, but
+    #' it can also return derivative-based scores when fitted models contain a
+    #' derivative function.
+    #'
+    #' The input data must contain the predictor column specified by `x_col`. It must
+    #' also contain any additional feature columns required by parameter modifiers or
+    #' categorical shift terms used during model fitting.
+    #'
+    #' @param new_data A `data.table`, `data.frame`, or object coercible to a
+    #'   `data.table`. The new data to score.
+    #' @param x_col Character string. The name of the predictor column in `new_data`
+    #'   used as the model's x-variable.
+    #' @param score_type Character string. Type of score to generate. Use
+    #'   `"prediction"` for regular fitted-value predictions or `"derivative"` for
+    #'   derivative-based scores. Defaults to `"prediction"`.
+    #' @param get_prediction_bounds Logical. If `TRUE`, generates lower and upper
+    #'   prediction bounds using simulation. Defaults to `FALSE`.
+    #' @param lower_bound Numeric value between 0 and 1. Lower quantile used for
+    #'   prediction bounds when `get_prediction_bounds = TRUE`. Defaults to `0.025`.
+    #' @param upper_bound Numeric value between 0 and 1. Upper quantile used for
+    #'   prediction bounds when `get_prediction_bounds = TRUE`. Defaults to `0.975`.
+    #' @param n_sim Integer. Number of simulations used to generate prediction bounds
+    #'   when `get_prediction_bounds = TRUE`. Defaults to `1000`.
+    #' @param return_cols Optional character vector. Columns from `new_data` to keep
+    #'   in the returned scored data. If `NULL`, all columns are retained.
+    #' @param id_col Optional character string. Name of an ID column in `new_data` to
+    #'   preserve in the returned scored data. If supplied, the column must exist in
+    #'   `new_data`.
+    #'
+    #' @return A `data.table` containing scored results for each fitted model. The
+    #'   output includes model identifiers, selected input columns, and the generated
+    #'   score. When `score_type = "prediction"`, the score represents the predicted
+    #'   response. When `score_type = "derivative"`, the score represents the model
+    #'   derivative with respect to `x_col`. If `get_prediction_bounds = TRUE`,
+    #'   lower and upper prediction-bound columns are also returned.
+    #'
+    #' @details
+    #' For models with decomposed parameters, the scorer reconstructs row-level
+    #' parameter values using the fitted baseline coefficients and any encoded
+    #' parameter modifier columns. For regular predictions, additive categorical
+    #' shift terms are included in the scored value. For derivative scores, additive
+    #' shift terms are not included because their derivative with respect to `x_col`
+    #' is zero.
+    #'
+    #' If the model was trained on scaled `x` and/or scaled `y`, derivative scores
+    #' should be transformed back to the original units using the chain rule:
+    #'
+    #' \deqn{
+    #'   \frac{dy}{dx}_{original}
+    #'   =
+    #'   \frac{dy}{dx}_{scaled}
+    #'   \times
+    #'   \frac{y_{scale}}{x_{scale}}
+    #' }
+    #'
+    #' Prediction bounds are intended for regular predictions. Derivative-based
+    #' prediction bounds should only be requested if the scoring implementation
+    #' explicitly supports derivative simulation.
+    #'
+    #' @examples
+    #' \dontrun{
+    #' scored <- scorer$score_new_data(
+    #'   new_data = dt_new,
+    #'   x_col = "spend",
+    #'   score_type = "prediction"
+    #' )
+    #'
+    #' scored_derivative <- scorer$score_new_data(
+    #'   new_data = dt_new,
+    #'   x_col = "spend",
+    #'   score_type = "derivative"
+    #' )
+    #'
+    #' scored_with_bounds <- scorer$score_new_data(
+    #'   new_data = dt_new,
+    #'   x_col = "spend",
+    #'   score_type = "prediction",
+    #'   get_prediction_bounds = TRUE,
+    #'   lower_bound = 0.025,
+    #'   upper_bound = 0.975,
+    #'   n_sim = 1000
+    #' )
+    #' }
+    #' @export
     score_new_data = function(
     new_data,
     x_col,
+    score_type = "prediction",
     get_prediction_bounds = FALSE,
     lower_bound = 0.025,
     upper_bound = 0.975,
@@ -50,12 +137,13 @@ ModelScorer <- R6::R6Class(
       ND0 <- data.table::copy(new_data)
       ND0[, row_id := .I]
 
-      self$scored_data <- lapply(self$fit_results, function(fit) {
+      self$scored_data <- lapply(self$fit_results, function(fit) { # fit <- self$fit_results[1]
         if (is.null(fit)) return(NULL)
         tryCatch({
           ND <- data.table::copy(ND0)
 
           # Materialize engineered features (strict: throws if raw cats missing)
+          # ef_info <- ensure_required_features(fit = fit, ND = ND)
           ef_info <- private$ensure_required_features(fit = fit, ND = ND)
           ND <- ef_info$ND
           required_eng <- ef_info$required_eng   # engineered cols referenced by coefficients
@@ -65,10 +153,12 @@ ModelScorer <- R6::R6Class(
           scaled_x <- (ND[[x_col]] - fit$scale_params$min_x) / fit$scale_params$scale_factor_x
 
           # Predict on standardized scale (handles decomposed params + shift)
+          #preds_std <- predict_std_from_decomposed(
           preds_std <- private$predict_std_from_decomposed(
             fit  = fit,
             data = ND,
-            x_scaled = scaled_x
+            x_scaled = scaled_x,
+            score_type = score_type
           )
           y_pred <- fit$back_transform(preds_std, fit$scale_params)
 
@@ -171,8 +261,149 @@ ModelScorer <- R6::R6Class(
   ),
 
   private = list(
+
+    predict_std_from_decomposed = function(
+    fit,
+    data,
+    x_scaled,
+    override_coef = NULL,
+    score_type = c("prediction", "derivative")
+    ) {
+      score_type <- match.arg(score_type)
+
+      # coefs must be named like:
+      # "a:baseline", "b:baseline", "b:<enc>", "shift:<enc>"
+      coefs <- if (is.null(override_coef)) fit$coefficients else override_coef
+
+      if (is.null(names(coefs)) || any(names(coefs) == "")) {
+        stop("Coefficients are missing names; cannot decompose parameters.")
+      }
+
+      param_names <- fit$param_names
+
+      if (is.null(param_names) || length(param_names) == 0) {
+        stop("fit$param_names is missing or empty.")
+      }
+
+      inv_link <- function(nm) {
+        switch(
+          nm,
+          log = exp,
+          logit = plogis,
+          identity = identity,
+          identity
+        )
+      }
+
+      n <- length(x_scaled)
+
+      params_list <- vector("list", length(param_names))
+      names(params_list) <- param_names
+
+      # Build per-row parameter vectors:
+      # baseline + optional encoded modifier
+      for (p in param_names) {
+        base_name <- paste0(p, ":baseline")
+
+        if (!(base_name %in% names(coefs))) {
+          stop(sprintf("Missing baseline for parameter '%s'", p))
+        }
+
+        eta <- rep(unname(coefs[[base_name]]), n)
+
+        enc_name <- NULL
+
+        if (!is.null(fit$cat) && !is.null(fit$cat$param_enc_names)) {
+          enc_name <- fit$cat$param_enc_names[[p]]
+        }
+
+        if (!is.null(enc_name)) {
+          if (!(enc_name %in% names(data))) {
+            stop(sprintf(
+              "Engineered column '%s' missing in scoring data for parameter '%s'",
+              enc_name,
+              p
+            ))
+          }
+
+          mod_coef_name <- paste0(p, ":", enc_name)
+
+          if (!(mod_coef_name %in% names(coefs))) {
+            stop(sprintf(
+              "Missing coefficient '%s' for parameter '%s'",
+              mod_coef_name,
+              p
+            ))
+          }
+
+          eta <- eta + data[[enc_name]] * unname(coefs[[mod_coef_name]])
+        }
+
+        link_name <- if (
+          !is.null(fit$param_links) &&
+          !is.null(fit$param_links[[p]])
+        ) {
+          fit$param_links[[p]]
+        } else {
+          "identity"
+        }
+
+        params_list[[p]] <- inv_link(link_name)(eta)
+      }
+
+      # Core score
+      if (score_type == "prediction") {
+        score <- fit$model_function(
+          x = x_scaled,
+          params = params_list
+        )
+
+        # Additive categorical shifts affect prediction level.
+        if (
+          !is.null(fit$cat) &&
+          !is.null(fit$cat$shift_names) &&
+          length(fit$cat$shift_names) > 0
+        ) {
+          for (sn in fit$cat$shift_names) {
+            beta_name <- paste0("shift:", sn)
+
+            # If model did not include this shift, skip
+            if (!(beta_name %in% names(coefs))) next
+
+            if (!(sn %in% names(data))) {
+              stop(sprintf(
+                "Engineered shift column '%s' missing in scoring data",
+                sn
+              ))
+            }
+
+            score <- score + data[[sn]] * unname(coefs[[beta_name]])
+          }
+        }
+
+        return(score)
+      }
+
+      if (score_type == "derivative") {
+        if (is.null(fit$derivative) || !is.function(fit$derivative)) {
+          stop("fit$derivative is missing or is not a function.")
+        }
+
+        # Additive categorical shifts are intercept terms.
+        # Their derivative with respect to x is zero, so they are not added here.
+        score <- fit$derivative(
+          x = x_scaled,
+          params = params_list
+        )
+
+        return(score)
+      }
+
+      stop("Unhandled score_type.")
+    },
+
     # Rebuild per-row params from decomposed coefficients and compute standardized predictions
-    predict_std_from_decomposed = function(fit, data, x_scaled, override_coef = NULL) {
+    predict_std_from_decomposed1 = function(fit, data, x_scaled, override_coef = NULL) {
       # coefs (must be named like "a:baseline", "b:baseline", "b:<enc>", "shift:<enc>")
       coefs <- if (is.null(override_coef)) fit$coefficients else override_coef
       if (is.null(names(coefs)) || any(names(coefs) == "")) {

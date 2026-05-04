@@ -839,11 +839,13 @@ ModelFitter <- R6::R6Class(
         formula      <- model_info$formula
         start_params <- model_info$start_params
         model_function <- model_info$model_function
+        deriv_function <- model_info$deriv_function
       }
       self$models[[name]] <- list(
         formula = formula,
         start_params = start_params,
-        model_function = model_function
+        model_function = model_function,
+        deriv_function = deriv_function
       )
     },
 
@@ -944,7 +946,7 @@ ModelFitter <- R6::R6Class(
       temp_data_scaled[, x := (x - scale_params$min_x) / scale_params$scale_factor_x]
       temp_data_scaled[, y := (y - scale_params$min_y) / scale_params$scale_factor_y]
 
-      self$fit_results <- lapply(names(self$models), function(model_name) {
+      self$fit_results <- lapply(names(self$models), function(model_name) {# model_name <- names(self$models)[1]
         model <- self$models[[model_name]]
 
         # ---- base param/link setup ----
@@ -1098,6 +1100,7 @@ ModelFitter <- R6::R6Class(
             coefficients   = result_params$params,
             hessian        = result_params$hessian,
             formula        = model$formula,
+            derivative     = model$deriv_function,
             residuals      = temp_data_scaled$y - preds,
             fitted.values  = preds,
             model_function = model$model_function,

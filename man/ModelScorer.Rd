@@ -4,8 +4,65 @@
 \alias{ModelScorer}
 \title{ModelScorer}
 \description{
+ModelScorer
+
+ModelScorer
+}
+\details{
 An R6 class to score non-linear regression models on new data
 and visualize the results.
+
+For models with decomposed parameters, the scorer reconstructs row-level
+parameter values using the fitted baseline coefficients and any encoded
+parameter modifier columns. For regular predictions, additive categorical
+shift terms are included in the scored value. For derivative scores, additive
+shift terms are not included because their derivative with respect to \code{x_col}
+is zero.
+
+If the model was trained on scaled \code{x} and/or scaled \code{y}, derivative scores
+should be transformed back to the original units using the chain rule:
+
+\deqn{
+  \frac{dy}{dx}_{original}
+  =
+  \frac{dy}{dx}_{scaled}
+  \times
+  \frac{y_{scale}}{x_{scale}}
+}
+
+Prediction bounds are intended for regular predictions. Derivative-based
+prediction bounds should only be requested if the scoring implementation
+explicitly supports derivative simulation.
+}
+\examples{
+
+## ------------------------------------------------
+## Method `ModelScorer$score_new_data`
+## ------------------------------------------------
+
+\dontrun{
+scored <- scorer$score_new_data(
+  new_data = dt_new,
+  x_col = "spend",
+  score_type = "prediction"
+)
+
+scored_derivative <- scorer$score_new_data(
+  new_data = dt_new,
+  x_col = "spend",
+  score_type = "derivative"
+)
+
+scored_with_bounds <- scorer$score_new_data(
+  new_data = dt_new,
+  x_col = "spend",
+  score_type = "prediction",
+  get_prediction_bounds = TRUE,
+  lower_bound = 0.025,
+  upper_bound = 0.975,
+  n_sim = 1000
+)
+}
 }
 \section{Methods}{
 \subsection{Public methods}{
@@ -29,10 +86,21 @@ and visualize the results.
 \if{html}{\out{<a id="method-ModelScorer-score_new_data"></a>}}
 \if{latex}{\out{\hypertarget{method-ModelScorer-score_new_data}{}}}
 \subsection{Method \code{score_new_data()}}{
+Score New Data with All Fitted AutoNLS Models
+
+Generates scores for new data using all fitted nonlinear models stored in the
+scoring object. By default, the method returns standard model predictions, but
+it can also return derivative-based scores when fitted models contain a
+derivative function.
+
+The input data must contain the predictor column specified by \code{x_col}. It must
+also contain any additional feature columns required by parameter modifiers or
+categorical shift terms used during model fitting.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ModelScorer$score_new_data(
   new_data,
   x_col,
+  score_type = "prediction",
   get_prediction_bounds = FALSE,
   lower_bound = 0.025,
   upper_bound = 0.975,
@@ -40,6 +108,78 @@ and visualize the results.
   return_cols = NULL,
   id_col = NULL
 )}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{new_data}}{A \code{data.table}, \code{data.frame}, or object coercible to a
+\code{data.table}. The new data to score.}
+
+\item{\code{x_col}}{Character string. The name of the predictor column in \code{new_data}
+used as the model's x-variable.}
+
+\item{\code{score_type}}{Character string. Type of score to generate. Use
+\code{"prediction"} for regular fitted-value predictions or \code{"derivative"} for
+derivative-based scores. Defaults to \code{"prediction"}.}
+
+\item{\code{get_prediction_bounds}}{Logical. If \code{TRUE}, generates lower and upper
+prediction bounds using simulation. Defaults to \code{FALSE}.}
+
+\item{\code{lower_bound}}{Numeric value between 0 and 1. Lower quantile used for
+prediction bounds when \code{get_prediction_bounds = TRUE}. Defaults to \code{0.025}.}
+
+\item{\code{upper_bound}}{Numeric value between 0 and 1. Upper quantile used for
+prediction bounds when \code{get_prediction_bounds = TRUE}. Defaults to \code{0.975}.}
+
+\item{\code{n_sim}}{Integer. Number of simulations used to generate prediction bounds
+when \code{get_prediction_bounds = TRUE}. Defaults to \code{1000}.}
+
+\item{\code{return_cols}}{Optional character vector. Columns from \code{new_data} to keep
+in the returned scored data. If \code{NULL}, all columns are retained.}
+
+\item{\code{id_col}}{Optional character string. Name of an ID column in \code{new_data} to
+preserve in the returned scored data. If supplied, the column must exist in
+\code{new_data}.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A \code{data.table} containing scored results for each fitted model. The
+output includes model identifiers, selected input columns, and the generated
+score. When \code{score_type = "prediction"}, the score represents the predicted
+response. When \code{score_type = "derivative"}, the score represents the model
+derivative with respect to \code{x_col}. If \code{get_prediction_bounds = TRUE},
+lower and upper prediction-bound columns are also returned.
+}
+\subsection{Examples}{
+\if{html}{\out{<div class="r example copy">}}
+\preformatted{\dontrun{
+scored <- scorer$score_new_data(
+  new_data = dt_new,
+  x_col = "spend",
+  score_type = "prediction"
+)
+
+scored_derivative <- scorer$score_new_data(
+  new_data = dt_new,
+  x_col = "spend",
+  score_type = "derivative"
+)
+
+scored_with_bounds <- scorer$score_new_data(
+  new_data = dt_new,
+  x_col = "spend",
+  score_type = "prediction",
+  get_prediction_bounds = TRUE,
+  lower_bound = 0.025,
+  upper_bound = 0.975,
+  n_sim = 1000
+)
+}
+}
+\if{html}{\out{</div>}}
+
 }
 
 }
