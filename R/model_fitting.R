@@ -36,6 +36,11 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           x^b / (a^b + x^b)
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]
+          denom <- (a^b + x^b)
+          (b * a^b * x^(b - 1)) / (denom^2)
         }
       ),
       Hill = list(
@@ -51,6 +56,11 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           a * x^b / (c^b + x^b)
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]; c <- params[["c"]]
+          denom <- (c^b + x^b)
+          a * (b * c^b * x^(b - 1)) / (denom^2)
         }
       ),
       Hill5Model = list(
@@ -68,6 +78,12 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           a * (x^b) / (c^b + x^b) + d + e * x
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]; c <- params[["c"]]
+          e <- params[["e"]]
+          denom <- (c^b + x^b)
+          a * (b * c^b * x^(b - 1)) / (denom^2) + e
         }
       ),
       HillSwitchpointModel = list(
@@ -88,6 +104,30 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           1 / (1 + exp(-k * (x - s))) * (a * (x^b) / (c^b + x^b)) + (1 - 1 / (1 + exp(-k * (x - s)))) * (d * (x^e) / (f^e + x^e))
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]; c <- params[["c"]]
+          d <- params[["d"]]; e <- params[["e"]]; f <- params[["f"]]
+          s <- params[["s"]]; k <- params[["k"]]
+
+          # logistic weight + derivative
+          w  <- 1 / (1 + exp(-k * (x - s)))
+          wp <- k * w * (1 - w)
+
+          # H1 and H1'
+          denom1 <- (c^b + x^b)
+          H1  <- a * x^b / denom1
+          H1p <- a * (b * c^b * x^(b - 1)) / (denom1^2)
+
+          # H2 and H2'
+          denom2 <- (f^e + x^e)
+          H2  <- d * x^e / denom2
+          H2p <- d * (e * f^e * x^(e - 1)) / (denom2^2)
+
+          # product rule on mixture:
+          # y = w*H1 + (1-w)*H2
+          # y' = w'*(H1 - H2) + w*H1' + (1-w)*H2'
+          wp * (H1 - H2) + w * H1p + (1 - w) * H2p
         }
       ),
       HillQuad = list(
@@ -104,6 +144,11 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           a * (x^b) / (c + x^b) + d * (x^2)
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]; c <- params[["c"]]; d <- params[["d"]]
+          denom <- (c + x^b)
+          a * (b * c * x^(b - 1)) / (denom^2) + 2 * d * x
         }
       ),
       Logistic = list(
@@ -119,6 +164,11 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           a / (1 + exp(-b * (x - c)))
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]; c <- params[["c"]]
+          z <- exp(-b * (x - c))
+          a * b * z / (1 + z)^2
         }
       ),
       Logistic5Param = list(
@@ -136,6 +186,13 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           d + (a - d) / (1 + (x / c)^b)^g
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]; c <- params[["c"]]
+          d <- params[["d"]]; g <- params[["g"]]
+          h <- 1 + (x / c)^b
+          dhdx <- b * x^(b - 1) / (c^b)
+          -(a - d) * g * h^(-g - 1) * dhdx
         }
       ),
       ExponentialDecay = list(
@@ -150,6 +207,10 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           a * exp(-b * x)
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]
+          -a * b * exp(-b * x)
         }
       ),
       ExpDecayPlateau = list(
@@ -165,6 +226,10 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           a * exp(-b * x) + c
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]
+          -a * b * exp(-b * x)
         }
       ),
       Exp2OrderDecay = list(
@@ -181,6 +246,11 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           a * exp(-b * x) + c * exp(-d * x)
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]
+          c <- params[["c"]]; d <- params[["d"]]
+          -a * b * exp(-b * x) - c * d * exp(-d * x)
         }
       ),
       Gompertz = list(
@@ -196,6 +266,11 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           a * exp(-b * exp(-c * x))
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]; c <- params[["c"]]
+          t <- exp(-c * x)
+          a * b * c * t * exp(-b * t)
         }
       ),
       Gompertz4Param = list(
@@ -212,6 +287,11 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           a * exp(-exp(b - c * x)) + d
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]; c <- params[["c"]]
+          u <- exp(b - c * x)
+          a * c * u * exp(-u)
         }
       ),
       MichaelisMenten = list(
@@ -226,6 +306,10 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           (Vmax * x) / (Km + x)
+        },
+        deriv_function = function(x, params) {
+          Vmax <- params[["Vmax"]]; Km <- params[["Km"]]
+          (Vmax * Km) / (Km + x)^2
         }
       ),
       WeibullType1 = list(
@@ -241,6 +325,11 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           a * exp(-exp(b - c * x))
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]; c <- params[["c"]]
+          u <- exp(b - c * x)
+          a * c * u * exp(-u)
         }
       ),
       WeibullType2 = list(
@@ -256,6 +345,10 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           a * (1 - exp(-b * x^c))
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]; c <- params[["c"]]
+          a * b * c * x^(c - 1) * exp(-b * x^c)
         }
       ),
       Asymptotic = list(
@@ -271,6 +364,10 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           a - (a - b) * exp(-c * x)
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]; c <- params[["c"]]
+          (a - b) * c * exp(-c * x)
         }
       ),
       PowerCurve = list(
@@ -285,6 +382,10 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           a * x^b
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]
+          a * b * x^(b - 1)
         }
       ),
       Logarithmic = list(
@@ -299,6 +400,15 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           a + b * log(x)
+        },
+        deriv_function = function(x, params) {
+          b <- params[["b"]]
+          if (!is.numeric(x)) {
+            message("x must be numeric in deriv_function.")
+            return(NULL)
+          }
+          xx <- pmax(x, 1e-12)
+          b / xx
         }
       ),
       RectangularHyperbola = list(
@@ -313,6 +423,10 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           (a * x) / (b + x)
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]
+          (a * b) / (b + x)^2
         }
       ),
       Richards = list(
@@ -329,6 +443,12 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           a / (1 + exp(-b * (x - c)))^d
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]; c <- params[["c"]]; d <- params[["d"]]
+          z <- exp(-b * (x - c))
+          g <- 1 + z
+          a * d * b * z / (g^(d + 1))
         }
       ),
       ChapmanRichards = list(
@@ -344,6 +464,11 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           a * (1 - exp(-b * x))^c
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]; c <- params[["c"]]
+          g <- 1 - exp(-b * x)
+          a * c * g^(c - 1) * b * exp(-b * x)
         }
       ),
       HyperbolicTangent = list(
@@ -359,6 +484,11 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           a * tanh(b * x + c)
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]; c <- params[["c"]]
+          z <- tanh(b * x + c)
+          a * b * (1 - z^2)
         }
       ),
       BetaModel = list(
@@ -376,6 +506,13 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           a + (b - a) * (1 + (x / c)^d)^-e
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]; c <- params[["c"]]
+          d <- params[["d"]]; e <- params[["e"]]
+          h <- 1 + (x / c)^d
+          dhdx <- d * x^(d - 1) / (c^d)
+          (b - a) * (-e) * h^(-e - 1) * dhdx
         }
       ),
       StretchedExponential = list(
@@ -392,6 +529,12 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           d + (a - d)*exp(-(x/b)^c)
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]; c <- params[["c"]]; d <- params[["d"]]
+          t <- (x / b)^c
+          dtdx <- c * x^(c - 1) / (b^c)
+          -(a - d) * exp(-t) * dtdx
         }
       ),
       HyperbolicDecay = list(
@@ -408,6 +551,12 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           d + (a-d)/(1 + x/b^c)
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]; c <- params[["c"]]; d <- params[["d"]]
+          bc <- b^c
+          denom <- (1 + x / bc)
+          -(a - d) * (1 / bc) / (denom^2)
         }
       ),
       GompertzDecay = list(
@@ -424,6 +573,11 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           d + (a-d)*exp(-b * exp(-c*x))
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]; c <- params[["c"]]; d <- params[["d"]]
+          t <- exp(-c * x)
+          (a - d) * b * c * t * exp(-b * t)
         }
       ),
       InverseHill = list(
@@ -440,6 +594,11 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           d + (a-d) * (b^c / (b^c + x^c))
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]; c <- params[["c"]]; d <- params[["d"]]
+          bc <- b^c
+          (a - d) * (-c) * bc * x^(c - 1) / (bc + x^c)^2
         }
       ),
       ShiftedExponentialDecay = list(
@@ -455,6 +614,10 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           a * exp(-b*x) + c
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]
+          -a * b * exp(-b * x)
         }
       ),
       NegativePowerFunction = list(
@@ -471,6 +634,10 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           a / ((x + d)^b) + c
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]; d <- params[["d"]]
+          a * (-b) * (x + d)^(-b - 1)
         }
       ),
       NegativeLogisticDecay = list(
@@ -487,6 +654,11 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           a / (1 + exp(b*(x - c))) + d
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]; c <- params[["c"]]
+          z <- exp(b * (x - c))
+          -a * b * z / (1 + z)^2
         }
       ),
       LogLinearDecay = list(
@@ -502,6 +674,10 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           a - b * log(x + c)
+        },
+        deriv_function = function(x, params) {
+          b <- params[["b"]]; c <- params[["c"]]
+          -b / (x + c)
         }
       ),
       PolynomialDecay = list(
@@ -517,6 +693,10 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           a - b * x ^ c
+        },
+        deriv_function = function(x, params) {
+          b <- params[["b"]]; c <- params[["c"]]
+          -b * c * x^(c - 1)
         }
       ),
       InvertedSigma = list(
@@ -533,6 +713,11 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           -a / (1 + -b * (x - c)) + d
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]; c <- params[["c"]]
+          denom <- (1 - b * (x - c))
+          -a * b / (denom^2)
         }
       ),
       ArctangentDecay = list(
@@ -548,6 +733,10 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           -a * atan(b*x) + c
+        },
+        deriv_function = function(x, params) {
+          a <- params[["a"]]; b <- params[["b"]]
+          -a * (b / (1 + (b * x)^2))
         }
       ),
       LinearModel = list(
@@ -562,6 +751,9 @@ ModelFitter <- R6::R6Class(
             return(NULL)
           }
           a + b * x
+        },
+        deriv_function = function(x, params) {
+          params[["b"]]
         }
       )
     ),

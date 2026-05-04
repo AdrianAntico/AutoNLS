@@ -68,8 +68,8 @@
 #' }
 #'
 #' @export
-AutoNLSFitter <- R6::R6Class(
-  "AutoNLSFitter",
+AutoNLSModel <- R6::R6Class(
+  "AutoNLSModel",
   public = list(
     data = NULL,
     models = NULL,
@@ -971,22 +971,28 @@ AutoNLSFitter <- R6::R6Class(
         if (!all(w == 1)) w <- w / sum(w)
       }
 
-      min_x <- min(dt$x_raw, na.rm = TRUE)
+      # --- X scaling anchored at 0 for pragmatic scoring ---
       max_x <- max(dt$x_raw, na.rm = TRUE)
-      min_y <- min(dt$y_raw, na.rm = TRUE)
-      max_y <- max(dt$y_raw, na.rm = TRUE)
+
+      min_x <- 0
+      if (!is.finite(max_x)) max_x <- 1
+      if (max_x < 0) max_x <- 1  # extreme edge case
 
       scale_x <- max_x - min_x
-      scale_y <- max_y - min_y
       if (!is.finite(scale_x) || scale_x <= 0) scale_x <- 1
+
+      # y scaling unchanged
+      min_y <- min(dt$y_raw, na.rm = TRUE)
+      max_y <- max(dt$y_raw, na.rm = TRUE)
+      scale_y <- max_y - min_y
       if (!is.finite(scale_y) || scale_y <= 0) scale_y <- 1
 
       scale <- list(
         x_col = x_col,
         y_col = y_col,
         weights_col = weights_col,
-        min_x = min_x,
-        max_x = max_x,
+        min_x = min_x,      # now always 0
+        max_x = max_x,      # training max (used for clipping)
         min_y = min_y,
         max_y = max_y,
         scale_x = scale_x,
@@ -996,7 +1002,11 @@ AutoNLSFitter <- R6::R6Class(
       )
 
       dts <- data.table::copy(dt)
-      dts[, x := (x_raw - min_x) / scale_x]
+      if (isTRUE(nonnegative_x)) {
+        dts[, x := pmax(x_raw, 0) / scale_x]
+      } else {
+        dts[, x := x_raw / scale_x]
+      }
       dts[, y := (y_raw - min_y) / scale_y]
 
       fits <- lapply(names(self$models), function(model_name) {
@@ -1065,162 +1075,22 @@ AutoNLSFitter <- R6::R6Class(
       }
 
       if (scale$extrapolation == "error") {
-        if (any(x < scale$min_x, na.rm = TRUE)) stop("new x has values < training min_x; set extrapolation='clip' or 'allow'.")
-        if (any(x > scale$max_x, na.rm = TRUE)) stop("new x has values > training max_x; set extrapolation='clip' or 'allow'.")
+        if (scale$nonnegative_x && any(x < 0, na.rm = TRUE)) {
+          stop("new x has values < 0; set nonnegative_x = FALSE or change extrapolation policy.")
+        }
+        if (any(x > scale$max_x, na.rm = TRUE)) {
+          stop("new x has values > training max_x; set extrapolation = 'clip' or 'allow'.")
+        }
       } else if (scale$extrapolation == "clip") {
-        x <- pmin(pmax(x, scale$min_x), scale$max_x)
-      }
-
-      (x - scale$min_x) / scale$scale_x
-    },
-
-    back_transform_y = function(y_scaled, scale) {
-      y_scaled * scale$scale_y + scale$min_y
-    },
-
-    categorical_encoding = function(dt, var, ycol = "y", method = c("credibility", "target_encoding")) {
-      method <- match.arg(method)
-      if (!data.table::is.data.table(dt)) data.table::setDT(dt)
-      stopifnot(is.character(var), length(var) == 1L, var %chin% names(dt))
-      stopifnot(ycol %chin% names(dt), is.numeric(dt[[ycol]]))
-
-      suffix <- if (method == "credibility") "Credibility" else "TargetEncode"
-      enc_name <- paste0(var, "_", suffix)
-      grand_mean <- mean(dt[[ycol]], na.rm = TRUE)
-
-      if (method == "target_encoding") {
-        map <- dt[, .(val = mean(get(ycol), na.rm = TRUE)), keyby = eval(var)]
-        data.table::setnames(map, "val", enc_name)
+        if (scale$nonnegative_x) {
+          x <- pmax(x, 0)
+        }
+        x <- pmin(x, scale$max_x)
       } else {
-        map <- dt[, .(
-          Mean = mean(get(ycol), na.rm = TRUE),
-          VarY = stats::var(get(ycol), na.rm = TRUE),
-          N = .N
-        ), keyby = eval(var)]
-
-        EPV  <- mean(map$VarY, na.rm = TRUE)
-        Nbar <- max(1, mean(map$N))
-        VHM  <- stats::var(map$Mean - grand_mean, na.rm = TRUE) - (EPV / Nbar)
-        if (!is.finite(VHM) || VHM <= 0) VHM <- 1e-8
-        if (!is.finite(EPV) || EPV < 0)  EPV <- 0
-
-        K <- EPV / VHM
-        Z <- map$N / (map$N + K)
-
-        map[, (enc_name) := Z * Mean + (1 - Z) * grand_mean]
-        map[, c("Mean","VarY","N") := NULL]
+        # allow: do nothing
       }
 
-      data.table::setkeyv(map, var)
-
-      X <- map[ dt[, get(var)], on = var, nomatch = NA ][[enc_name]]
-      if (anyNA(X)) X[is.na(X)] <- grand_mean
-
-      list(
-        X = as.numeric(X),
-        map = map,
-        enc_name = enc_name,
-        meta = list(method = method, var = var, ycol = ycol, grand_mean = grand_mean)
-      )
-    },
-
-    build_encoder_from_maps = function(artifacts_by_raw, encoder_name = "categorical_map") {
-      stopifnot(is.list(artifacts_by_raw), length(artifacts_by_raw) > 0)
-
-      requires <- names(artifacts_by_raw)
-      produced <- unlist(lapply(artifacts_by_raw, function(outputs)
-        vapply(outputs, function(o) o$out_col, character(1L))
-      ), use.names = FALSE)
-
-      transform_fn <- function(new_dt) {
-        nd <- data.table::as.data.table(new_dt)
-
-        for (raw in names(artifacts_by_raw)) {
-          if (!raw %in% names(nd)) next
-
-          for (o in artifacts_by_raw[[raw]]) {
-            mp <- data.table::as.data.table(o$map)
-
-            key_col   <- if (!is.null(o$key_col)   && o$key_col   %in% names(mp)) o$key_col   else if (raw %in% names(mp)) raw else names(mp)[1L]
-            value_col <- if (!is.null(o$value_col) && o$value_col %in% names(mp)) o$value_col else if (!is.null(o$out_col) && o$out_col %in% names(mp)) o$out_col else setdiff(names(mp), key_col)[1L]
-
-            idx  <- match(nd[[raw]], mp[[key_col]])
-            vals <- mp[[value_col]][idx]
-
-            def <- if (!is.null(o$default)) o$default else 0
-            vals[is.na(vals)] <- def
-
-            nd[, (o$out_col) := vals]
-          }
-        }
-        nd
-      }
-
-      list(
-        name = encoder_name,
-        requires = requires,
-        produced_features = produced,
-        artifacts = artifacts_by_raw,
-        transform = transform_fn
-      )
-    },
-
-    optimize = function(x, y, weights, model, par0, loss, quantile_level,
-                        control, method, compute_hessian, ...) {
-
-      pinball <- function(r, q) ifelse(r >= 0, q * r, (q - 1) * r)
-
-      safe_model_eval <- function(par) {
-        # Return numeric vector or NA_real_ on any warning/error
-        out <- tryCatch(
-          withCallingHandlers(
-            model(x = x, params = par),
-            warning = function(w) {
-              invokeRestart("muffleWarning")
-            }
-          ),
-          error = function(e) NA_real_
-        )
-        out
-      }
-
-      obj <- function(par) {
-        pred <- safe_model_eval(par)
-
-        # kill any non-finite / wrong-length predictions
-        if (length(pred) != length(y) || any(!is.finite(pred))) return(Inf)
-
-        r <- y - pred
-        if (loss == "mse") {
-          if (!is.null(weights)) sum(weights * r^2) else sum(r^2)
-        } else {
-          if (!is.null(weights)) sum(weights * pinball(r, quantile_level)) else sum(pinball(r, quantile_level))
-        }
-      }
-
-      ctrl <- modifyList(list(maxit = 3000, reltol = 1e-8), control)
-
-      res <- stats::optim(
-        par = par0,
-        fn = obj,
-        method = method,
-        hessian = isTRUE(compute_hessian),
-        control = ctrl,
-        ...
-      )
-
-      ok <- is.list(res) && is.finite(res$value) && res$convergence == 0
-      list(
-        ok = ok,
-        par = res$par,
-        hessian = if (isTRUE(compute_hessian)) res$hessian else NULL,
-        optim = list(
-          convergence = res$convergence,
-          value = res$value,
-          counts = res$counts,
-          message = res$message
-        )
-      )
+      x / scale$scale_x
     },
 
     fit_one_model = function(
@@ -1607,8 +1477,19 @@ AutoNLSFitter <- R6::R6Class(
         if (!is.finite(h) || h <= 0) h <- 1e-6
 
         # clamp steps in scaled domain for stability
-        x_plus  <- pmin(pmax(xs + h, 0), 1)
-        x_minus <- pmin(pmax(xs - h, 0), 1)
+        x_plus  <- xs + h
+        x_minus <- xs - h
+
+        if (fit$scale$extrapolation == "clip") {
+          x_plus  <- pmin(pmax(x_plus, 0), 1)
+          x_minus <- pmin(pmax(x_minus, 0), 1)
+        } else if (fit$scale$extrapolation == "error") {
+          if (any(x_plus > 1 | x_minus < 0, na.rm = TRUE)) {
+            stop("finite-difference step moved outside training range; use extrapolation = 'clip' or 'allow'.")
+          }
+        } else {
+          # allow: do nothing
+        }
 
         # score at explicit xs (avoid re-transforming raw x)
         score_at_xs <- function(xs_override) {
