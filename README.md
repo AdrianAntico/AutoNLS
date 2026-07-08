@@ -13,6 +13,230 @@ Automated Non-Linear Least Squares and Exploratory Data Analysis in R
 
 ---
 
+## AutoNLS vNext Preview
+
+AutoNLS is being redesigned around one main workflow for understanding functional relationships. The vNext API keeps the old classes in place and adds a compact fit object:
+
+```r
+library(AutoNLS)
+library(data.table)
+
+list_nls_models()
+```
+
+Fit a few stable curves:
+
+```r
+DT <- data.table(
+  Spend = seq(1, 100, length.out = 100)
+)
+DT[, Sales := 12 + 220 * Spend^1.4 / (35^1.4 + Spend^1.4) + rnorm(.N, sd = 4)]
+
+fit <- AutoNLS(
+  data = DT,
+  x = "Spend",
+  y = "Sales",
+  models = c("Linear", "Hill", "Logistic", "Gompertz"),
+  loss = "mse",
+  n_starts = 25,
+  seed = 42,
+  theme = "dark"
+)
+```
+
+Intervals are disabled by default:
+
+```r
+fit_no_intervals <- AutoNLS(
+  data = DT,
+  x = "Spend",
+  y = "Sales",
+  models = c("Linear", "Hill", "Logistic"),
+  interval_method = "none"
+)
+```
+
+Enable residual bootstrap intervals for the best model:
+
+```r
+fit_intervals <- AutoNLS(
+  data = DT,
+  x = "Spend",
+  y = "Sales",
+  models = c("Linear", "Hill", "Logistic"),
+  interval_method = "residual_bootstrap",
+  interval_models = "best",
+  interval_n = 200,
+  interval_seed = 42
+)
+
+fit_intervals$prediction_intervals
+fit_intervals$interval_diagnostics
+```
+
+Fit all stable registry models:
+
+```r
+fit_all <- AutoNLS(
+  data = DT,
+  x = "Spend",
+  y = "Sales",
+  models = "all",
+  model_status = "stable",
+  n_starts = 25,
+  seed = 42
+)
+```
+
+Use more multi-start search when curves are harder:
+
+```r
+fit_search <- AutoNLS(
+  data = DT,
+  x = "Spend",
+  y = "Sales",
+  models = c("Hill", "Logistic", "Gompertz", "PowerCurve"),
+  n_starts = 75,
+  maxit = 5000,
+  reltol = 1e-8,
+  scale_x = TRUE,
+  scale_y = TRUE
+)
+```
+
+Use a validation split when you want ranking to consider holdout behavior:
+
+```r
+fit_validated <- AutoNLS(
+  data = DT,
+  x = "Spend",
+  y = "Sales",
+  models = "all",
+  model_status = "stable",
+  n_starts = 25,
+  validation_fraction = 0.2,
+  validation_seed = 42
+)
+```
+
+Inspect the fitted models:
+
+```r
+fit$summary()
+fit$metrics()
+fit$best_model()
+
+fit$ranking_summary
+fit$ranking_summary[, .(model_name, ranking_position, reason_code, explanation)]
+fit$model_suitability
+fit$domain_diagnostics
+fit$parameter_stability
+fit$validation_metrics
+fit$fit_warnings
+fit$fit_recommendations
+```
+
+Compare internal fitting strategies while keeping the user API original-scale:
+
+```r
+strategy_validation <- validate_autonls_fit_strategies(
+  data = DT,
+  x = "Spend",
+  y = "Sales",
+  models = c("Linear", "Hill", "Logistic", "PowerCurve")
+)
+
+strategy_validation$convergence_rate_by_strategy
+strategy_validation$metrics_by_strategy
+strategy_validation$selected_model_by_strategy
+strategy_validation$warnings_by_strategy
+strategy_validation$original_scale_prediction_check
+```
+
+Build comparison data for plotting:
+
+```r
+comparison <- fit$compare_plot()
+head(comparison)
+```
+
+Predict and score new data:
+
+```r
+new_data <- data.table(Spend = c(10, 25, 50, 100))
+
+fit$predict(new_data)
+fit$score(new_data)
+```
+
+Build derivative and elasticity curves:
+
+```r
+curve <- data.table(Spend = seq(1, 100, length.out = 100))
+
+derivative_curve <- fit$derivative(curve)
+elasticity_curve <- fit$elasticity(curve)
+```
+
+Generate report artifacts:
+
+```r
+artifacts <- fit$artifacts()
+names(artifacts)
+
+report <- fit$report()
+
+artifacts$curve_values
+artifacts$curve_diagnostics
+artifacts$selected_model
+artifacts$model_confidence
+```
+
+List available registry models:
+
+```r
+list_nls_models()
+```
+
+Run the vNext smoke test:
+
+```r
+qa_autonls_vnext()
+qa_autonls_family_initialization()
+qa_autonls_domain_checks()
+qa_autonls_model_ranking()
+qa_autonls_validation()
+qa_autonls_parameter_stability()
+qa_autonls_intervals()
+qa_autonls_fit_warnings()
+qa_autonls_curve_artifact_contract()
+qa_autonls_model_confidence()
+qa_autonls_ranking_explanations()
+qa_autonls_interval_estimation()
+qa_autonls_realistic_curve_families()
+qa_autonls_experimental_model_safety()
+qa_autonls_raw_scale_strategy_validation()
+```
+
+Experimental models are available only when requested:
+
+```r
+list_nls_models(model_status = "experimental")
+
+fit_experimental <- AutoNLS(
+  data = DT,
+  x = "Spend",
+  y = "Sales",
+  models = "all",
+  model_status = "experimental",
+  n_starts = 10
+)
+```
+
+Stable models are intended for the default workflow. Experimental models are migrated from the legacy library with numerical guards, but they still need more real-data hardening.
+
+---
+
 ## **Overview**
 
 AutoNLS is an R package built for automating non-linear regression modeling, exploratory data analysis (EDA), and interactive visualization. Whether you're an analyst or a data scientist, AutoNLS streamlines your workflow with its extensive suite of tools, user-friendly interface, and Shiny-based app for intuitive data exploration and modeling.
