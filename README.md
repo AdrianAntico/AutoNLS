@@ -173,9 +173,17 @@ Build derivative and elasticity curves:
 
 ```r
 curve <- data.table(Spend = seq(1, 100, length.out = 100))
-
 derivative_curve <- fit$derivative(curve)
 elasticity_curve <- fit$elasticity(curve)
+curve_dt <- fit$score(curve)
+curve_dt <- cbind(curve_dt, elasticity_curve$elasticity, derivative_curve$derivative)
+data.table::setnames(curve_dt, c("V2","V3"), c("elasticity","derivative"))
+
+AutoPlots::Line(
+  dt = curve_dt, XVar = "x", YVar = "prediction", DualYVar = c("elasticity","derivative"),
+  title.text = "AutoNLS Fitting",
+  legend.top = 70, legend.right = 200
+)
 ```
 
 Generate report artifacts:
