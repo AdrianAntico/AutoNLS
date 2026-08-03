@@ -1618,5 +1618,71 @@ if (sys.nframe() == 0L) {
   results <- main()
 }
 
+# Overall results
+results$metrics[
+  order(target, mape),
+  .(
+    target,
+    model,
+    mape_pct = round(100 * mape, 2),
+    mae,
+    rmse,
+    mean_bias
+  )
+]
 
+# Inspect holdout predictions
+results$heldout_predictions[
+  ,
+  .(
+    portfolio_id,
+    date,
+    chosen_target_roas,
+    actual_value,
+    google_value_at_choice,
+    pred_value_autoquant,
+    pred_value_contextual,
+    pred_value_blend
+  )
+]
+
+# Actual vs predicted
+results$heldout_predictions[
+  ,
+  .(
+    actual = actual_value,
+    google = google_value_at_choice,
+    corrected = pred_value_blend
+  )
+]
+
+# Primary deliverable: corrected data
+results$corrected_surfaces
+
+
+one_surface <- results$corrected_surfaces[
+  portfolio_id == "P01" &
+    date == min(date)
+]
+
+one_surface[
+  ,
+  .(
+    target_roas,
+    google_cost,
+    corrected_cost,
+    google_events,
+    corrected_events,
+    google_value,
+    corrected_value,
+    corrected_implied_roas,
+    corrected_implied_cpa
+  )
+]
+
+recommended_value <- results$corrected_surfaces[
+  ,
+  .SD[which.max(corrected_value)],
+  by = .(portfolio_id, date)
+]
 
