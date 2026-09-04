@@ -1,0 +1,36 @@
+{
+  "schema_version": "autonls_bayesian_response_artifact_v1",
+  "owner": "AutoNLS",
+  "claim_class": "PREDICTIVE_RESPONSE",
+  "required_fields": [
+    "family",
+    "focal_variable",
+    "controls",
+    "observed_support",
+    "model_domain",
+    "priors",
+    "prior_source",
+    "posterior_draws_available",
+    "posterior_function_draws_available",
+    "posterior_predictive_draws_available",
+    "convergence",
+    "convergence_status",
+    "fitted_state_id",
+    "refit",
+    "limitations",
+    "provenance"
+  ],
+  "support_states": ["INTERPOLATION", "BOUNDARY", "EXTRAPOLATION"],
+  "authority_boundary": {
+    "causal": false,
+    "actionable_extrapolation": false,
+    "automatic_family_election": false,
+    "downstream_must_preserve": [
+      "support status",
+      "prior source",
+      "convergence status",
+      "fitted-state identity",
+      "refit status"
+    ]
+  }
+}

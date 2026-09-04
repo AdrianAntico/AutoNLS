@@ -1,0 +1,9 @@
+parameter_concept,parameter_names,generated_default,caller_override,interpretation,qualification_note
+lower_asymptote,"a,lower",registry-bounded uniform or weak normal,explicit prior object,lower response level,Family parameterization is authoritative
+upper_asymptote,"b,upper,L",registry-bounded uniform or weak normal,explicit prior object,upper response level,Family parameterization is authoritative
+midpoint,"c,midpoint,xmid",weak normal centered on observed focal range,explicit prior object,location of transition or inflection,May be weakly identified under limited support
+slope,"b,slope,steepness",weak normal scaled to focal range,explicit prior object,direction and transition rate,Inspect family-specific sign convention
+saturation,"K,Vmax,asymptote",registry-bounded uniform or positive half-normal,explicit prior object,saturation response,Inspect family-specific parameterization
+positive_scale,"sigma,tau,scale",half-normal with positive support,explicit prior object,positive scale,Support incompatible with registry bounds fails
+linear_control,control:<column>,weak normal on standardized coefficient,explicit prior object,linear additive control effect,Use control_coefficients() for original units
+residual_scale,sigma,half-normal,explicit prior object,Gaussian residual standard deviation,Posterior predictive draws include this uncertainty
