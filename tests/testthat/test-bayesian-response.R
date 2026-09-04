@@ -26,6 +26,8 @@ testthat::test_that("Bayesian response jointly estimates focal geometry and cont
   testthat::expect_equal(fit$provenance$likelihood_rows, seq_len(nrow(fit$data)))
   testthat::expect_equal(fit$control_coefficients()$scale,
     "ORIGINAL_CONTROL_UNITS")
+  testthat::expect_s3_class(fit$prior_table(), "data.table")
+  testthat::expect_true(all(fit$prior_table()$source == "GENERATED_WEAK"))
 })
 
 testthat::test_that("support and posterior curve semantics remain honest", {
@@ -45,29 +47,32 @@ testthat::test_that("support and posterior curve semantics remain honest", {
   before <- data.table::copy(fit$data)
   fit$posterior_function(seq(-1, 1, length.out = 201), "draws")
   testthat::expect_identical(fit$data, before)
+  testthat::expect_error(fit$posterior_function(1.1), "model_domain")
+  testthat::expect_error(fit$derivative(data.table::data.table(
+    sentiment = 1.1, impressions = 110)), "model_domain")
 })
 
 testthat::test_that("control scenarios and effects replay without refit", {
   fit <- fit_bayes_fixture()
-  low <- fit$predict(data.frame(sentiment = -.1, impressions = 90))
-  high <- fit$predict(data.frame(sentiment = -.1, impressions = 130))
+  low <- fit$predict(data.table::data.table(sentiment = -.1, impressions = 90))
+  high <- fit$predict(data.table::data.table(sentiment = -.1, impressions = 130))
   testthat::expect_gt(high$prediction_mean, low$prediction_mean)
-  d <- fit$derivative(data.frame(sentiment = c(-.2, .2), impressions = 110))
-  e <- fit$elasticity(data.frame(sentiment = c(-.2, .2), impressions = 110))
+  d <- fit$derivative(data.table::data.table(sentiment = c(-.2, .2), impressions = 110))
+  e <- fit$elasticity(data.table::data.table(sentiment = c(-.2, .2), impressions = 110))
   inc <- fit$incremental_response(-.2, .2, list(impressions = 110))
   testthat::expect_true(all(c("INTERPOLATION", "EXTRAPOLATION") %in% d$support_status))
   testthat::expect_equal(e$refit, rep(FALSE, 2))
   testthat::expect_false(inc$refit)
   path <- tempfile(fileext = ".rds")
   saveRDS(fit, path); replay <- readRDS(path)
-  testthat::expect_equal(replay$predict(data.frame(sentiment = .2, impressions = 110)),
-    fit$predict(data.frame(sentiment = .2, impressions = 110)))
+  testthat::expect_equal(replay$predict(data.table::data.table(sentiment = .2, impressions = 110)),
+    fit$predict(data.table::data.table(sentiment = .2, impressions = 110)))
   testthat::expect_identical(replay$fitted_state_id, fit$fitted_state_id)
 })
 
 testthat::test_that("caller control draws are used but never invented", {
   fit <- fit_bayes_fixture()
-  nd <- data.frame(sentiment = .1, impressions = 110)
+  nd <- data.table::data.table(sentiment = .1, impressions = 110)
   supplied <- list(impressions = rep(c(90, 130), length.out = nrow(fit$posterior_draws)))
   testthat::expect_equal(nrow(fit$predict(nd, type = "draws", control_draws = supplied)),
     nrow(fit$posterior_draws))
@@ -81,11 +86,38 @@ testthat::test_that("prior sensitivity is visible outside limited support", {
   p_high <- list(c = autonls_bayesian_prior("normal", .35, .04))
   low <- fit_bayes_fixture(seed = 51, priors = p_low)
   high <- fit_bayes_fixture(seed = 51, priors = p_high)
-  scenario <- data.frame(sentiment = .6, impressions = 110)
+  scenario <- data.table::data.table(sentiment = .6, impressions = 110)
   delta <- abs(low$predict(scenario)$prediction_mean - high$predict(scenario)$prediction_mean)
   testthat::expect_gt(delta, 1)
   testthat::expect_equal(low$prior_source, "CALLER_OVERRIDDEN")
+  testthat::expect_equal(low$prior_table()[parameter == "c"]$source,
+    "CALLER_SPECIFIED")
   testthat::expect_equal(low$predict(scenario)$support_status, "EXTRAPOLATION")
+})
+
+testthat::test_that("arbitrary domains and zero or multiple controls are general", {
+  set.seed(73)
+  d <- data.table::data.table(
+    temperature = runif(90, 20, 50),
+    pressure = runif(90, 95, 105),
+    flow = runif(90, 4, 8)
+  )
+  d[, yield := 75 / (1 + exp(-.18 * (temperature - 34))) +
+      .3 * (pressure - 100) - .7 * (flow - 6) + rnorm(.N, 0, 1)]
+  zero <- AutoNLSBayes(d, "temperature", "yield", family = "Logistic",
+    model_domain = c(0, 100), chains = 2, iter = 350, burnin = 175,
+    thin = 2, seed = 9)
+  multi <- AutoNLSBayes(d, "temperature", "yield", family = "Logistic",
+    controls = c("pressure", "flow"), model_domain = c(0, 100),
+    chains = 2, iter = 350, burnin = 175, thin = 2, seed = 9)
+  p <- multi$predict(data.table::data.table(
+    temperature = c(10, 35, 80), pressure = 100, flow = 6))
+  testthat::expect_s3_class(p, "data.table")
+  testthat::expect_equal(p$support_status,
+    c("EXTRAPOLATION", "INTERPOLATION", "EXTRAPOLATION"))
+  testthat::expect_equal(zero$controls, character())
+  testthat::expect_equal(nrow(multi$control_coefficients()), 2L)
+  testthat::expect_equal(nrow(multi$data), 90L)
 })
 
 testthat::test_that("families fit independently and artifacts remain neutral", {
@@ -108,6 +140,8 @@ testthat::test_that("Bayesian input and prior hostiles fail closed", {
   testthat::expect_error(AutoNLSBayes(d, "sentiment", "engaged_visits",
     controls = "missing"), "must contain")
   testthat::expect_error(autonls_bayesian_prior("normal", scale = -1), "positive")
+  testthat::expect_error(autonls_bayesian_prior("normal", location = c(0, 1)),
+    "location")
   testthat::expect_error(AutoNLSBayes(d, "sentiment", "engaged_visits",
     model_domain = c(-.2, .2)), "containing observed support")
   testthat::expect_error(AutoNLSBayes(d, "sentiment", "engaged_visits",

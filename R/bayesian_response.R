@@ -22,11 +22,15 @@ autonls_bayesian_prior <- function(distribution = c("normal", "lognormal",
     "uniform", "half_normal"), location = 0, scale = 1,
     lower = -Inf, upper = Inf) {
   distribution <- match.arg(distribution)
+  if (!is.numeric(location) || length(location) != 1L || !is.finite(location))
+    stop("prior location must be one finite number.")
   if (!is.numeric(scale) || length(scale) != 1L || !is.finite(scale) || scale <= 0)
     stop("prior scale must be one positive finite number.")
+  if (!is.numeric(lower) || !is.numeric(upper) || length(lower) != 1L ||
+      length(upper) != 1L || is.na(lower) || is.na(upper) || lower >= upper)
+    stop("prior bounds must be scalar and satisfy lower < upper.")
   if (identical(distribution, "uniform") &&
-      (!is.numeric(lower) || !is.numeric(upper) || length(lower) != 1L ||
-       length(upper) != 1L || is.na(lower) || is.na(upper) || lower >= upper))
+      (!is.finite(lower) || !is.finite(upper)))
     stop("uniform prior requires lower < upper.")
   structure(list(distribution = distribution, location = as.numeric(location),
     scale = as.numeric(scale), lower = as.numeric(lower), upper = as.numeric(upper)),
@@ -94,8 +98,8 @@ bnls_rhat <- function(chains) {
   m <- length(chains)
   if (m < 2L) return(rep(NA_real_, ncol(chains[[1L]])))
   n <- min(vapply(chains, nrow, integer(1)))
-  means <- do.call(rbind, lapply(chains, function(x) colMeans(tail(x, n))))
-  vars <- do.call(rbind, lapply(chains, function(x) apply(tail(x, n), 2, stats::var)))
+  means <- do.call(rbind, lapply(chains, function(x) colMeans(utils::tail(x, n))))
+  vars <- do.call(rbind, lapply(chains, function(x) apply(utils::tail(x, n), 2, stats::var)))
   W <- colMeans(vars)
   B <- n * apply(means, 2, stats::var)
   sqrt(pmax(((n - 1) / n * W + B / n) / W, 0))
@@ -116,7 +120,8 @@ bnls_ess <- function(x, max_lag = 100L) {
 #' family and zero or more jointly estimated linear controls. Bayesian fitting is
 #' explicit and does not alter [AutoNLS()].
 #'
-#' @param data A data.frame or data.table containing observed rows only.
+#' @param data A `data.table` containing observed rows only. Objects coercible to
+#'   `data.table` are accepted for compatibility.
 #' @param x,y Focal nonlinear predictor and outcome column names.
 #' @param family One qualified equation name from [list_nls_models()].
 #' @param controls Optional character vector of linear control columns.
@@ -132,13 +137,16 @@ bnls_ess <- function(x, max_lag = 100L) {
 #' @return An `AutoNLSBayesFit` R6 object retaining draws and diagnostics.
 #' @examples
 #' set.seed(4)
-#' d <- data.frame(sentiment = runif(80, -.4, 0), impressions = runif(80, 80, 140))
+#' d <- data.table::data.table(
+#'   sentiment = runif(80, -.4, 0), impressions = runif(80, 80, 140))
 #' d$visits <- 20 + 35 / (1 + exp(-10 * (d$sentiment + .15))) +
 #'   .08 * (d$impressions - 110) + rnorm(80, 0, 2)
 #' fit <- AutoNLSBayes(d, "sentiment", "visits", family = "Logistic",
 #'   controls = "impressions", model_domain = c(-1, 1),
 #'   chains = 2, iter = 400, burnin = 200)
-#' fit$predict(data.frame(sentiment = c(-.2, .3), impressions = 110))
+#' fit$prior_table()
+#' fit$predict(data.table::data.table(
+#'   sentiment = c(-.2, .3), impressions = 110))
 #' @export
 AutoNLSBayes <- function(data, x, y, family = "Logistic", controls = NULL,
     model_domain = NULL, priors = NULL, chains = 4L, iter = 2000L,
@@ -156,7 +164,8 @@ AutoNLSBayes <- function(data, x, y, family = "Logistic", controls = NULL,
 AutoNLSBayesFit <- R6::R6Class("AutoNLSBayesFit", public = list(
   data = NULL, x = NULL, y = NULL, family = NULL, controls = NULL,
   observed_support = NULL, model_domain = NULL, priors = NULL,
-  prior_source = NULL, posterior_draws = NULL, convergence = NULL,
+  prior_source = NULL, prior_overrides = NULL,
+  posterior_draws = NULL, convergence = NULL,
   posterior_predictive_draws = NULL,
   control_center = NULL, control_scale = NULL, registry_spec = NULL,
   fitted_state_id = NULL, provenance = NULL, refit = FALSE,
@@ -204,7 +213,8 @@ AutoNLSBayesFit <- R6::R6Class("AutoNLSBayesFit", public = list(
       self$control_center[] <- 0; self$control_scale[] <- 1
     }
     defaults <- bnls_default_priors(self$registry_spec, DT[[x]], DT[[y]], controls)
-    self$prior_source <- if (is.null(priors)) "GENERATED_WEAK" else "CALLER_OVERRIDDEN"
+    self$prior_source <- if (!length(priors)) "GENERATED_WEAK" else "CALLER_OVERRIDDEN"
+    self$prior_overrides <- if (!length(priors)) character() else names(priors)
     if (!is.null(priors) && (!is.list(priors) || is.null(names(priors))))
       stop("priors must be a named list of prior overrides.")
     self$priors <- defaults
@@ -222,9 +232,12 @@ AutoNLSBayesFit <- R6::R6Class("AutoNLSBayesFit", public = list(
   fit = function() {
     x <- self$data[[self$x]]; y <- self$data[[self$y]]
     z <- private$control_matrix(self$data)
-    par_names <- c(self$registry_spec$parameter_names, paste0("control:", self$controls), "sigma")
-    start <- c(self$registry_spec$start_params, setNames(rep(0, length(self$controls)),
-      paste0("control:", self$controls)), sigma = max(stats::sd(y), 1e-3))
+    control_parameters <- if (length(self$controls))
+      paste0("control:", self$controls) else character()
+    par_names <- c(self$registry_spec$parameter_names, control_parameters, "sigma")
+    start <- c(self$registry_spec$start_params,
+      stats::setNames(rep(0, length(control_parameters)), control_parameters),
+      sigma = max(stats::sd(y), 1e-3))
     objective <- function(p) -private$log_posterior(p, x, y, z)
     map <- tryCatch(stats::optim(start, objective, method = "Nelder-Mead",
       control = list(maxit = 3000)), error = function(e) NULL)
@@ -269,6 +282,7 @@ AutoNLSBayesFit <- R6::R6Class("AutoNLSBayesFit", public = list(
     self$convergence <- data.table::data.table(parameter = par_names,
       rhat = as.numeric(rhat), ess = as.numeric(ess),
       acceptance_rate = colMeans(acceptance),
+      diagnostic_class = "SAMPLER_COMPUTATIONAL",
       status = ifelse(is.na(rhat) | (rhat <= 1.1 & ess >= 50), "PASS", "POOR_CONVERGENCE"))
     self$fitted_state_id <- paste0("autonls-bayes-", bnls_hash(list(
       family = self$family, x = x, y = y, controls = z,
@@ -276,6 +290,9 @@ AutoNLSBayesFit <- R6::R6Class("AutoNLSBayesFit", public = list(
     self$provenance <- list(package = "AutoNLS", version = "1.1.0",
       method = "native_random_walk_metropolis", observations = nrow(self$data),
       likelihood_rows = seq_len(nrow(self$data)), seed = private$seed,
+      sampler = list(chains = private$chains, iter = private$iter,
+        burnin = private$burnin, thin = private$thin,
+        proposal_scale = private$proposal_scale),
       fitted_state_id = self$fitted_state_id)
     set.seed(private$seed + 100000L)
     self$posterior_predictive_draws <- self$predict(self$data, type = "draws",
@@ -296,6 +313,7 @@ AutoNLSBayesFit <- R6::R6Class("AutoNLSBayesFit", public = list(
       stop("prediction inputs must be finite.")
     draws <- self$posterior_draws
     xval <- ND[[self$x]]
+    private$validate_prediction_domain(xval)
     z <- private$control_matrix(ND)
     if (!is.null(control_draws)) {
       if (nrow(ND) != 1L || !is.list(control_draws) ||
@@ -342,7 +360,6 @@ AutoNLSBayesFit <- R6::R6Class("AutoNLSBayesFit", public = list(
     ND <- data.table::data.table(value = as.numeric(grid)); data.table::setnames(ND, self$x)
     if (length(self$controls)) {
       if (missing(controls) || is.null(controls)) stop("controls must be supplied for posterior curves.")
-      if (is.list(controls)) controls <- as.data.frame(controls)
       CD <- data.table::as.data.table(controls)
       if (nrow(CD) == 1L) CD <- CD[rep(1L, length(grid))]
       if (nrow(CD) != length(grid) || !all(self$controls %in% names(CD)))
@@ -358,6 +375,7 @@ AutoNLSBayesFit <- R6::R6Class("AutoNLSBayesFit", public = list(
     private$require_fitted()
     xval <- as.numeric(grid)
     if (any(!is.finite(xval))) stop("grid must contain only finite values.")
+    private$validate_prediction_domain(xval)
     draws <- self$posterior_draws
     theta_names <- self$registry_spec$parameter_names
     out <- matrix(NA_real_, nrow(draws), length(xval))
@@ -398,6 +416,18 @@ AutoNLSBayesFit <- R6::R6Class("AutoNLSBayesFit", public = list(
     data.table::rbindlist(out)
   },
 
+  prior_table = function() {
+    names <- names(self$priors)
+    data.table::rbindlist(lapply(names, function(nm) {
+      p <- self$priors[[nm]]
+      data.table::data.table(parameter = nm, distribution = p$distribution,
+        location = p$location, scale = p$scale, lower = p$lower,
+        upper = p$upper,
+        source = if (nm %in% self$prior_overrides)
+          "CALLER_SPECIFIED" else "GENERATED_WEAK")
+    }))
+  },
+
   derivative = function(new_data, probs = c(.025, .5, .975)) {
     private$effect_summary(new_data, "derivative", probs)
   },
@@ -435,8 +465,9 @@ AutoNLSBayesFit <- R6::R6Class("AutoNLSBayesFit", public = list(
       sweep(sweep(z, 2, self$control_center, "-"), 2, self$control_scale, "/")
     },
     log_posterior = function(p, x, y, z) {
-      names(p) <- c(self$registry_spec$parameter_names,
-        paste0("control:", self$controls), "sigma")
+      control_parameters <- if (length(self$controls))
+        paste0("control:", self$controls) else character()
+      names(p) <- c(self$registry_spec$parameter_names, control_parameters, "sigma")
       lp <- sum(vapply(names(p), function(nm) bnls_log_prior(p[[nm]], self$priors[[nm]]), numeric(1)))
       if (!is.finite(lp) || p[["sigma"]] <= 0) return(-Inf)
       theta <- p[self$registry_spec$parameter_names]
@@ -454,11 +485,17 @@ AutoNLSBayesFit <- R6::R6Class("AutoNLSBayesFit", public = list(
       distance <- pmax(lo - x, 0) + pmax(x - hi, 0)
       list(status = status, distance = distance)
     },
+    validate_prediction_domain = function(x) {
+      if (any(x < self$model_domain[[1L]] | x > self$model_domain[[2L]]))
+        stop("prediction focal values must lie inside the fitted model_domain.")
+      invisible(TRUE)
+    },
     effect_summary = function(new_data, what, probs) {
       private$require_fitted(); ND <- data.table::as.data.table(new_data)
       if (!all(c(self$x, self$controls) %in% names(ND)))
         stop("new_data must contain focal predictor and every fitted control.")
       xval <- ND[[self$x]]; draws <- self$posterior_draws
+      private$validate_prediction_domain(xval)
       mat <- matrix(NA_real_, nrow(draws), nrow(ND)); theta_names <- self$registry_spec$parameter_names
       pred <- if (identical(what, "elasticity")) self$predict(ND, type = "draws") else NULL
       for (m in seq_len(nrow(draws))) {
@@ -496,12 +533,16 @@ autonls_bayesian_agent_artifact <- function(fit) {
     controls = fit$controls, observed_support = fit$observed_support,
     model_domain = fit$model_domain, priors = fit$priors,
     prior_source = fit$prior_source, posterior_draws_available = TRUE,
+    prior_table = fit$prior_table(),
     posterior_function_draws_available = TRUE,
     posterior_predictive_draws_available = TRUE,
     control_parameterization = list(internal = "CENTERED_AND_SCALED",
       reported = "ORIGINAL_CONTROL_UNITS",
       center = fit$control_center, scale = fit$control_scale),
     convergence = conv, convergence_status = if (all(conv$status == "PASS")) "PASS" else "POOR_CONVERGENCE",
+    identification = list(status = "NOT_ASSESSED_BY_SAMPLER_DIAGNOSTICS",
+      prior_sensitivity = "CALLER_MUST_COMPARE_SCIENTIFICALLY_REASONABLE_PRIORS",
+      note = "Poor mixing and weak identification are distinct concepts."),
     extrapolation_status = "POINT_SPECIFIC_AT_PREDICTION",
     fitted_state_id = fit$fitted_state_id, refit = FALSE,
     claim_class = "PREDICTIVE_RESPONSE",

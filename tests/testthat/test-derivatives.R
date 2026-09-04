@@ -1,6 +1,6 @@
 testthat::test_that("All model_library derivatives agree with finite differences", {
-  # robust: works whether you attach the package or not
-  ml <- AutoNLS::AutoNLSFitter$new(data.table::data.table(x = 1, y = 1))$model_library
+  # The vNext registry is the single current authority for equation derivatives.
+  ml <- AutoNLS:::nls_model_registry()
 
   fd <- function(f, x, params, h = 1e-6) {
     (f(x + h, params) - f(x - h, params)) / (2 * h)
@@ -10,13 +10,13 @@ testthat::test_that("All model_library derivatives agree with finite differences
     mi <- ml[[nm]]
 
     testthat::expect_true(is.function(mi$model_function), info = nm)
-    testthat::expect_true(is.function(mi$deriv_function), info = nm)
+    testthat::expect_true(is.function(mi$derivative_function), info = nm)
 
     x <- seq(0.05, 0.95, length.out = 25)  # scaled-domain probe
     params <- mi$start_params
 
     y     <- mi$model_function(x, params)
-    dy    <- mi$deriv_function(x, params)
+    dy    <- mi$derivative_function(x, params)
     dy_fd <- fd(mi$model_function, x, params)
 
     # be tolerant of scalar returns (should still behave like vectorized)

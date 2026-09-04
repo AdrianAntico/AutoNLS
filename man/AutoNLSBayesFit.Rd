@@ -17,6 +17,7 @@ AutoNLS Bayesian fitted response object
 \item \href{#method-AutoNLSBayesFit-posterior_curve}{\code{AutoNLSBayesFit$posterior_curve()}}
 \item \href{#method-AutoNLSBayesFit-posterior_function}{\code{AutoNLSBayesFit$posterior_function()}}
 \item \href{#method-AutoNLSBayesFit-control_coefficients}{\code{AutoNLSBayesFit$control_coefficients()}}
+\item \href{#method-AutoNLSBayesFit-prior_table}{\code{AutoNLSBayesFit$prior_table()}}
 \item \href{#method-AutoNLSBayesFit-derivative}{\code{AutoNLSBayesFit$derivative()}}
 \item \href{#method-AutoNLSBayesFit-elasticity}{\code{AutoNLSBayesFit$elasticity()}}
 \item \href{#method-AutoNLSBayesFit-incremental_response}{\code{AutoNLSBayesFit$incremental_response()}}
@@ -102,6 +103,15 @@ AutoNLS Bayesian fitted response object
 \subsection{Method \code{control_coefficients()}}{
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{AutoNLSBayesFit$control_coefficients(probs = c(0.025, 0.5, 0.975))}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-AutoNLSBayesFit-prior_table"></a>}}
+\if{latex}{\out{\hypertarget{method-AutoNLSBayesFit-prior_table}{}}}
+\subsection{Method \code{prior_table()}}{
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{AutoNLSBayesFit$prior_table()}\if{html}{\out{</div>}}
 }
 
 }

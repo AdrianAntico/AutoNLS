@@ -22,7 +22,8 @@ AutoNLSBayes(
 )
 }
 \arguments{
-\item{data}{A data.frame or data.table containing observed rows only.}
+\item{data}{A \code{data.table} containing observed rows only. Objects coercible to
+\code{data.table} are accepted for compatibility.}
 
 \item{x, y}{Focal nonlinear predictor and outcome column names.}
 
@@ -56,11 +57,14 @@ explicit and does not alter \code{\link[=AutoNLS]{AutoNLS()}}.
 }
 \examples{
 set.seed(4)
-d <- data.frame(sentiment = runif(80, -.4, 0), impressions = runif(80, 80, 140))
+d <- data.table::data.table(
+  sentiment = runif(80, -.4, 0), impressions = runif(80, 80, 140))
 d$visits <- 20 + 35 / (1 + exp(-10 * (d$sentiment + .15))) +
   .08 * (d$impressions - 110) + rnorm(80, 0, 2)
 fit <- AutoNLSBayes(d, "sentiment", "visits", family = "Logistic",
   controls = "impressions", model_domain = c(-1, 1),
   chains = 2, iter = 400, burnin = 200)
-fit$predict(data.frame(sentiment = c(-.2, .3), impressions = 110))
+fit$prior_table()
+fit$predict(data.table::data.table(
+  sentiment = c(-.2, .3), impressions = 110))
 }

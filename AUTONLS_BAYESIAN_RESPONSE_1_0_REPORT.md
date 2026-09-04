@@ -52,12 +52,12 @@ elasticity, incremental response, serialization, fitted identity, malformed
 priors, impossible prior support, unsupported families, missing controls, invalid
 domains, and unchanged frequentist entry points.
 
-The Bayesian suite passes 42 expectations. The full repository suite additionally
-contains two pre-existing stale derivative tests that reference the absent,
-unexported historical `AutoNLSFitter`; they are unrelated to this additive path.
-Package build and installation pass. Local `R CMD check` metadata inspection is
-blocked by this machine's failing `C.UTF-8` locale initialization, which check
-promotes to an environment error; this is not a package-code failure.
+At the original 1.0 qualification, the Bayesian suite passed 42 expectations and
+package build/installation passed. Two historical derivative tests still
+referenced the absent `AutoNLSFitter`, and the local shell forced an invalid
+`C.UTF-8` locale. Both package-test and environment issues were subsequently
+reconciled in the 1.1 hardening wave; see
+`AUTONLS_BAYESIAN_RESPONSE_1_1_REPORT.md` for the current release result.
 
 ## Partial Boundaries
 

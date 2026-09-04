@@ -33,6 +33,7 @@ Key methods are:
 - `posterior_curve()` for control-adjusted curves;
 - `derivative()`, `elasticity()`, and `incremental_response()`;
 - `control_coefficients()` for coefficients in original control units;
+- `prior_table()` for a structured parameter/support/source inventory;
 - `diagnostics()`, `draws()`, and `artifact()`.
 
 ## Support Contract
@@ -42,6 +43,7 @@ caller declaration and must contain observed support. It never creates data.
 Each prediction is labeled `INTERPOLATION`, `BOUNDARY`, or `EXTRAPOLATION`, with
 distance outside observed support. A prediction outside support remains
 extrapolative even when it is inside the declared model domain.
+Prediction outside the fitted `model_domain` fails closed.
 
 ## Prior Contract
 
@@ -78,6 +80,11 @@ Per-parameter R-hat, effective sample size, acceptance rate, and status are
 returned. Poor convergence is visible as `POOR_CONVERGENCE`; it is not silently
 converted into a successful authority claim. Invalid schemas, priors, domains,
 families, controls, and control draws fail closed.
+
+Sampler diagnostics describe computation. They do not diagnose scientific
+identification. Identification and prior sensitivity are separate evidence and
+the downstream artifact marks identification as not assessed until the caller
+performs an appropriate sensitivity analysis.
 
 ## Backward Compatibility
 
